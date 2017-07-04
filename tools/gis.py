@@ -1,5 +1,7 @@
 from image import Geotransform
 from pyproj import Proj, transform
+from shapely.geometry import Polygon
+from geojson import Feature
 
 
 def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
@@ -23,3 +25,7 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (fl
     x2, y2 = transform(in_proj, out_proj, x, y)
 
     return x2, y2
+
+
+def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
+    return Feature(geometry=polygon, properties=properties)
