@@ -8,6 +8,8 @@ import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
+WGS84_EPSG = 4326
+
 
 def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
     x = int((x - geotransform.upper_left_x) / geotransform.pixel_width)
