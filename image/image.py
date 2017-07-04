@@ -18,6 +18,16 @@ class Image:
         return self.image_dataset.RasterYSize
 
     @property
+    def bounds(self) -> ([float], [float]):
+        x_max = self.width * self.geotransform.pixel_width
+        y_min = self.height * self.geotransform.pixel_width
+        x = [self.geotransform.upper_left_x, x_max, x_max,
+             self.geotransform.upper_left_x, self.geotransform.upper_left_x]
+        y = [self.geotransform.upper_left_y, self.geotransform.upper_left_y,
+             y_min, y_min, self.geotransform.upper_left_y]
+        return x, y
+
+    @property
     def band_count(self) -> int:
         return self.image_dataset.RasterCount
 
