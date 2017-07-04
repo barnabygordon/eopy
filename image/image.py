@@ -21,9 +21,16 @@ class Image:
     def band_count(self) -> int:
         return self.image_dataset.RasterCount
 
+    @property
+    def ndvi(self) -> np.ndarray:
+        nir = self.get_band('nir')
+        red = self.get_band('red')
+        return (nir - red) / (nir + red)
+
     def get_band(self, band: str) -> np.ndarray:
         band_dataset = self.image_dataset.GetRasterBand(BAND_LOOKUP[band])
         return band_dataset.ReadAsArray()
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.image_dataset.ReadAsArray(x, y, width, width)
+
