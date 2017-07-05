@@ -1,6 +1,7 @@
 from osgeo import gdal
 
 from image import LandsatSceneID
+from image import Image
 
 LANDSAT_8_BANDS = [
     'coastal', 'blue', 'green', 'red', 'nir', 'swir_1',
@@ -21,4 +22,4 @@ class Downloader:
 
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
 
-        return image_dataset
+        return Image(image_dataset)
