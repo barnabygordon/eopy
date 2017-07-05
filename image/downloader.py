@@ -13,7 +13,8 @@ LANDSAT_8_LOOKUP_BAND = {
 
 
 class Downloader:
-    def download_landsat8_band(self, scene_id: LandsatSceneID, band):
+    @staticmethod
+    def download_landsat8_band(scene_id: LandsatSceneID, band):
         url = 'https://landsat-pds.s3.amazonaws.com/L8/{path}/{row}/{scene_id}/{scene_id}_{band}.TIF'.format(
             path=scene_id.path,
             row=scene_id.row,
