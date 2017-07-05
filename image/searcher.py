@@ -45,10 +45,7 @@ class Searcher:
                 self.password)).json()
 
         feed = response['feed']
-        results_overview = feed['subtitle']
         results_count = feed['opensearch:totalResults']
-        results_link = feed['link']
-        results_content = feed['entry']
 
         print('Found {} results'.format(results_count))
 
@@ -121,7 +118,8 @@ class Searcher:
 
         return tree[2][0][0].text
 
-    def _construct_sentinel2_search_url(self, polygon: Polygon, start_date):
+    @staticmethod
+    def _construct_sentinel2_search_url(polygon: Polygon, start_date):
         url_root = 'https://scihub.copernicus.eu/dhus/search?q='
 
         area = 'footprint:"Intersects({})"'.format(polygon)
@@ -135,7 +133,8 @@ class Searcher:
 
         return url
 
-    def _construct_sentinel2_image_url(self, scene_id, utm_zone, latitude_band, grid_square):
+    @staticmethod
+    def _construct_sentinel2_image_url(scene_id, utm_zone, latitude_band, grid_square):
         url_root = 's3://sentinel-s2-l1c/tiles'
         sequence = '0'
 
@@ -145,7 +144,8 @@ class Searcher:
 
         return folder_url
 
-    def _parse_xml(self, xml):
+    @staticmethod
+    def _parse_xml(xml):
         return ElementTree.fromstring(xml)
 
 
