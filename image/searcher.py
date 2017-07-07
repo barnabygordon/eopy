@@ -1,5 +1,6 @@
 import requests
 import time
+import numpy as np
 from shapely.geometry import Polygon
 from xml.etree import ElementTree
 
@@ -27,11 +28,13 @@ class Searcher:
 
             search_results = []
             for i, result in enumerate(response['results']):
-                search_results.append({
-                    'date': result['acquisitionDate'],
-                    'clouds': result['cloudCoverFull'],
-                    'scene_id': LandsatSceneID(result['scene_id']),
-                    'bounds': result['data_geometry']['coordinates']})
+                bounds = np.squeeze(np.array(result['data_geometry']['coordinates']))
+                polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
+                search_results.append(LandsatSceneID(
+                    scene_id_string=result['scene_id'],
+                    date=result['acquisitionDate'],
+                    clouds=result['cloudCoverFull'],
+                    bounds=polygon))
 
             return search_results
 
@@ -150,10 +153,13 @@ class Searcher:
 
 
 class LandsatSceneID:
-    def __init__(self, scene_id_string: str):
+    def __init__(self, scene_id_string: str, date: str, clouds: int, bounds: Polygon):
         self.string = scene_id_string
-        self.path = self.string[3:6]
-        self.row = self.string[6:9]
-        self.year = self.string[9:14]
-        self.month = self.string[14:16]
-        self.day = self.string[16:18]
+        self.path = int(self.string[3:6])
+        self.row = int(self.string[6:9])
+        self.year = int(self.string[9:13])
+        self.month = int(self.string[13:14])
+        self.day = int(self.string[14:16])
+        self.bounds = bounds
+        self.clouds = int(clouds)
+        self.date = date
