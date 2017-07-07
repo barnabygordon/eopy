@@ -30,8 +30,8 @@ class Searcher:
             for i, result in enumerate(response['results']):
                 bounds = np.squeeze(np.array(result['data_geometry']['coordinates']))
                 polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
-                search_results.append(LandsatSceneID(
-                    scene_id_string=result['scene_id'],
+                search_results.append(LandsatScene(
+                    scene_id=result['scene_id'],
                     date=result['acquisitionDate'],
                     clouds=result['cloudCoverFull'],
                     bounds=polygon))
@@ -152,9 +152,9 @@ class Searcher:
         return ElementTree.fromstring(xml)
 
 
-class LandsatSceneID:
-    def __init__(self, scene_id_string: str, date: str, clouds: int, bounds: Polygon):
-        self.string = scene_id_string
+class LandsatScene:
+    def __init__(self, scene_id: str, date: str, clouds: int, bounds: Polygon):
+        self.string = scene_id
         self.path = int(self.string[3:6])
         self.row = int(self.string[6:9])
         self.year = int(self.string[9:13])
