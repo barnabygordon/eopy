@@ -1,5 +1,5 @@
 import numpy as np
-from image import Geotransform
+from image.geotransform import Geotransform
 
 BAND_LOOKUP = {'blue': 1, 'green': 2, 'red': 3, 'red_edge': 4, 'nir': 5}
 
