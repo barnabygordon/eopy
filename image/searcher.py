@@ -8,9 +8,10 @@ from xml.etree import ElementTree
 from tools import gis
 import config
 
+
 class LandsatScene:
-    """ Landsat scene metadata """
-    def __init__(self, scene_id: str, date: str, clouds: int, bounds: Polygon, download_links: [str]):
+    """ Landsat-8 scene metadata """
+    def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, download_links: [str]):
         self.string = scene_id
         self.path = self.string[3:6]
         self.row = self.string[6:9]
@@ -18,6 +19,16 @@ class LandsatScene:
         self.bounds = bounds
         self.clouds = int(clouds)
         self.download_links = download_links
+
+
+class SentinelScene:
+    """ Sentinel-2 scene metadata """
+    def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, image_url: str):
+        self.scene_id = scene_id
+        self.date = date
+        self.clouds = clouds
+        self.bounds = bounds
+        self.image_url = image_url
 
 
 class Searcher:
@@ -63,7 +74,7 @@ class Searcher:
 
             return search_results
 
-    def search_sentinel2_scenes(self, polygon: Polygon, start_date) -> dict:
+    def search_sentinel2_scenes(self, polygon: Polygon, start_date) -> [SentinelScene]:
         url = self._construct_sentinel2_search_url(polygon, start_date)
         utm_code, latitude_band, square = gis.get_mgrs_info(polygon)
 
@@ -113,12 +124,13 @@ class Searcher:
                 latitude_band,
                 square)
 
-            search_results.append({
-                'date': date,
-                'clouds': cloud_percentage,
-                'scene_id': name,
-                'image_url': image_url,
-                'bounds': boundary})
+            search_results.append(
+                SentinelScene(
+                    scene_id=name,
+                    date=date,
+                    clouds=cloud_percentage,
+                    bounds=boundary,
+                    image_url=image_url))
 
         return search_results
 
