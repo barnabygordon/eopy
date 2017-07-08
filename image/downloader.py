@@ -11,6 +11,10 @@ LANDSAT_8_LOOKUP_BAND = {
 
 class Downloader:
     @staticmethod
+    def available_landsat8_bands():
+        return list(LANDSAT_8_LOOKUP_BAND.keys())
+
+    @staticmethod
     def get_landsat8_band(scene: LandsatScene, band) -> Image:
         url = scene.download_links[LANDSAT_8_LOOKUP_BAND[band]]
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
