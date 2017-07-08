@@ -75,6 +75,11 @@ class Searcher:
             return search_results
 
     def search_sentinel2_scenes(self, polygon: Polygon, start_date) -> [SentinelScene]:
+        """ Search for downloadable Sentinel-2 scenes within AOI and after date
+        :param polygon: WKT polygon AOI
+        :param start_date: date of start of search (YYYY-MM-DD)
+        :return: list of SentinelScene objects
+        """
         url = self._construct_sentinel2_search_url(polygon, start_date)
         utm_code, latitude_band, square = gis.get_mgrs_info(polygon)
 
@@ -192,7 +197,3 @@ class Searcher:
             year=year, month=month, day=day, sequence=sequence)
 
         return folder_url
-
-    @staticmethod
-    def _parse_xml(xml):
-        return ElementTree.fromstring(xml)
