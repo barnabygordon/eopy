@@ -1,11 +1,11 @@
 import requests
-import time
 import json
 import numpy as np
 from shapely.geometry import Polygon
 from xml.etree import ElementTree
 
 from tools import gis
+from tools.url_builder import URLBuilder
 from image.scene import LandsatScene, SentinelScene
 import config
 
@@ -30,7 +30,11 @@ class Searcher:
         :param start_date: Start date from which to begin the search (YYYY-MM-DD)
         :return: A list of LandsatScenes
         """
-        url = self._construct_landsat8_search_url(polygon, start_date)
+        url = URLBuilder.build_landsat8_search_url(
+            polygon,
+            start_date,
+            cloud_min=self.cloud_min, cloud_max=self.cloud_max,
+            search_limit=self.search_limit)
 
         response = requests.get(url).json()
 
@@ -59,7 +63,7 @@ class Searcher:
         :param start_date: date of start of search (YYYY-MM-DD)
         :return: list of SentinelScene objects
         """
-        url = self._construct_sentinel2_search_url(polygon, start_date)
+        url = URLBuilder.build_sentinel2_search_url(polygon, start_date)
         utm_code, latitude_band, square = gis.get_mgrs_info(polygon)
 
         response = requests.get(
@@ -102,7 +106,7 @@ class Searcher:
             coords = np.array([(float(coord.split(',')[0]), float(coord.split(',')[1])) for coord in coordinates])
             boundary = Polygon(coords)
 
-            image_url = self._construct_sentinel2_image_url(
+            image_url = URLBuilder.build_sentinel2_image_url(
                 year, int(month), int(day),
                 utm_code,
                 latitude_band,
@@ -117,62 +121,3 @@ class Searcher:
                     image_url=image_url))
 
         return search_results
-
-    def _construct_landsat8_search_url(self, polygon: Polygon, start_date):
-        """ Defines a Landsat-8 search url for development seed """
-        url_root = 'https://api.developmentseed.org/satellites/landsat'
-
-        search_bounds = polygon.bounds
-
-        upper_left_latitude = search_bounds[3]
-        lower_right_latitude = search_bounds[1]
-        lower_left_longitude = search_bounds[0]
-        upper_right_longitude = search_bounds[2]
-
-        today = time.strftime("%Y-%m-%d")
-
-        date_string = 'acquisitionDate:[{}+TO+{}]'.format(start_date, today)
-        cloud_string = 'cloudCoverFull:[{}+TO+{}]'.format(self.cloud_min, self.cloud_max)
-        left_latitude_string = 'upperLeftCornerLatitude:[{}+TO+1000]'.format(upper_left_latitude)
-        right_latitude_string = 'lowerRightCornerLatitude:[-1000+TO+{}]'.format(lower_right_latitude)
-        left_longitude_string = 'lowerLeftCornerLongitude:[-1000+TO+{}]'.format(lower_left_longitude)
-        right_longitude_string = 'upperRightCornerLongitude:[{}+TO+1000]'.format(upper_right_longitude)
-        limit_string = 'limit={}'.format(self.search_limit)
-
-        search_string = '{}+AND+{}+AND+{}+AND+{}+AND+{}+AND+{}&{}'.format(
-            date_string, cloud_string,
-            left_latitude_string, right_latitude_string,
-            left_longitude_string, right_longitude_string,
-            limit_string)
-
-        url = '{}?search={}'.format(url_root, search_string)
-
-        return url
-
-    @staticmethod
-    def _construct_sentinel2_search_url(polygon: Polygon, start_date: str) -> str:
-        """ Constructs the search url for Scihub
-        :param polygon: A WKT polygon
-        :param start_date: Search start date in YYYY-MM-DD format
-        :return: A url string
-        """
-        url = 'https://scihub.copernicus.eu/dhus/search?q=\
-        ingestiondate:[{date}T00:00:00.000Z TO NOW]\
-         AND platformname:Sentinel-2\
-         AND footprint:"Intersects({polygon})"\
-         &format=json'.format(
-            date=start_date,
-            polygon=polygon)
-
-        return url
-
-    @staticmethod
-    def _construct_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square):
-        url_root = 's3://sentinel-s2-l1c/tiles'
-        sequence = '0'
-
-        folder_url = '{url_root}/{utm_zone}/{latitude_band}/{grid_square}/{year}/{month}/{day}/{sequence}'.format(
-            url_root=url_root, utm_zone=utm_zone, latitude_band=latitude_band, grid_square=grid_square,
-            year=year, month=month, day=day, sequence=sequence)
-
-        return folder_url

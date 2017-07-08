@@ -1,6 +1,6 @@
 from osgeo import gdal
 
-from image import LandsatScene
+from image.scene import LandsatScene, SentinelScene
 from image import Image
 
 LANDSAT_8_LOOKUP_BAND = {
