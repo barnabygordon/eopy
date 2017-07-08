@@ -26,3 +26,7 @@ class Downloader:
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
 
         return Image(image_dataset)
+
+    @staticmethod
+    def get_sentinel2_band(scene: SentinelScene, band: str) -> Image:
+        raise NotImplementedError("Sorry! Work in progress!")
