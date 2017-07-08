@@ -33,7 +33,7 @@ class Image:
 
     @property
     def pixels(self) -> np.ndarray:
-        return self.image_dataset.ReadAsArray()
+        return self.image_dataset.ReadAsArray().transpose(1, 2, 0)
 
     @property
     def ndvi(self) -> np.ndarray:
