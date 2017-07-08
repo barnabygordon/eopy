@@ -1,5 +1,6 @@
 import numpy as np
 from osgeo import gdal
+from shapely.geometry import Polygon
 
 from image.geotransform import Geotransform
 
@@ -30,7 +31,8 @@ class Image:
              self.geotransform.upper_left_x, self.geotransform.upper_left_x]
         y = [self.geotransform.upper_left_y, self.geotransform.upper_left_y,
              y_min, y_min, self.geotransform.upper_left_y]
-        return x, y
+
+        return Polygon(zip(x, y))
 
     @property
     def band_count(self) -> int:
