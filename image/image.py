@@ -6,12 +6,13 @@ from image.geotransform import Geotransform
 
 
 class Image:
-    def __init__(self, image_dataset):
+    """ A generic image object revolving around gdal """
+    def __init__(self, image_dataset: gdal.Dataset):
         self.image_dataset = image_dataset
         self.geotransform = Geotransform(self.image_dataset)
 
     @classmethod
-    def load(cls, filepath):
+    def load(cls, filepath: str):
         image_dataset = gdal.Open(filepath)
         return Image(image_dataset)
 
@@ -24,7 +25,7 @@ class Image:
         return self.image_dataset.RasterYSize
 
     @property
-    def bounds(self) -> ([float], [float]):
+    def bounds(self) -> Polygon:
         x_max = self.width * self.geotransform.pixel_width
         y_min = self.height * self.geotransform.pixel_width
         x = [self.geotransform.upper_left_x, x_max, x_max,
