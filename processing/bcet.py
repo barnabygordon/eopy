@@ -4,7 +4,7 @@ import numpy as np
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image: np.ndarray, L: float, H: float, E: float, clip: float=0.):
+    def calculate(image: np.ndarray, L: float=0., H: float=1., E: float=0.5, clip: float=0.):
         """ Perform a BCET on an image
         :param image: A 3D array of shape (rows, columns, bands)
         :param L: The lower limit of the output

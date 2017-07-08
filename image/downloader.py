@@ -47,14 +47,14 @@ class Downloader:
         else:
             image_stack = image.pixels
 
-        self.save_image(image_stack, image_dataset)
+        self.save_image(image_stack, image_dataset, filepath=self.filepath)
 
         return Image(gdal.Open(self.filepath))
 
     def get_sentinel2_band(self, scene: SentinelScene, band: str) -> Image:
         raise NotImplementedError("Sorry! Work in progress!")
 
-    def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset) -> None:
+    def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset, filepath: str) -> None:
 
         width = image.shape[0]
         height = image.shape[1]
@@ -65,7 +65,7 @@ class Downloader:
             number_of_bands = 1
 
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(self.filepath, height, width, number_of_bands, self.data_type)
+            .Create(filepath, height, width, number_of_bands, self.data_type)
         out_image.SetGeoTransform(image_dataset.GetGeoTransform())
         out_image.SetProjection(image_dataset.GetProjection())
 

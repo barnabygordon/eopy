@@ -8,8 +8,8 @@ from image.geotransform import Geotransform
 class Image:
     """ A generic image object revolving around gdal """
     def __init__(self, image_dataset: gdal.Dataset):
-        self.image_dataset = image_dataset
-        self.geotransform = Geotransform(self.image_dataset)
+        self.dataset = image_dataset
+        self.geotransform = Geotransform(self.dataset)
 
     @classmethod
     def load(cls, filepath: str):
@@ -18,11 +18,11 @@ class Image:
 
     @property
     def width(self) -> int:
-        return self.image_dataset.RasterXSize
+        return self.dataset.RasterXSize
 
     @property
     def height(self) -> int:
-        return self.image_dataset.RasterYSize
+        return self.dataset.RasterYSize
 
     @property
     def bounds(self) -> Polygon:
@@ -37,11 +37,11 @@ class Image:
 
     @property
     def band_count(self) -> int:
-        return self.image_dataset.RasterCount
+        return self.dataset.RasterCount
 
     @property
     def pixels(self) -> np.ndarray:
-        return self.image_dataset.ReadAsArray().transpose(1, 2, 0)
+        return self.dataset.ReadAsArray().transpose(1, 2, 0)
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
-        return self.image_dataset.ReadAsArray(x, y, width, width)
+        return self.dataset.ReadAsArray(x, y, width, width)
