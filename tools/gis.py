@@ -75,7 +75,7 @@ def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
     longitude, latitude = center.x, center.y
 
     mgrs_converter = mgrs.MGRS()
-    mgrs_code = mgrs_converter.toMGRS(latitude, longitude)
+    mgrs_code = mgrs_converter.toMGRS(latitude, longitude).decode('utf-8')
 
     utm_code = mgrs_code[0:2]
     latitude_band = mgrs_code[2:3]
