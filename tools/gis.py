@@ -1,4 +1,3 @@
-from image import Geotransform
 from pyproj import Proj, transform
 from shapely.geometry import Polygon
 from shapely.ops import transform as shapely_transform
@@ -8,6 +7,8 @@ from functools import partial
 import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
+
+from image.geotransform import  Geotransform
 
 WGS84_EPSG = 4326
 
