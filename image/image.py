@@ -41,7 +41,11 @@ class Image:
 
     @property
     def pixels(self) -> np.ndarray:
-        return self.dataset.ReadAsArray().transpose(1, 2, 0)
+        pixels = self.dataset.ReadAsArray()
+        if pixels.ndim > 2:
+            return pixels.transpose(1, 2, 0)
+        else:
+            return pixels
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.dataset.ReadAsArray(x, y, width, width)

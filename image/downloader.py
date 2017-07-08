@@ -13,7 +13,7 @@ GTIFF_DRIVER = 'GTiff'
 
 
 class Downloader:
-    def __init__(self, filepath: str, data_type: int = gdal.GDT_Float32):
+    def __init__(self, filepath: str, data_type: int = gdal.GDT_Int16):
         self.filepath = filepath
         self.data_type = data_type
 
