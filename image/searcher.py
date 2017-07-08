@@ -6,6 +6,16 @@ from xml.etree import ElementTree
 
 import config
 
+class LandsatScene:
+    def __init__(self, scene_id: str, date: str, clouds: int, bounds: Polygon, download_links: [str]):
+        self.string = scene_id
+        self.path = self.string[3:6]
+        self.row = self.string[6:9]
+        self.date = date
+        self.bounds = bounds
+        self.clouds = int(clouds)
+        self.download_links = download_links
+
 
 class Searcher:
     def __init__(self, cloud_min: int=0, cloud_max: int=100, search_limit: int=100):
@@ -15,7 +25,7 @@ class Searcher:
         self.username = config.username
         self.password = config.password
 
-    def search_landsat8_scenes(self, polygon: Polygon, start_date) -> dict:
+    def search_landsat8_scenes(self, polygon: Polygon, start_date) -> [LandsatScene]:
         url = self._construct_landsat8_search_url(polygon, start_date)
 
         response = requests.get(url).json()
@@ -32,9 +42,10 @@ class Searcher:
                 polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
                 search_results.append(LandsatScene(
                     scene_id=result['scene_id'],
-                    date=result['acquisitionDate'],
+                    date="".join(result['acquisitionDate'].split('-')),
                     clouds=result['cloudCoverFull'],
-                    bounds=polygon))
+                    bounds=polygon,
+                    download_links=result['download_links']['aws_s3']))
 
             return search_results
 
@@ -150,16 +161,3 @@ class Searcher:
     @staticmethod
     def _parse_xml(xml):
         return ElementTree.fromstring(xml)
-
-
-class LandsatScene:
-    def __init__(self, scene_id: str, date: str, clouds: int, bounds: Polygon):
-        self.string = scene_id
-        self.path = int(self.string[3:6])
-        self.row = int(self.string[6:9])
-        self.year = int(self.string[9:13])
-        self.month = int(self.string[13:14])
-        self.day = int(self.string[14:16])
-        self.bounds = bounds
-        self.clouds = int(clouds)
-        self.date = date
