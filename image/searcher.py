@@ -5,6 +5,7 @@ import numpy as np
 from shapely.geometry import Polygon
 from xml.etree import ElementTree
 
+from tools import gis
 import config
 
 class LandsatScene:
@@ -64,6 +65,7 @@ class Searcher:
 
     def search_sentinel2_scenes(self, polygon: Polygon, start_date) -> dict:
         url = self._construct_sentinel2_search_url(polygon, start_date)
+        utm_code, latitude_band, square = gis.get_mgrs_info(polygon)
 
         response = requests.get(
             url,
