@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
-from image.geotransform import  Geotransform
+from image.geotransform import Geotransform
 
 WGS84_EPSG = 4326
 

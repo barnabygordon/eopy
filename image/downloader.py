@@ -64,7 +64,8 @@ class Downloader:
         else:
             number_of_bands = 1
 
-        out_image = gdal.GetDriverByName(GTIFF_DRIVER).Create(self.filepath, height, width, number_of_bands, self.data_type)
+        out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
+            .Create(self.filepath, height, width, number_of_bands, self.data_type)
         out_image.SetGeoTransform(image_dataset.GetGeoTransform())
         out_image.SetProjection(image_dataset.GetProjection())
 
