@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 import config
 
 class LandsatScene:
+    """ Landsat scene metadata """
     def __init__(self, scene_id: str, date: str, clouds: int, bounds: Polygon, download_links: [str]):
         self.string = scene_id
         self.path = self.string[3:6]
@@ -18,14 +19,25 @@ class LandsatScene:
 
 
 class Searcher:
+    """ A class to search for satellite imagery """
     def __init__(self, cloud_min: int=0, cloud_max: int=100, search_limit: int=100):
+        """
+        :param cloud_min: Minimum percentage of clouds per scene
+        :param cloud_max: Maximum percentage of clouds per scene
+        :param search_limit: Search limit
+        """
         self.cloud_min = cloud_min
         self.cloud_max = cloud_max
         self.search_limit = search_limit
         self.username = config.username
         self.password = config.password
 
-    def search_landsat8_scenes(self, polygon: Polygon, start_date) -> [LandsatScene]:
+    def search_landsat8_scenes(self, polygon: Polygon, start_date: str) -> [LandsatScene]:
+        """ Search for downloadable Landsat-8 scenes
+        :param polygon: A WKT polygon defining the search AOI
+        :param start_date: Start date from which to begin the search (YYYY-MM-DD)
+        :return: A list of LandsatScenes
+        """
         url = self._construct_landsat8_search_url(polygon, start_date)
 
         response = requests.get(url).json()
@@ -88,6 +100,7 @@ class Searcher:
                 'bounds': geometry})
 
     def _construct_landsat8_search_url(self, polygon: Polygon, start_date):
+        """ Defines a Landsat-8 search url for development seed """
         url_root = 'https://api.developmentseed.org/satellites/landsat'
 
         search_bounds = polygon.bounds
