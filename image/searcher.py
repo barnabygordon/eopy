@@ -170,23 +170,6 @@ class Searcher:
 
         return url
 
-    def _get_sentinel2_metadata(self, image_id):
-        url_root = "https://scihub.copernicus.eu/dhus/odata/v1/Products"
-        url = "{}('{}')".format(url_root, image_id)
-
-        return requests.get(url, auth=(self.username, self.password))
-
-    def _get_sentinel2_cloudcover(self, url):
-        folder_path = url.split('tiles/')[1]
-        metadata_url = 'http://sentinel-s2-l1c.s3.amazonaws.com/tiles/{}/metadata.xml'.format(folder_path)
-
-        print(metadata_url)
-
-        results = requests.get(metadata_url)
-        tree = self._parse_xml(results.text)
-
-        return tree[2][0][0].text
-
     @staticmethod
     def _construct_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square):
         url_root = 's3://sentinel-s2-l1c/tiles'
