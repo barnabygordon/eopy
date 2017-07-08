@@ -84,7 +84,7 @@ class Searcher:
         for r in feed['entry']:
             xml_response = self._get_sentinel2_metadata(r['id'])
 
-            response = self._parse_xml(xml_response)
+            response = self._parse_xml(xml_response.content)
             name = response[-1][1].text
             date = response[2].text.split('T')[0]
             geometry = response[-1][11].text
