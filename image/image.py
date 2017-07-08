@@ -32,6 +32,10 @@ class Image:
         return self.image_dataset.RasterCount
 
     @property
+    def pixels(self) -> np.ndarray:
+        return self.image_dataset.ReadAsArray()
+
+    @property
     def ndvi(self) -> np.ndarray:
         nir = self.get_band('nir')
         red = self.get_band('red')
@@ -43,4 +47,3 @@ class Image:
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.image_dataset.ReadAsArray(x, y, width, width)
-
