@@ -84,27 +84,43 @@ class Searcher:
 
         search_results = []
         for r in feed['entry']:
-            xml_response = self._get_sentinel2_metadata(r['id'])
+            date = r['summary'].split(',')[0].split(' ')[1].split('T')[0]
+            year, month, day = date.split('-')
+            if type(r['double']) == list:
+                for metric in r['double']:
+                    if metric['name'] == 'cloudcoverpercentage':
+                        cloud_percentage = metric['content']
+            elif r['double']['name'] == 'cloudcoverpercentage':
+                cloud_percentage = r['double']['content']
+            else:
+                print('Cloud Percentage not recorded')
+                cloud_percentage = 999
+            name = r['title']
 
-            response = self._parse_xml(xml_response.content)
-            name = response[-1][1].text
-            date = response[2].text.split('T')[0]
-            geometry = response[-1][11].text
+            boundary_xml = ElementTree.fromstring(r['str'][1]['content'])
 
-            # TODO: calculate geopatial codes
+            for boundary in boundary_xml.findall('{http://www.opengis.net/gml}outerBoundaryIs'):
+                for ring in boundary.findall('{http://www.opengis.net/gml}LinearRing'):
+                    for coord in ring.findall('{http://www.opengis.net/gml}coordinates'):
+                        coordinates = coord.text.split(' ')
+
+            coords = np.array([(float(coord.split(',')[0]), float(coord.split(',')[1])) for coord in coordinates])
+            boundary = Polygon(coords)
+
             image_url = self._construct_sentinel2_image_url(
-                name,
+                year, int(month), int(day),
                 utm_code,
                 latitude_band,
                 square)
-            cloud_percentage = self._get_sentinel2_cloudcover(image_url)
 
             search_results.append({
                 'date': date,
                 'clouds': cloud_percentage,
                 'scene_id': name,
                 'image_url': image_url,
-                'bounds': geometry})
+                'bounds': boundary})
+
+        return search_results
 
     def _construct_landsat8_search_url(self, polygon: Polygon, start_date):
         """ Defines a Landsat-8 search url for development seed """
@@ -146,6 +162,7 @@ class Searcher:
         """
         url = 'https://scihub.copernicus.eu/dhus/search?q=\
         ingestiondate:[{date}T00:00:00.000Z TO NOW]\
+         AND platformname:Sentinel-2\
          AND footprint:"Intersects({polygon})"\
          &format=json'.format(
             date=start_date,
@@ -163,19 +180,21 @@ class Searcher:
         folder_path = url.split('tiles/')[1]
         metadata_url = 'http://sentinel-s2-l1c.s3.amazonaws.com/tiles/{}/metadata.xml'.format(folder_path)
 
+        print(metadata_url)
+
         results = requests.get(metadata_url)
         tree = self._parse_xml(results.text)
 
         return tree[2][0][0].text
 
     @staticmethod
-    def _construct_sentinel2_image_url(scene_id, utm_zone, latitude_band, grid_square):
+    def _construct_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square):
         url_root = 's3://sentinel-s2-l1c/tiles'
         sequence = '0'
 
         folder_url = '{url_root}/{utm_zone}/{latitude_band}/{grid_square}/{year}/{month}/{day}/{sequence}'.format(
             url_root=url_root, utm_zone=utm_zone, latitude_band=latitude_band, grid_square=grid_square,
-            year=scene_id.year, month=scene_id.month, day=scene_id.day, sequence=sequence)
+            year=year, month=month, day=day, sequence=sequence)
 
         return folder_url
 
