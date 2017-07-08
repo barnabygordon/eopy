@@ -1,5 +1,6 @@
 import requests
 import time
+import json
 import numpy as np
 from shapely.geometry import Polygon
 from xml.etree import ElementTree
@@ -68,9 +69,13 @@ class Searcher:
             url,
             auth=(
                 self.username,
-                self.password)).json()
+                self.password))
 
-        feed = response['feed']
+        assert response.status_code == 200, 'Search error!'
+
+        content = json.loads(response.content.decode('utf-8'))
+
+        feed = content['feed']
         results_count = feed['opensearch:totalResults']
 
         print('Found {} results'.format(results_count))
@@ -130,6 +135,17 @@ class Searcher:
 
         return url
 
+    @staticmethod
+    def _construct_sentinel2_search_url(polygon: Polygon, start_date):
+        url = 'https://scihub.copernicus.eu/dhus/search?q=\
+        ingestiondate:[{date}T00:00:00.000Z TO NOW]\
+         AND footprint:"Intersects({polygon})"\
+         &format=json'.format(
+            date=start_date,
+            polygon=polygon)
+
+        return url
+
     def _get_sentinel2_metadata(self, image_id):
         url_root = "https://scihub.copernicus.eu/dhus/odata/v1/Products"
         url = "{}('{}')".format(url_root, image_id)
@@ -144,21 +160,6 @@ class Searcher:
         tree = self._parse_xml(results.text)
 
         return tree[2][0][0].text
-
-    @staticmethod
-    def _construct_sentinel2_search_url(polygon: Polygon, start_date):
-        url_root = 'https://scihub.copernicus.eu/dhus/search?q='
-
-        area = 'footprint:"Intersects({})"'.format(polygon)
-        #  TODO: Convert start date to days past
-        time = 'ingestiondate:[NOW-{}DAYS TO NOW]'.format(start_date)
-        product_type = 'S2MSI1C'
-        rows = 100
-
-        url = '{url_root}producttype:{product_type} AND {area} AND {time}&format=json&rows={rows}'.format(
-            url_root=url_root, product_type=product_type, area=area, time=time, rows=rows)
-
-        return url
 
     @staticmethod
     def _construct_sentinel2_image_url(scene_id, utm_zone, latitude_band, grid_square):
