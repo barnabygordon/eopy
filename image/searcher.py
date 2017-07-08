@@ -136,7 +136,12 @@ class Searcher:
         return url
 
     @staticmethod
-    def _construct_sentinel2_search_url(polygon: Polygon, start_date):
+    def _construct_sentinel2_search_url(polygon: Polygon, start_date: str) -> str:
+        """ Constructs the search url for Scihub
+        :param polygon: A WKT polygon
+        :param start_date: Search start date in YYYY-MM-DD format
+        :return: A url string
+        """
         url = 'https://scihub.copernicus.eu/dhus/search?q=\
         ingestiondate:[{date}T00:00:00.000Z TO NOW]\
          AND footprint:"Intersects({polygon})"\
