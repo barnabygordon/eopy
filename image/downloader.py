@@ -16,16 +16,18 @@ class Downloader:
     def __init__(self, filepath: str, data_type: int = gdal.GDT_Float32):
         self.filepath = filepath
         self.data_type = data_type
+        self.landsat_8 = Landsat8()
+        self.sentinel_2 = Sentinel2()
 
     @property
     def available_landsat8_bands(self):
         """ List the available Landsat-8 band options"""
-        return Landsat8.available_bands
+        return self.landsat_8.available_bands
 
     @property
     def available_sentinel2_bands(self):
         """ List the available Sentinel-2 band options """
-        return Sentinel2.available_bands
+        return self.sentinel_2.available_bands
 
     def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
         """ Load a Landsat-8 band into memory
@@ -34,7 +36,7 @@ class Downloader:
         :return: An Image object
         """
 
-        url = scene.download_links[Landsat8.band_number(band_list[0])]
+        url = scene.download_links[self.sentinel_2.band_number(band_list[0])]
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
         image = Image(image_dataset)
 
@@ -43,7 +45,7 @@ class Downloader:
             image_stack[:, :, 0] = image.pixels
 
             for i, band in tqdm(enumerate(band_list[1:]), total=len(band_list[1:])):
-                url = scene.download_links[Landsat8.band_number(band)]
+                url = scene.download_links[self.landsat_8.band_number(band)]
                 image_dataset = gdal.Open('/vsicurl/{}'.format(url))
                 image = Image(image_dataset)
 
