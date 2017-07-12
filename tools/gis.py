@@ -1,12 +1,14 @@
-from image import Geotransform
 from pyproj import Proj, transform
 from shapely.geometry import Polygon
 from shapely.ops import transform as shapely_transform
 from geojson import Feature
+import mgrs
 from functools import partial
 import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
+
+from image.geotransform import Geotransform
 
 WGS84_EPSG = 4326
 
@@ -62,3 +64,21 @@ def clip_image(image: np.ndarray, polygon: Polygon) -> np.ndarray:
     image_clip[mask_clip != 0] = np.nan
 
     return image_clip
+
+
+def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
+    """ Gets MGRS info for a polygon
+    :param wkt_polygon: WKT Polygon
+    :return: UTM Code, Latitude Band, Square
+    """
+    center = wkt_polygon.centroid
+    longitude, latitude = center.x, center.y
+
+    mgrs_converter = mgrs.MGRS()
+    mgrs_code = mgrs_converter.toMGRS(latitude, longitude).decode('utf-8')
+
+    utm_code = mgrs_code[0:2]
+    latitude_band = mgrs_code[2:3]
+    square = mgrs_code[3:5]
+
+    return utm_code, latitude_band, square

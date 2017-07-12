@@ -1,36 +1,54 @@
-from osgeo import gdal
 from scipy.ndimage.filters import gaussian_filter
 from cv2 import resize
-
 import numpy as np
 
 
 class SFIM:
-    def calculate(self, image_path: str, pan_path: str) -> np.ndarray:
-        image_list = [pan_path, image_path]
-        data = {}
+    """ (Smoothing Filter-Based Intensity Modulation)
+    A class for fusing together images for pansharpening
+    """
+    def calculate(self, low_resolution_image: np.ndarray, pan_image: np.ndarray) -> np.ndarray:
+        """ Fuse a low resolution image with a higher resolution one
+        :param low_resolution_image: An array with shapes of either (rows, cols) or (rows, cols, bands)
+        :param pan_image: A 2D array that is 2x the size of the lower resolution image
+        :return: An array the same shape as the pan_image but with the same number of bands as the lower resolution
+        """
 
-        for i, image_path in enumerate(image_list):
-            image_dataset = gdal.Open(image_path)
-            image = image_dataset.ReadAsArray()
-            data[i] = image
+        pan_smooth = self._smooth_image(pan_image)
 
-        pan = data[0]
-        image = data[1]
+        if low_resolution_image.ndim > 2:
+            pansharpened = np.zeros((
+                pan_image.shape[0],
+                pan_image.shape[1],
+                low_resolution_image.shape[2]))
 
-        pan_smooth = self._smooth_image(pan)
+            for b in range(pansharpened.shape[2]):
+                pansharpened[:, :, b] = self._fuse_images(
+                    low_resolution_image=low_resolution_image[:, :, b],
+                    pan_image=pan_image,
+                    smoothed_pan_image=pan_smooth)
 
-        pansharpened = np.zeros((
-            image.shape[0],
-            pan.shape[0],
-            pan.shape[1]))
+        else:
+            pansharpened = self._fuse_images(
+                low_resolution_image=low_resolution_image,
+                pan_image=pan_image,
+                smoothed_pan_image=pan_smooth)
 
-        for b in range(image.shape[0]):
-            band = resize(image[b, :, :], (pan.shape[1], pan.shape[0]))
-            band = (band * pan) / pan_smooth
-            pansharpened[b, :, :] = band
+        return pansharpened
 
-        return pansharpened.transpose(1, 2, 0)
+    def _fuse_images(self,
+                    low_resolution_image: np.ndarray,
+                    pan_image: np.ndarray,
+                    smoothed_pan_image: np.ndarray) -> np.ndarray:
+        """ Fuse together two images of the same number of dimensions
+        :param low_resolution_image: A 2D lower resolution image
+        :param pan_image: A 2D higher resolution image
+        :param smoothed_pan_image: The smoothed higher resolution image
+        :return: Fused image
+        """
+        resized_image = resize(low_resolution_image, pan_image.shape[::-1])
+        return (resized_image * pan_image) / smoothed_pan_image
+
 
     @staticmethod
     def _smooth_image(image: np.ndarray, sigma: int=5) -> np.ndarray:

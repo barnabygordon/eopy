@@ -8,4 +8,4 @@ class Geotransform:
         self.pixel_width = self.geotransform[1]
         self.pixel_height = self.geotransform[5]
         self.rotation_x = self.geotransform[2]
-        self.rotation_y = self.geotransform[6]
+        self.rotation_y = self.geotransform[4]
