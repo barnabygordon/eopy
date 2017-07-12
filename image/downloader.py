@@ -2,13 +2,12 @@ from osgeo import gdal
 from tqdm import tqdm
 import numpy as np
 
-from image.scene import LandsatScene, SentinelScene
+from image.scene import LandsatScene
+from image.scene import SentinelScene
+from image.sensor import Landsat8
+from image.sensor import Sentinel2
 from image import Image
 
-LANDSAT_8_LOOKUP = {
-    'coastal': 1, 'blue': 2, 'green': 3, 'red': 4,
-    'nir': 5, 'swir_1': 6, 'swir_2': 7, 'pan': 8,
-    'cirrus': 9, 'tirs_1': 10, 'tirs_2': 11, 'BQA': 12}
 GTIFF_DRIVER = 'GTiff'
 
 
@@ -20,7 +19,7 @@ class Downloader:
     @property
     def available_landsat8_bands(self):
         """ List the available Landsat-8 band options"""
-        return list(LANDSAT_8_LOOKUP.keys())
+        return Landsat8.available_bands
 
     def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
         """ Load a Landsat-8 band into memory
@@ -29,7 +28,7 @@ class Downloader:
         :return: An Image object
         """
 
-        url = scene.download_links[LANDSAT_8_LOOKUP[band_list[0]]]
+        url = scene.download_links[Landsat8.band_number(band_list[0])]
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
         image = Image(image_dataset)
 
@@ -38,7 +37,7 @@ class Downloader:
             image_stack[:, :, 0] = image.pixels
 
             for i, band in tqdm(enumerate(band_list[1:]), total=len(band_list[1:])):
-                url = scene.download_links[LANDSAT_8_LOOKUP[band]]
+                url = scene.download_links[Landsat8.band_number(band)]
                 image_dataset = gdal.Open('/vsicurl/{}'.format(url))
                 image = Image(image_dataset)
 
