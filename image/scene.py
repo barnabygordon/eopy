@@ -12,6 +12,9 @@ class LandsatScene:
         self.clouds = int(clouds)
         self.download_links = download_links
 
+    def __repr__(self):
+        return "Landsat-8 Scene -- Clouds: {} -- Date: {}".format(self.clouds, self.date)
+
 
 class SentinelScene:
     """ Sentinel-2 scene metadata """
@@ -21,3 +24,6 @@ class SentinelScene:
         self.clouds = clouds
         self.bounds = bounds
         self.image_url = image_url
+
+    def __repr__(self):
+        return "Sentinel-2 Scene -- Clouds: {}: -- Date {}".format(self.clouds, self.date)
