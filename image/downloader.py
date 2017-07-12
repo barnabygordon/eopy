@@ -13,7 +13,7 @@ GTIFF_DRIVER = 'GTiff'
 
 class Downloader:
     """ A class for downloading satellite imagery """
-    def __init__(self, filepath: str, data_type: int = gdal.GDT_Float32):
+    def __init__(self, filepath: str, data_type: int = gdal.GDT_Int16):
         self.filepath = filepath
         self.data_type = data_type
         self.landsat_8 = Landsat8()
@@ -35,21 +35,24 @@ class Downloader:
         :param band_list: List of the bands you want to download
         :return: An Image object
         """
+        progress_bar = tqdm(total=len(band_list))
 
         url = scene.download_links[self.sentinel_2.band_number(band_list[0])]
         image_dataset = gdal.Open('/vsicurl/{}'.format(url))
         image = Image(image_dataset)
+        progress_bar.update(1)
 
         if len(band_list) > 1:
             image_stack = np.zeros((image.height, image.width, len(band_list)))
             image_stack[:, :, 0] = image.pixels
 
-            for i, band in tqdm(enumerate(band_list[1:]), total=len(band_list[1:])):
+            for i, band in enumerate(band_list[1:]):
                 url = scene.download_links[self.landsat_8.band_number(band)]
                 image_dataset = gdal.Open('/vsicurl/{}'.format(url))
                 image = Image(image_dataset)
 
                 image_stack[:, :, i+1] = image.pixels
+                progress_bar.update(1)
 
         else:
             image_stack = image.pixels
