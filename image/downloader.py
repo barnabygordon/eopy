@@ -55,7 +55,6 @@ class Downloader:
         raise NotImplementedError("Sorry! Work in progress!")
 
     def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset) -> None:
-
         width = image.shape[0]
         height = image.shape[1]
 
