@@ -22,12 +22,12 @@ class Downloader:
     @property
     def available_landsat8_bands(self):
         """ List the available Landsat-8 band options"""
-        return self.landsat_8.available_bands
+        return ", ".join(self.landsat_8.available_bands)
 
     @property
     def available_sentinel2_bands(self):
         """ List the available Sentinel-2 band options """
-        return self.sentinel_2.available_bands
+        return ", ".join(self.sentinel_2.available_bands)
 
     def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
         """ Load a Landsat-8 band into memory
