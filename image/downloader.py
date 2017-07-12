@@ -21,6 +21,11 @@ class Downloader:
         """ List the available Landsat-8 band options"""
         return Landsat8.available_bands
 
+    @property
+    def available_sentinel2_bands(self):
+        """ List the available Sentinel-2 band options """
+        return Sentinel2.available_bands
+
     def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
         """ Load a Landsat-8 band into memory
         :param scene: A LandsatScene from the Searcher
