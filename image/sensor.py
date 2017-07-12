@@ -14,32 +14,38 @@ class Sensor(metaclass=ABCMeta):
     def available_bands(self) -> dict:
         pass
 
-    @abstractmethod
+    @abstractproperty
     def band_number(self, band_name: str) -> int:
         pass
 
-    @abstractmethod
+    @abstractproperty
     def band_resolution(self, band_name: str) -> float:
         pass
 
 
 class Landsat8(Sensor):
+    @property
     def available_bands(self):
         return None
 
+    @property
     def band_number(self, band_name: str):
         return None
 
+    @property
     def band_resolution(self, band_name: str):
         return None
 
 
 class Sentinel2(Sensor):
+    @property
     def available_bands(self):
         return None
 
+    @property
     def band_number(self, band_name: str):
         return None
 
+    @property
     def band_resolution(self, band_name: str):
         return None
