@@ -37,13 +37,18 @@ class Landsat8(Sensor):
 
 class Sentinel2(Sensor):
     @property
-    def available_bands(self):
-        return None
+    def available_bands(self) -> list:
+        return ['coastal', 'blue', 'green', 'red', 'red_edge_1', 'red_edge_2', 'red_edge_3',
+                'nir_1', 'nir_2', 'water_vapour', 'swir_1', 'swir_2', 'swir_3']
 
     @property
-    def band_number(self, band_name: str):
-        return None
+    def band_number(self, band_name: str) -> int:
+        return self.available_bands.index(band_name) + 1
 
     @property
-    def band_resolution(self, band_name: str):
-        return None
+    def band_resolution(self, band_name: str) -> float:
+        resolutions = {
+            'coastal': 60., 'blue': 10., 'green': 10., 'red': 10., 'red_edge_1': 20.,
+            'red_edge_2': 20., 'red_edge_3': 20., 'nir_1': 10., 'nir_2': 20., 'water_vapour': 60.,
+            'swir_1': 60., 'swir_2': 20., 'swir_3': 20.}
+        return resolutions[band_name]
