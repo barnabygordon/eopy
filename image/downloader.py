@@ -12,6 +12,7 @@ GTIFF_DRIVER = 'GTiff'
 
 
 class Downloader:
+    """ A class for downloading satellite imagery """
     def __init__(self, filepath: str, data_type: int = gdal.GDT_Float32):
         self.filepath = filepath
         self.data_type = data_type
@@ -59,6 +60,10 @@ class Downloader:
         raise NotImplementedError("Sorry! Work in progress!")
 
     def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset) -> None:
+        """ Save a ndarray as an image with geospatial metadata
+        :param image: ndarray with shape (x, y) or (x, y, z)
+        :param image_dataset: a gdal Dataset returned from gdal.Open
+        """
         width = image.shape[0]
         height = image.shape[1]
 
