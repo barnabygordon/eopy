@@ -6,12 +6,12 @@ from image.geotransform import Geotransform
 
 
 class Image:
-    def __init__(self, image_dataset):
+    def __init__(self, image_dataset: gdal.Dataset):
         self.image_dataset = image_dataset
         self.geotransform = Geotransform(self.image_dataset)
 
     @classmethod
-    def load(cls, filepath):
+    def load(cls, filepath: str):
         image_dataset = gdal.Open(filepath)
         return Image(image_dataset)
 
@@ -41,6 +41,10 @@ class Image:
     @property
     def pixels(self) -> np.ndarray:
         return self.image_dataset.ReadAsArray().transpose(1, 2, 0)
+
+    @property
+    def projection(self) -> str:
+        return self.image_dataset.GetProjection()
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.image_dataset.ReadAsArray(x, y, width, width)
