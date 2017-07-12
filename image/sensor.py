@@ -7,6 +7,7 @@ class Sensor(metaclass=ABCMeta):
     """ Abstract class describing what a sensor should look like """
     @abstractproperty
     def available_bands(self) -> list:
+        """ What bands are available for the sensor """
         pass
 
     @abstractclassmethod
@@ -15,6 +16,7 @@ class Sensor(metaclass=ABCMeta):
 
     @abstractclassmethod
     def band_resolution(self, band_name: str) -> float:
+        """ The resolution in metres of a spectral band """
         pass
 
 
