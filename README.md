@@ -75,6 +75,6 @@ from image import Downloader
 downloader = Downloader(filepath="path/to/image.tif")
 image = downloader.get_landsat8_bands(scene=landsat_scenes[0], band_list=['red', 'green', 'blue'])
 
-print(image.shape)
->>> (8081, 8171, 3)
+print(image.pixels.shape)
+>>> (8171, 8091, 4)
 ```
