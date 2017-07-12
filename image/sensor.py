@@ -1,17 +1,11 @@
 from abc import ABCMeta
-from abc import abstractmethod
 from abc import abstractproperty
-
-LANDSAT_8_LOOKUP = {
-    'coastal': 1, 'blue': 2, 'green': 3, 'red': 4,
-    'nir': 5, 'swir_1': 6, 'swir_2': 7, 'pan': 8,
-    'cirrus': 9, 'tirs_1': 10, 'tirs_2': 11, 'BQA': 12}
 
 
 class Sensor(metaclass=ABCMeta):
 
     @abstractproperty
-    def available_bands(self) -> dict:
+    def available_bands(self) -> list:
         pass
 
     @abstractproperty
@@ -25,16 +19,20 @@ class Sensor(metaclass=ABCMeta):
 
 class Landsat8(Sensor):
     @property
-    def available_bands(self):
-        return None
+    def available_bands(self) -> list:
+        return ['coastal', 'blue', 'green', 'red', 'nir', 'swir_1',
+                'swir_2', 'pan', 'cirrus', 'tirs_1', 'tirs_2', 'BQA']
 
     @property
-    def band_number(self, band_name: str):
-        return None
+    def band_number(self, band_name: str) -> int:
+        return self.available_bands.index(band_name) + 1
 
     @property
-    def band_resolution(self, band_name: str):
-        return None
+    def band_resolution(self, band_name: str) -> float:
+        resolutions = {
+            'coastal': 30., 'blue': 30., 'green': 30., 'red': 30., 'nir': 30., 'swir_1': 30.,
+            'swir_2': 30., 'pan': 15., 'cirrus': 30., 'tirs_1': 30., 'tirs_2': 30., 'BQA': None}
+        return resolutions[band_name]
 
 
 class Sentinel2(Sensor):
