@@ -4,15 +4,24 @@ import numpy as np
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image: np.ndarray, L: float, H: float, E: float, clip: float=0.):
+    def calculate(image: np.ndarray,
+                  L: float=0.,
+                  H: float=1.,
+                  E: float=0.5,
+                  clip: float=0.,
+                  bad_value=None) -> np.ndarray:
         """ Perform a BCET on an image
         :param image: A 3D array of shape (rows, columns, bands)
         :param L: The lower limit of the output
         :param H: The upper limit of the output
         :param E: The mean of the output
         :param clip: Percentage of outliers to be clipped prior to enhancement
+        :param bad_value: Value that should be masked
         :return: A array that has been contrast enhanced
         """
+        if bad_value is not None:
+            image[image == bad_value] = np.nan
+
         for band in range(image.shape[2]):
 
             x = image[:, :, band]
