@@ -13,7 +13,7 @@ class LandsatScene:
         self.download_links = download_links
 
     def __repr__(self):
-        return "Landsat-8 Scene -- Clouds: {} -- Date: {}".format(self.clouds, self.date)
+        return "Landsat-8 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
 
 
 class SentinelScene:
@@ -26,4 +26,4 @@ class SentinelScene:
         self.image_url = image_url
 
     def __repr__(self):
-        return "Sentinel-2 Scene -- Clouds: {}: -- Date {}".format(self.clouds, self.date)
+        return "Sentinel-2 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
