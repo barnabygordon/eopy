@@ -61,8 +61,8 @@ polygon = Polygon(bounds)
 searcher = Searcher(cloud_min=0, cloud_max=100, search_limit=100)
 landsat_scenes = searcher.search_landsat8_scenes(polygon=polygon, start_date="2016-01-01")
 
-print(landsat_scenes[0].clouds)
->>> 17.099
+print(landsat_scenes[0])
+>>> Landsat-8 Scene -- Clouds: 90 -- Date: 20170703
 ```
 
 ### Downloading
