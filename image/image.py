@@ -44,7 +44,11 @@ class Image:
     @property
     def pixels(self) -> np.ndarray:
         """ The pixels data as a ndarray """
-        return self.image_dataset.ReadAsArray().transpose(1, 2, 0)
+        pixels = self.image_dataset.ReadAsArray()
+        if pixels.ndim > 2:
+            return pixels.transpose(1, 2, 0)
+        else:
+            return pixels
 
     @property
     def projection(self) -> str:

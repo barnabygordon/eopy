@@ -24,14 +24,14 @@ class Searcher:
         self.username = config.username
         self.password = config.password
 
-    def search_landsat8_scenes(self, polygon: Polygon, start_date: str) -> [LandsatScene]:
+    def search_landsat8_scenes(self, aoi: Polygon, start_date: str) -> [LandsatScene]:
         """ Search for downloadable Landsat-8 scenes
-        :param polygon: A WKT polygon defining the search AOI
+        :param aoi: A WKT polygon defining the search AOI
         :param start_date: Start date from which to begin the search (YYYY-MM-DD)
         :return: A list of LandsatScenes
         """
         url = URLBuilder.build_landsat8_search_url(
-            polygon,
+            aoi,
             start_date,
             cloud_min=self.cloud_min, cloud_max=self.cloud_max,
             search_limit=self.search_limit)
@@ -57,14 +57,14 @@ class Searcher:
 
             return search_results
 
-    def search_sentinel2_scenes(self, polygon: Polygon, start_date) -> [SentinelScene]:
+    def search_sentinel2_scenes(self, aoi: Polygon, start_date) -> [SentinelScene]:
         """ Search for downloadable Sentinel-2 scenes within AOI and after date
-        :param polygon: WKT polygon AOI
+        :param aoi: WKT polygon AOI
         :param start_date: date of start of search (YYYY-MM-DD)
         :return: list of SentinelScene objects
         """
-        url = URLBuilder.build_sentinel2_search_url(polygon, start_date)
-        utm_code, latitude_band, square = gis.get_mgrs_info(polygon)
+        url = URLBuilder.build_sentinel2_search_url(aoi, start_date)
+        utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
 
         response = requests.get(
             url,
