@@ -53,7 +53,16 @@ class URLBuilder:
         return url
 
     @staticmethod
-    def build_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square):
+    def build_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square) -> str:
+        """ Generate a url for the Sentinel2 AWS storage
+        :param year: year of the image capture
+        :param month: month of the image capture
+        :param day: day of the image capture
+        :param utm_zone: MGRS UTM zone
+        :param latitude_band: MGRS latitude band
+        :param grid_square: MGRS grid square
+        :return: a url string
+        """
         url_root = 's3://sentinel-s2-l1c/tiles'
         sequence = '0'
 
