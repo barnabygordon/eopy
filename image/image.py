@@ -1,5 +1,5 @@
 import numpy as np
-from osgeo import gdal
+from osgeo import gdal, osr
 from shapely.geometry import Polygon
 
 from image.geotransform import Geotransform
@@ -45,6 +45,11 @@ class Image:
     @property
     def projection(self) -> str:
         return self.image_dataset.GetProjection()
+
+    @property
+    def epsg(self) -> str:
+        spatial_reference = osr.SpatialReference(wkt=self.projection)
+        return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.image_dataset.ReadAsArray(x, y, width, width)
