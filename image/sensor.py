@@ -4,7 +4,7 @@ from abc import abstractclassmethod
 
 
 class Sensor(metaclass=ABCMeta):
-
+    """ Abstract class describing what a sensor should look like """
     @abstractproperty
     def available_bands(self) -> list:
         pass
@@ -19,6 +19,7 @@ class Sensor(metaclass=ABCMeta):
 
 
 class Landsat8(Sensor):
+    """ Landsat8 bands and band resolutions """
     @property
     def available_bands(self) -> list:
         return ['coastal', 'blue', 'green', 'red', 'nir', 'swir_1',
@@ -36,6 +37,7 @@ class Landsat8(Sensor):
 
 
 class Sentinel2(Sensor):
+    """ Sentinle2 bands and band resolutions """
     @property
     def available_bands(self) -> list:
         return ['coastal', 'blue', 'green', 'red', 'red_edge_1', 'red_edge_2', 'red_edge_3',
