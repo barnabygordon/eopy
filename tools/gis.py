@@ -13,17 +13,18 @@ from image.geotransform import Geotransform
 WGS84_EPSG = 4326
 
 
-def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
+def world_to_pixel(x: float, y: float, geotransform: Geotransform, image_height: int) -> (int, int):
     """ Transform a projected coordinates to image pixel indices
     :param x: easting/longitude
     :param y: northing/latitude
     :param geotransform: the geospatial properties of the image
     :return: x, y in pixel indices
     """
-    x = int((x - geotransform.upper_left_x) / geotransform.pixel_width)
-    y = int((y - geotransform.upper_left_y) / geotransform.pixel_width)
 
-    return x, -y
+    x = np.round((x - geotransform.upper_left_x) / geotransform.pixel_width).astype(np.int)
+    y = np.round((geotransform.upper_left_y - y) / geotransform.pixel_width).astype(np.int)
+
+    return x, y
 
 
 def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float):
