@@ -43,13 +43,10 @@ class Image:
     def pixels(self) -> np.ndarray:
         """ The pixels data as a ndarray """
         pixels = self.dataset.ReadAsArray()
-        if self.band_count > 2:
+        if self.band_count > 1:
             return pixels.transpose(1, 2, 0)
         else:
             return pixels
-
-    def get_window(self, x: int, y: int, width: int) -> np.ndarray:
-        return self.dataset.ReadAsArray(x, y, width, width)
 
     @property
     def projection(self) -> str:
@@ -63,4 +60,7 @@ class Image:
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
-        return self.dataset.ReadAsArray(x, y, width, width)
+        pixels = self.dataset.ReadAsArray(x, y, width, width)
+        if self.band_count > 1:
+            pixels = pixels.transpose(1, 2, 0)
+        return pixels
