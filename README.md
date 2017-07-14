@@ -1,6 +1,6 @@
 # Remote Sensing
 
-A collection of helper functions and classes to read, process and save geospatial data.
+A collection of helper functions and classes to search, download and process earth observation data.
 
 ## Processing Techniques
 
@@ -38,3 +38,43 @@ BCET:
 ![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/kunene_bcet.png)
 BCET + DDS (k=0.6):
 ![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/kunene_dds.png)
+
+## Image Handling
+
+### Searching
+
+Currently we can search for Sentinel-2 and Landsat-8 scenes.
+
+```python
+from image import Searcher
+from shapely.geometry import Polygon
+
+bounds = [
+    [-0.48, 51.30],
+    [0.31, 51.30],
+    [0.31, 51.66],
+    [-0.48, 51.66],
+    [-0.48, 51.30]]
+
+polygon = Polygon(bounds)
+
+searcher = Searcher(cloud_min=0, cloud_max=100, search_limit=100)
+landsat_scenes = searcher.search_landsat8_scenes(aoi=polygon, start_date="2016-01-01")
+
+print(landsat_scenes[0])
+>>> Landsat-8 Scene | Clouds: 90 | Date: 20170703
+```
+
+### Downloading
+
+Currently we can download Landsat-8 scenes.
+
+```python
+from image import Downloader
+
+downloader = Downloader(filepath="path/to/image.tif")
+image = downloader.get_landsat8_bands(scene=landsat_scenes[0], band_list=['red', 'green', 'blue'])
+
+print(image.pixels.shape)
+>>> (8171, 8091, 4)
+```

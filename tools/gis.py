@@ -14,6 +14,12 @@ WGS84_EPSG = 4326
 
 
 def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
+    """ Transform a projected coordinates to image pixel indices
+    :param x: easting/longitude
+    :param y: northing/latitude
+    :param geotransform: the geospatial properties of the image
+    :return: x, y in pixel indices
+    """
     x = int((x - geotransform.upper_left_x) / geotransform.pixel_width)
     y = int((y - geotransform.upper_left_y) / geotransform.pixel_width)
 
@@ -21,6 +27,12 @@ def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int)
 
 
 def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float):
+    """ Transform a pixel indices into projected coordinates
+    :param x: column
+    :param y: row
+    :param geotransform: the geospatial properties of the image
+    :return: easting/longitude, northing/latitude
+    """
     x2 = (y * geotransform.pixel_width) + geotransform.upper_left_y
     y2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
 
@@ -28,6 +40,13 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
 
 
 def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (float, float):
+    """ Tranform a coordinate to a new coordinate system
+    :param x: easting/longitude
+    :param y: northing/latitude
+    :param in_epsg: input EPSG code
+    :param out_epsg: output EPSG code
+    :return: reprojected easting/longitude, northing/latitude
+    """
     in_proj = Proj(init='epsg:{}'.format(in_epsg))
     out_proj = Proj(init='epsg:{}'.format(out_epsg))
 
@@ -37,6 +56,12 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (fl
 
 
 def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
+    """ Transform a polygon to a new coordinate system
+    :param polygon: WKT Shapely polygon
+    :param in_epsg: input EPSG code
+    :param out_epsg: output EPSG code
+    :return: reprojected polygon
+    """
     projection = partial(
         transform,
         Proj(init='epsg:{}'.format(in_epsg)),
@@ -46,10 +71,17 @@ def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
 
 
 def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
+    """ Convert a WKT polygon to GeoJSON """
     return Feature(geometry=polygon, properties=properties)
 
 
-def clip_image(image: np.ndarray, polygon: Polygon) -> np.ndarray:
+def clip_image(image: np.ndarray, polygon: Polygon, mask_value: float = np.nan) -> np.ndarray:
+    """ Clip an image using a polygon and masking all the output values
+    :param image: a 2D array
+    :param polygon: a WKT, Shapely polygon in the pixel coordinates of the image
+    :param mask_value: the value to be used for non-image pixels
+    :return: clipped image
+    """
     coordinates = np.array([(point[0], point[1]) for point in polygon.exterior.coords])
 
     mask_image = PILImage.new("L", (image.shape[1], image.shape[0]), 1)
@@ -61,7 +93,7 @@ def clip_image(image: np.ndarray, polygon: Polygon) -> np.ndarray:
 
     image_clip = image[y_min:y_max, x_min:x_max]
     mask_clip = mask[y_min:y_max, x_min: x_max]
-    image_clip[mask_clip != 0] = np.nan
+    image_clip[mask_clip != 0] = mask_value
 
     return image_clip
 

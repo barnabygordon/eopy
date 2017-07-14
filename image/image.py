@@ -1,5 +1,5 @@
 import numpy as np
-from osgeo import gdal
+from osgeo import gdal, osr
 from shapely.geometry import Polygon
 
 from image.geotransform import Geotransform
@@ -41,7 +41,8 @@ class Image:
 
     @property
     def pixels(self) -> np.ndarray:
-        pixels = self.dataset.ReadAsArray()
+        """ The pixels data as a ndarray """
+        pixels = self.image_dataset.ReadAsArray()
         if pixels.ndim > 2:
             return pixels.transpose(1, 2, 0)
         else:
@@ -49,3 +50,17 @@ class Image:
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         return self.dataset.ReadAsArray(x, y, width, width)
+
+    @property
+    def projection(self) -> str:
+        """ The projection of the image as a WKT string """
+        return self.image_dataset.GetProjection()
+
+    @property
+    def epsg(self) -> str:
+        spatial_reference = osr.SpatialReference(wkt=self.projection)
+        return spatial_reference.GetAttrValue("AUTHORITY", 1)
+
+    def get_window(self, x: int, y: int, width: int) -> np.ndarray:
+        """ A slice of the image across all bands """
+        return self.image_dataset.ReadAsArray(x, y, width, width)
