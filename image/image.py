@@ -42,8 +42,8 @@ class Image:
     @property
     def pixels(self) -> np.ndarray:
         """ The pixels data as a ndarray """
-        pixels = self.image_dataset.ReadAsArray()
-        if pixels.ndim > 2:
+        pixels = self.dataset.ReadAsArray()
+        if self.band_count > 2:
             return pixels.transpose(1, 2, 0)
         else:
             return pixels
@@ -54,7 +54,7 @@ class Image:
     @property
     def projection(self) -> str:
         """ The projection of the image as a WKT string """
-        return self.image_dataset.GetProjection()
+        return self.dataset.GetProjection()
 
     @property
     def epsg(self) -> str:
@@ -63,4 +63,4 @@ class Image:
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
-        return self.image_dataset.ReadAsArray(x, y, width, width)
+        return self.dataset.ReadAsArray(x, y, width, width)
