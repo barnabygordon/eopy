@@ -8,19 +8,19 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 class Classifier:
-    def __init__(self, image: Image, class_data_filepath: str, n_estimators: int=100):
+    def __init__(self, image: Image, class_data_filepath: str, class_name: str='label', n_estimators: int=100):
         self.image = image
         self.class_data = self._open_class_file(class_data_filepath)
         self.classifier = RandomForestClassifier(n_estimators=n_estimators)
+        self.class_name = class_name
 
     def _open_class_file(self, filepath: str) -> gpd.GeoDataFrame:
         class_data = gpd.read_file(filepath)
 
-        class_data['pixel_polygon'] = class_data.geometry.apply(
+        class_data.geometry = class_data.geometry.apply(
             lambda x: gis.polygon_to_pixel(x,
                                            self.image.geotransform,
                                            self.image.height))
-        class_data.set_geometry('pixel_polygon')
 
         return class_data
 
@@ -28,16 +28,16 @@ class Classifier:
         classes, class_values = [], []
         features = []
         for i, row in self.class_data.iterrows():
-            clip = gis.clip_image(self.image.pixels, row.pixel_polygon)
+            clip = gis.clip_image(self.image.pixels, row.geometry)
             flat_clip = clip.reshape(clip.shape[0] * clip.shape[1], clip.shape[2])
             clean_features = [features for features in flat_clip if not np.isnan(np.sum(features))]
 
             features.extend(clean_features)
 
-            if row.label not in classes:
-                classes.append(row.label)
+            if row[self.class_name] not in classes:
+                classes.append(row[self.class_name])
 
-            class_value = classes.index(row.label)
+            class_value = classes.index(row[self.class_name])
             class_values.extend([class_value] * len(clean_features))
 
         self.classifier.fit(features, class_values)
