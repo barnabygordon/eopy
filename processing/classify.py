@@ -42,11 +42,12 @@ class Classifier:
 
         self.classifier.fit(features, class_values)
 
-    def predict(self) -> np.ndarray:
-        test_data = self.image.pixels.reshape(-1, self.image.band_count)
+    def predict(self, test_image=np.ndarray) -> np.ndarray:
+        assert (test_image.shape[2] == self.image.band_count, "Train and test images must have same band count.")
+        test_data = test_image.reshape(-1, self.image.band_count)
         predictions = self.classifier.predict(test_data)
 
-        return predictions.reshape((self.image.height, self.image.width))
+        return predictions.reshape((test_image.shape[0], test_image.shape[1]))
 
     def show(self, figsize: (int, int)=(15, 10)):
         f, ax = plt.subplots(figsize=figsize)
