@@ -13,7 +13,7 @@ from image.geotransform import Geotransform
 WGS84_EPSG = 4326
 
 
-def world_to_pixel(x: float, y: float, geotransform: Geotransform, image_height: int) -> (int, int):
+def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
     """ Transform a projected coordinates to image pixel indices
     :param x: easting/longitude
     :param y: northing/latitude
@@ -40,12 +40,17 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
     return x2, y2
 
 
-def polygon_to_pixel(polygon, geotransform, image_height):
+def polygon_to_pixel(polygon, geotransform):
+    """ Reproject polygon coordinates to image indices
+    :param polygon: Shapely polygon projected in the image projection
+    :param geotransform: Image geotransform
+    :return: Polygon with coordinates in pixel indices
+    """
     x, y = polygon.exterior.xy
 
     points = []
     for x, y in zip(x, y):
-        x_index, y_index = world_to_pixel(x, y, geotransform=geotransform, image_height=image_height)
+        x_index, y_index = world_to_pixel(x, y, geotransform=geotransform)
         points.append((x_index, y_index))
 
     return Polygon(points)
@@ -86,10 +91,11 @@ def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
     """ Convert a WKT polygon to GeoJSON """
     return Feature(geometry=polygon, properties=properties)
 
+
 def clip_image(image: np.array, polygon: Polygon, mask_value: float=np.nan):
     """
     Masks the pixels outside its pixel polygon.
-    :param im_arr: np.array
+    :param image: np.array
     :param polygon: pixel_polygon
     :param mask_value: value of masked pixels
     :return: clipped image
