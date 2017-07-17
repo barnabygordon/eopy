@@ -20,6 +20,7 @@ class Classifier:
         self.class_data = self._open_class_file(class_data_filepath)
         self.classifier = RandomForestClassifier(n_estimators=n_estimators)
         self.class_name = class_name
+        self.trained = False
 
     def _open_class_file(self, filepath: str) -> gpd.GeoDataFrame:
         class_data = gpd.read_file(filepath)
@@ -49,12 +50,14 @@ class Classifier:
             class_values.extend([class_value] * len(clean_features))
 
         self.classifier.fit(features, class_values)
+        self.trained = True
 
     def predict(self, test_image=np.ndarray) -> np.ndarray:
         """ Use the trained model to classify an image
         :param test_image: An array that must have the same number of bands as the input
         :return: A 2D array with integer values representing the classes
         """
+        assert (self.trained is True, "Model must first be trained.")
         assert (test_image.shape[2] == self.image.band_count, "Train and test images must have same band count.")
         test_data = test_image.reshape(-1, self.image.band_count)
         predictions = self.classifier.predict(test_data)
