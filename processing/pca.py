@@ -6,9 +6,10 @@ import numpy as np
 class ImagePCA:
     """ Principal Components Analysis """
     @staticmethod
-    def calculate(image: np.ndarray) -> (np.ndarray, pd.DataFrame):
+    def calculate(image: np.ndarray, band_names: [str]=None) -> (np.ndarray, pd.DataFrame):
         """ Calculate PCs for each image band
         :param image: An image array of shape: (rows, columns, bands)
+        :param band_names: List of band names to be shown in eigenvector output
         :return: The PCs of the image array with the same shape as well as a dataframe of the eigenvectors
         """
         pca = PCA(n_components=image.shape[2])
@@ -21,5 +22,9 @@ class ImagePCA:
         result = scores.reshape(image.shape)
 
         eigenvectors = pd.DataFrame(eigenvectors)
+
+        if band_names is not None:
+            assert len(band_names) == image.shape[2], "Band names don't match with image shape"
+            eigenvectors.index = band_names
 
         return result, eigenvectors
