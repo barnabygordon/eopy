@@ -68,6 +68,7 @@ class Downloader:
         """ Save a ndarray as an image with geospatial metadata
         :param image: ndarray with shape (x, y) or (x, y, z)
         :param image_dataset: a gdal Dataset returned from gdal.Open
+        :param filepath: path to which the image should be saved, including extension
         """
         width = image.shape[0]
         height = image.shape[1]
