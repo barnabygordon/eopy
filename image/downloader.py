@@ -1,6 +1,8 @@
 from osgeo import gdal
 from tqdm import tqdm
+from urllib import request
 import numpy as np
+import os
 
 from image.scene import LandsatScene
 from image.scene import SentinelScene
@@ -13,8 +15,8 @@ GTIFF_DRIVER = 'GTiff'
 
 class Downloader:
     """ A class for downloading satellite imagery """
-    def __init__(self, filepath: str, data_type: int = gdal.GDT_Int16):
-        self.filepath = filepath
+    def __init__(self, save_directory: str, data_type: int = gdal.GDT_Int16):
+        self.save_directory = save_directory
         self.data_type = data_type
         self.landsat_8 = Landsat8()
         self.sentinel_2 = Sentinel2()
@@ -57,11 +59,17 @@ class Downloader:
         else:
             image_stack = image.pixels
 
-        self.save_image(image_stack, image_dataset, filepath=self.filepath)
+        filename = "LS8_{date}.tif".format(date=scene.date)
+        save_path = os.path.join(self.save_directory, filename)
+        self.save_image(image_stack, image_dataset, filepath=save_path)
 
-        return Image(gdal.Open(self.filepath))
+        return Image(gdal.Open(save_path))
 
     def get_sentinel2_band(self, scene: SentinelScene, band: str) -> Image:
+        filename = "S2A_{date}_{band}".format(date=scene.date, band=band)
+        save_path = os.path.join(self.save_directory, filename)
+        request.urlretrieve(scene.image_url, save_path)
+
         raise NotImplementedError("Sorry! Work in progress!")
 
     def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset, filepath: str) -> None:
