@@ -4,6 +4,8 @@ from shapely.geometry import Polygon
 
 from image.geotransform import Geotransform
 
+GTIFF_DRIVER = 'GTiff'
+
 
 class Image:
     """ A generic image object revolving around gdal """
@@ -64,3 +66,44 @@ class Image:
         if self.band_count > 1:
             pixels = pixels.transpose(1, 2, 0)
         return pixels
+
+    @staticmethod
+    def stack(images: list):
+        stack = np.zeros((images[0].height, images[0].width, len(images)))
+
+        for i, image in enumerate(images):
+            stack[:, :, i] = image.pixels
+
+        return stack, images[0].dataset
+
+    @staticmethod
+    def save(image: np.ndarray,
+             image_dataset: gdal.Dataset,
+             filepath: str,
+             data_type: int = gdal.GDT_Int16) -> None:
+        """ Save a ndarray as an image with geospatial metadata
+        :param image: ndarray with shape (x, y) or (x, y, z)
+        :param image_dataset: a gdal Dataset returned from gdal.Open
+        :param filepath: path to which the image should be saved, including extension
+        :param data_type: Type of bit depth for the output image
+        """
+        width = image.shape[0]
+        height = image.shape[1]
+
+        if image.ndim > 2:
+            number_of_bands = image.shape[2]
+        else:
+            number_of_bands = 1
+
+        out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
+            .Create(filepath, height, width, number_of_bands, data_type)
+        out_image.SetGeoTransform(image_dataset.GetGeoTransform())
+        out_image.SetProjection(image_dataset.GetProjection())
+
+        if number_of_bands > 1:
+            for band in range(number_of_bands):
+                out_image.GetRasterBand(band+1).WriteArray(image[:, :, band])
+        else:
+            out_image.GetRasterBand(1).WriteArray(image)
+
+        out_image.FlushCache()

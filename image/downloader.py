@@ -10,14 +10,11 @@ from image.sensor import Landsat8
 from image.sensor import Sentinel2
 from image import Image
 
-GTIFF_DRIVER = 'GTiff'
-
 
 class Downloader:
     """ A class for downloading satellite imagery """
-    def __init__(self, save_directory: str, data_type: int = gdal.GDT_Int16):
+    def __init__(self, save_directory: str):
         self.save_directory = save_directory
-        self.data_type = data_type
         self.landsat_8 = Landsat8()
         self.sentinel_2 = Sentinel2()
 
@@ -65,7 +62,7 @@ class Downloader:
 
         filename = "LS8_{date}.tif".format(date=scene.date)
         save_path = os.path.join(self.save_directory, filename)
-        self.save_image(image_stack, image_dataset, filepath=save_path)
+        Image.save(image_stack, image_dataset, filepath=save_path)
 
         return Image(gdal.Open(save_path))
 
@@ -84,30 +81,3 @@ class Downloader:
         request.urlretrieve(scene.image_url, save_path)
 
         return Image(gdal.Open(save_path))
-
-    def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset, filepath: str) -> None:
-        """ Save a ndarray as an image with geospatial metadata
-        :param image: ndarray with shape (x, y) or (x, y, z)
-        :param image_dataset: a gdal Dataset returned from gdal.Open
-        :param filepath: path to which the image should be saved, including extension
-        """
-        width = image.shape[0]
-        height = image.shape[1]
-
-        if image.ndim > 2:
-            number_of_bands = image.shape[2]
-        else:
-            number_of_bands = 1
-
-        out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(filepath, height, width, number_of_bands, self.data_type)
-        out_image.SetGeoTransform(image_dataset.GetGeoTransform())
-        out_image.SetProjection(image_dataset.GetProjection())
-
-        if number_of_bands > 1:
-            for band in range(number_of_bands):
-                out_image.GetRasterBand(band+1).WriteArray(image[:, :, band])
-        else:
-            out_image.GetRasterBand(1).WriteArray(image)
-
-        out_image.FlushCache()
