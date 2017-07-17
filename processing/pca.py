@@ -22,6 +22,7 @@ class ImagePCA:
         result = scores.reshape(image.shape)
 
         eigenvectors = pd.DataFrame(eigenvectors)
+        eigenvectors.columns = ["PC {}".format(i+1) for i in range(image.shape[2])]
 
         if band_names is not None:
             assert len(band_names) == image.shape[2], "Band names don't match with image shape"
