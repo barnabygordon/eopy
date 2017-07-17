@@ -68,7 +68,7 @@ class Image:
         return pixels
 
     @staticmethod
-    def stack(images: list):
+    def stack(images: list) -> (np.ndarray, gdal.Dataset):
         stack = np.zeros((images[0].height, images[0].width, len(images)))
 
         for i, image in enumerate(images):

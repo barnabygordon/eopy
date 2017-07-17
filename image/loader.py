@@ -7,7 +7,7 @@ from image import Image
 
 class Loader:
     @staticmethod
-    def load_landsat8(image_folder, band_list):
+    def load_landsat8(image_folder: str, band_list: [str]) -> Image:
         landsat8 = Landsat8()
         resolutions = [landsat8.band_resolution(band) for band in band_list]
         assert len(set(resolutions)) == 1, "All bands must have the same resolution."
