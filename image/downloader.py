@@ -32,7 +32,11 @@ class Downloader:
         return ", ".join(self.sentinel_2.available_bands)
 
     def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
-        """ Load a Landsat-8 band into memory
+        """ Load Landsat-8 bands into memory
+
+        An example of a landsat url is:
+        https://landsat-pds.s3.amazonaws.com/c1/L8/139/045/LC08_L1TP_139045_20170304_20170316_01_T1/LC08_L1TP_139045_20170304_20170316_01_T1_B1.TIF
+
         :param scene: A LandsatScene from the Searcher
         :param band_list: List of the bands you want to download
         :return: An Image object
@@ -66,6 +70,15 @@ class Downloader:
         return Image(gdal.Open(save_path))
 
     def get_sentinel2_band(self, scene: SentinelScene, band: str) -> Image:
+        """ Load a Sentinel-2 band into memory
+
+        An example of a Sentinel-2 url is:
+        http://sentinel-s2-l1c.s3.amazonaws.com/tiles/10/S/DG/2015/12/7/0/B01.jp2
+
+        :param scene: A Sentinel-2 scene
+        :param band: A band string
+        :return: An Image object
+        """
         filename = "S2A_{date}_{band}".format(date=scene.date, band=band)
         save_path = os.path.join(self.save_directory, filename)
         request.urlretrieve(scene.image_url, save_path)
