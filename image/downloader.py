@@ -70,7 +70,7 @@ class Downloader:
         save_path = os.path.join(self.save_directory, filename)
         request.urlretrieve(scene.image_url, save_path)
 
-        raise NotImplementedError("Sorry! Work in progress!")
+        return Image(gdal.Open(save_path))
 
     def save_image(self, image: np.ndarray, image_dataset: gdal.Dataset, filepath: str) -> None:
         """ Save a ndarray as an image with geospatial metadata
