@@ -26,5 +26,7 @@ class ImagePCA:
         if band_names is not None:
             assert len(band_names) == image.shape[2], "Band names don't match with image shape"
             eigenvectors.index = band_names
+        else:
+            eigenvectors.index = ["Band {}".format(i+1) for i in range(image.shape[2])]
 
         return result, eigenvectors
