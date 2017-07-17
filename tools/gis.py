@@ -13,17 +13,18 @@ from image.geotransform import Geotransform
 WGS84_EPSG = 4326
 
 
-def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
+def world_to_pixel(x: float, y: float, geotransform: Geotransform, image_height: int) -> (int, int):
     """ Transform a projected coordinates to image pixel indices
     :param x: easting/longitude
     :param y: northing/latitude
     :param geotransform: the geospatial properties of the image
     :return: x, y in pixel indices
     """
-    x = int((x - geotransform.upper_left_x) / geotransform.pixel_width)
-    y = int((y - geotransform.upper_left_y) / geotransform.pixel_width)
 
-    return x, -y
+    x = np.round((x - geotransform.upper_left_x) / geotransform.pixel_width).astype(np.int)
+    y = np.round((geotransform.upper_left_y - y) / geotransform.pixel_width).astype(np.int)
+
+    return x, y
 
 
 def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float):
@@ -37,6 +38,17 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
     y2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
 
     return x2, y2
+
+
+def polygon_to_pixel(polygon, geotransform, image_height):
+    x, y = polygon.exterior.xy
+
+    points = []
+    for x, y in zip(x, y):
+        x_index, y_index = world_to_pixel(x, y, geotransform=geotransform, image_height=image_height)
+        points.append((x_index, y_index))
+
+    return Polygon(points)
 
 
 def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (float, float):
@@ -74,28 +86,56 @@ def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
     """ Convert a WKT polygon to GeoJSON """
     return Feature(geometry=polygon, properties=properties)
 
-
-def clip_image(image: np.ndarray, polygon: Polygon, mask_value: float = np.nan) -> np.ndarray:
-    """ Clip an image using a polygon and masking all the output values
-    :param image: a 2D array
-    :param polygon: a WKT, Shapely polygon in the pixel coordinates of the image
-    :param mask_value: the value to be used for non-image pixels
+def clip_image(image: np.array, polygon: Polygon, mask_value: float=np.nan):
+    """
+    Masks the pixels outside its pixel polygon.
+    :param im_arr: np.array
+    :param polygon: pixel_polygon
+    :param mask_value: value of masked pixels
     :return: clipped image
     """
-    coordinates = np.array([(point[0], point[1]) for point in polygon.exterior.coords])
+    x, y = [], []
+    polygon_coords = []
+    for i in polygon.exterior.coords:
+        x.append(i[0])
+        y.append(i[1])
+        polygon_coords.append((i[0], i[1]))
 
-    mask_image = PILImage.new("L", (image.shape[1], image.shape[0]), 1)
-    ImageDraw.Draw(mask_image).polygon(coordinates, 0)
+    x_min, y_min = int(min(x)), int(min(y))
+    x_max, y_max = int(max(x)), int(max(y))
 
+    extent = [y_min, y_max, x_min, x_max]
+
+    mask = _create_mask(image.shape[1], image.shape[0], polygon_coords, extent)
+
+    if image.ndim > 2:
+        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3], :].astype(np.float)
+        im_arr_clip[mask != 0, :] = mask_value
+
+    elif image.ndim == 2:
+        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3]].astype(np.float)
+        im_arr_clip[mask != 0] = mask_value
+
+    else:
+        raise Exception("Not enough dimensions in array, expected 2 or more, received {}.".format(image.ndim))
+
+    return im_arr_clip
+
+
+def _create_mask(width: int, height: int, polygon_coords: list, extent: [int]):
+    """
+    Create a clipper mask for clipping a polygon or extracting an image subset.
+    :param width: pixel width of the image (number of columns)
+    :param height: pixel height of the image (number of rows)
+    :param polygon_coords: list of coordinates from clip_image function
+    :param extent: extent of the coordinates from clip_image function
+    :return:
+    """
+    mask_image = PILImage.new("L", (width, height), 1)
+    ImageDraw.Draw(mask_image).polygon(polygon_coords, 0)
     mask = np.array(mask_image)
-    x_min, y_min = int(min(coordinates[:, 0])), int(min(coordinates[:, 1]))
-    x_max, y_max = int(max(coordinates[:, 0])), int(max(coordinates[:, 1]))
 
-    image_clip = image[y_min:y_max, x_min:x_max]
-    mask_clip = mask[y_min:y_max, x_min: x_max]
-    image_clip[mask_clip != 0] = mask_value
-
-    return image_clip
+    return mask[extent[0]:extent[1], extent[2]:extent[3]]
 
 
 def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):

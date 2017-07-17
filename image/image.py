@@ -6,10 +6,10 @@ from image.geotransform import Geotransform
 
 
 class Image:
-    """ A generic class for dealing with GDAL images """
+    """ A generic image object revolving around gdal """
     def __init__(self, image_dataset: gdal.Dataset):
-        self.image_dataset = image_dataset
-        self.geotransform = Geotransform(self.image_dataset)
+        self.dataset = image_dataset
+        self.geotransform = Geotransform(self.dataset)
 
     @classmethod
     def load(cls, filepath: str):
@@ -18,15 +18,14 @@ class Image:
 
     @property
     def width(self) -> int:
-        return self.image_dataset.RasterXSize
+        return self.dataset.RasterXSize
 
     @property
     def height(self) -> int:
-        return self.image_dataset.RasterYSize
+        return self.dataset.RasterYSize
 
     @property
-    def bounds(self) -> ([float], [float]):
-        """ The boundary of the image as a polygon """
+    def bounds(self) -> Polygon:
         x_max = self.width * self.geotransform.pixel_width
         y_min = self.height * self.geotransform.pixel_width
         x = [self.geotransform.upper_left_x, x_max, x_max,
@@ -38,14 +37,13 @@ class Image:
 
     @property
     def band_count(self) -> int:
-        """ Number of bands in the image """
-        return self.image_dataset.RasterCount
+        return self.dataset.RasterCount
 
     @property
     def pixels(self) -> np.ndarray:
         """ The pixels data as a ndarray """
-        pixels = self.image_dataset.ReadAsArray()
-        if pixels.ndim > 2:
+        pixels = self.dataset.ReadAsArray()
+        if self.band_count > 1:
             return pixels.transpose(1, 2, 0)
         else:
             return pixels
@@ -53,7 +51,7 @@ class Image:
     @property
     def projection(self) -> str:
         """ The projection of the image as a WKT string """
-        return self.image_dataset.GetProjection()
+        return self.dataset.GetProjection()
 
     @property
     def epsg(self) -> str:
@@ -62,4 +60,7 @@ class Image:
 
     def get_window(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
-        return self.image_dataset.ReadAsArray(x, y, width, width)
+        pixels = self.dataset.ReadAsArray(x, y, width, width)
+        if self.band_count > 1:
+            pixels = pixels.transpose(1, 2, 0)
+        return pixels
