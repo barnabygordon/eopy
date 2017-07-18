@@ -1,6 +1,8 @@
 import numpy as np
 from osgeo import gdal, osr
+from tqdm import tqdm
 from shapely.geometry import Polygon
+from typing import List
 
 from image.geotransform import Geotransform
 
@@ -73,13 +75,16 @@ class Image:
         return pixels
 
     @staticmethod
-    def stack(images: list) -> (np.ndarray, gdal.Dataset):
-        stack = np.zeros((images[0].height, images[0].width, len(images)))
+    def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
+        if len(images) == 1:
+            return images[0].pixels, images[0].dataset
+        else:
+            stack = np.zeros((images[0].height, images[0].width, len(images)))
 
-        for i, image in enumerate(images):
-            stack[:, :, i] = image.pixels
+            for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
+                stack[:, :, i] = image.pixels
 
-        return stack, images[0].dataset
+            return stack, images[0].dataset
 
     @staticmethod
     def save(image: np.ndarray,
