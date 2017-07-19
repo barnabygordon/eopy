@@ -76,6 +76,7 @@ class Image:
 
     @staticmethod
     def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
+        """ Stack a list of Image objects and return a single image array and dataset """
         if len(images) == 1:
             return images[0].pixels, images[0].dataset
         else:
