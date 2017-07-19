@@ -72,7 +72,7 @@ class Searcher:
                 self.username,
                 self.password))
 
-        assert response.status_code == 200, 'Search error!'
+        assert response.status_code == 200, 'Search error: {}'.format(response.reason)
 
         content = json.loads(response.content.decode('utf-8'))
 
