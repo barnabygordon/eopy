@@ -1,7 +1,5 @@
 from osgeo import gdal
-from tqdm import tqdm
 from urllib import request
-import numpy as np
 import os
 
 from image.scene import LandsatScene
@@ -38,28 +36,14 @@ class Downloader:
         :param band_list: List of the bands you want to download
         :return: An Image object
         """
-        progress_bar = tqdm(total=len(band_list))
 
-        url = scene.download_links[self.sentinel_2.band_number(band_list[0])]
-        image_dataset = gdal.Open('/vsicurl/{}'.format(url))
-        image = Image(image_dataset)
-        progress_bar.update(1)
+        images = []
+        for band in band_list:
+            url = scene.download_links[self.landsat_8.band_number(band)]
+            image_dataset = gdal.Open('/vsicurl/{}'.format(url))
+            images.append(Image(image_dataset))
 
-        if len(band_list) > 1:
-            image_stack = np.zeros((image.height, image.width, len(band_list)))
-            image_stack[:, :, 0] = image.pixels
-
-            for i, band in enumerate(band_list[1:]):
-                url = scene.download_links[self.landsat_8.band_number(band)]
-                image_dataset = gdal.Open('/vsicurl/{}'.format(url))
-                image = Image(image_dataset)
-
-                image_stack[:, :, i+1] = image.pixels
-                progress_bar.update(1)
-
-        else:
-            image_stack = image.pixels
-
+        image_stack, image_dataset = Image.stack(images)
         filename = "LS8_{date}.tif".format(date=scene.date)
         save_path = os.path.join(self.save_directory, filename)
         Image.save(image_stack, image_dataset, filepath=save_path)
