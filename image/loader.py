@@ -6,8 +6,14 @@ from image import Image
 
 
 class Loader:
+    """ For loading imagery locally from standardised folder structures """
     @staticmethod
     def load_landsat8(image_folder: str, band_list: [str]) -> Image:
+        """ Load landsat-8 imagery from USGS Earthexplorer download folder
+        :param image_folder: Path to the folder containing image bands
+        :param band_list: List of bands to be loaded
+        :return: A stacked Image object of the requested bands
+        """
         landsat8 = Landsat8()
         resolutions = [landsat8.band_resolution(band) for band in band_list]
         assert len(set(resolutions)) == 1, "All bands must have the same resolution."
