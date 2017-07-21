@@ -6,7 +6,7 @@ from image.scene import LandsatScene
 from image.scene import SentinelScene
 from image.sensor import Landsat8
 from image.sensor import Sentinel2
-from image import Calibration
+from image.calibration import Calibration
 from image import Image
 
 
@@ -53,7 +53,7 @@ class Downloader:
             calibrator = Calibration(metadata_url=metadata_url)
             image_stack = calibrator.calibrate_landsat(image_stack, band_list)
 
-        filename = "LS8_{date}.tif".format(date=scene.date)
+        filename = "LS8_{date}_{bands}.tif".format(date=scene.date, bands='b'.join(band_list))
         save_path = os.path.join(self.save_directory, filename)
         Image.save(image_stack, image_dataset, filepath=save_path)
 

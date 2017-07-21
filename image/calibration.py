@@ -9,7 +9,7 @@ class Calibration:
     """ Functionality to calibrate satellite data """
     def __init__(self, metadata_url: str):
         self.landsat8 = Landsat8()
-        self.metadata_file = urlopen(metadata_url)
+        self.metadata_url = metadata_url
 
     def calibrate_landsat(self, image: np.ndarray, band_list: [str]) -> np.ndarray:
         """ Calibrate a stack of Landsat bands
@@ -19,7 +19,7 @@ class Calibration:
         """
 
         if image.ndim == 2:
-            calibrated_image = self.calibrate_landsat_band(image, band_list[0])
+            calibrated_image = self.calibrate_landsat_band(image, self.landsat8.band_number(band_list[0]))
 
         else:
             calibrated_image = np.zeros(image.shape)
@@ -49,10 +49,12 @@ class Calibration:
         :param parameter: The desired parameter
         :return: value
         """
-        for line in self.metadata_file:
-            data = line.split(' = ')
-            if(data[0]).strip() == parameter:
-                return (data[1]).strip()
+        metadata_file = urlopen(self.metadata_url)
+        for line in metadata_file:
+            data = str(line).split(' = ')
+            print(data[0].split("'")[1].strip(), parameter)
+            if(data[0]).split("'")[1].strip() == parameter:
+                return float(data[1].split('\\')[0])
 
     @staticmethod
     def calculate_landsat_toa_reflectance(dn: np.ndarray, gain: float, bias: float, sun_elevation: float):
