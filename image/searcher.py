@@ -49,7 +49,7 @@ class Searcher:
                 bounds = np.squeeze(np.array(result['data_geometry']['coordinates']))
                 polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
                 search_results.append(LandsatScene(
-                    scene_id=result['scene_id'],
+                    product_id=result['LANDSAT_PRODUCT_ID'],
                     date="".join(result['acquisitionDate'].split('-')),
                     clouds=result['cloudCoverFull'],
                     bounds=polygon,
