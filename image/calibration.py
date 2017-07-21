@@ -17,12 +17,17 @@ class Calibration:
         :param band_list: List of band names
         :return: Stack of calibrated Landsat bands
         """
-        calibrated_image = np.zeros(image.shape)
-        for i, band_name in enumerate(band_list):
-            band_array = image[:, :, i]
-            band_number = self.landsat8.band_number(band_name)
 
-            calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, band_number)
+        if image.ndim == 2:
+            calibrated_image = self.calibrate_landsat_band(image, band_list[0])
+
+        else:
+            calibrated_image = np.zeros(image.shape)
+            for i, band_name in enumerate(band_list):
+                band_array = image[:, :, i]
+                band_number = self.landsat8.band_number(band_name)
+
+                calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, band_number)
 
         return calibrated_image
 
