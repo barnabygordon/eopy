@@ -11,6 +11,7 @@ class LandsatScene:
         self.bounds = bounds
         self.clouds = int(clouds)
         self.download_links = download_links
+        self.thumbnail_url = "{}_{}".format("_".join(self.download_links[0].split("_")[0:-1]), 'thumb_large.jpg')
 
     def __repr__(self):
         return "Landsat-8 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
