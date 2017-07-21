@@ -63,7 +63,7 @@ class URLBuilder:
         :param grid_square: MGRS grid square
         :return: a url string
         """
-        url_root = 's3://sentinel-s2-l1c/tiles'
+        url_root = 'http://sentinel-s2-l1c.s3.amazonaws.com/tiles'
         sequence = '0'
 
         folder_url = '{url_root}/{utm_zone}/{latitude_band}/{grid_square}/{year}/{month}/{day}/{sequence}'.format(
