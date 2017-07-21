@@ -15,6 +15,9 @@ class Image:
         self.dataset = image_dataset
         self.geotransform = Geotransform(self.dataset)
 
+    def __repr__(self):
+        return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
+
     @classmethod
     def load(cls, filepath: str):
         image_dataset = gdal.Open(filepath)
