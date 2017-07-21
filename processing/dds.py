@@ -12,7 +12,7 @@ class DDS:
         """
         r, g, b = image[:, :, 0], image[:, :, 1], image[:, :, 2]
 
-        x = np.amin(image, axis=0)
+        x = np.amin(image, axis=2)
 
         rk = r - (k*x)
         gk = g - (k*x)
