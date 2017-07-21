@@ -61,7 +61,7 @@ class Downloader:
         :return: An Image object
         """
         band_name = "B{}".format(self.sentinel_2.band_number(band))
-        filename = "S2A_{date}_{band}".format(date=scene.date, band=band_name)
+        filename = "S2A_{date}_{band}.jp2".format(date=scene.date, band=band_name)
 
         save_path = os.path.join(self.save_directory, filename)
         request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
