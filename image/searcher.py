@@ -51,6 +51,8 @@ class Searcher:
                 search_results.append(LandsatScene(
                     product_id=result['LANDSAT_PRODUCT_ID'],
                     date="".join(result['acquisitionDate'].split('-')),
+                    path=str(result['path']),
+                    row=str(result['row']),
                     clouds=result['cloudCoverFull'],
                     bounds=polygon,
                     download_links=result['download_links']['aws_s3'],

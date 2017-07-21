@@ -7,17 +7,26 @@ class LandsatScene:
                  product_id: str,
                  date: str,
                  clouds: float,
+                 path: str,
+                 row: str,
                  bounds: Polygon,
                  download_links: [str],
                  thumbnail_url: str):
-        self.produced_id = product_id
-        self.path = self.string[3:6]
-        self.row = self.string[6:9]
+        self.product_id = product_id
+        self.path = self._parse_path_row(path)
+        self.row = self._parse_path_row(row)
         self.date = date
         self.bounds = bounds
         self.clouds = int(clouds)
         self.download_links = download_links
         self.thumbnail_url = thumbnail_url
+
+    @staticmethod
+    def _parse_path_row(string):
+        if len(string) == 2:
+            return '0{}'.format(string)
+        else:
+            return string
 
     def __repr__(self):
         return "Landsat-8 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
