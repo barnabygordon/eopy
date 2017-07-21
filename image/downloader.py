@@ -6,6 +6,7 @@ from image.scene import LandsatScene
 from image.scene import SentinelScene
 from image.sensor import Landsat8
 from image.sensor import Sentinel2
+from image import Calibration
 from image import Image
 
 
@@ -26,7 +27,7 @@ class Downloader:
         """ List the available Sentinel-2 band options """
         return ", ".join(self.sentinel_2.available_bands)
 
-    def get_landsat8_bands(self, scene: LandsatScene, band_list: [str]) -> Image:
+    def get_landsat8_bands(self, scene: LandsatScene, band_list: [str], calibrate: bool=True) -> Image:
         """ Load Landsat-8 bands into memory
 
         An example of a landsat url is:
@@ -34,6 +35,7 @@ class Downloader:
 
         :param scene: A LandsatScene from the Searcher
         :param band_list: List of the bands you want to download
+        :param calibrate: Do you want to calibrate the image to Top of Atmosphere reflectance?
         :return: An Image object
         """
 
@@ -45,6 +47,12 @@ class Downloader:
             images.append(Image(image_dataset))
 
         image_stack, image_dataset = Image.stack(images)
+
+        if calibrate:
+            metadata_url = "{download_path}_MTL.txt".format(download_path=scene.download_path)
+            calibrator = Calibration(metadata_url=metadata_url)
+            image_stack = calibrator.calibrate_landsat(image_stack, band_list)
+
         filename = "LS8_{date}.tif".format(date=scene.date)
         save_path = os.path.join(self.save_directory, filename)
         Image.save(image_stack, image_dataset, filepath=save_path)
