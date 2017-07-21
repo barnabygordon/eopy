@@ -10,7 +10,6 @@ class LandsatScene:
                  path: str,
                  row: str,
                  bounds: Polygon,
-                 download_links: [str],
                  thumbnail_url: str):
         self.product_id = product_id
         self.path = self._parse_path_row(path)
@@ -18,8 +17,14 @@ class LandsatScene:
         self.date = date
         self.bounds = bounds
         self.clouds = int(clouds)
-        self.download_links = download_links
         self.thumbnail_url = thumbnail_url
+        self.download_path = "{url_root}/{collection}/{sensor}/{path}/{row}/{product_id}/{product_id}".format(
+            url_root="https://landsat-pds.s3.amazonaws.com",
+            collection='c1',
+            sensor='L8',
+            path=self.path,
+            row=self.row,
+            product_id=self.product_id)
 
     @staticmethod
     def _parse_path_row(string):

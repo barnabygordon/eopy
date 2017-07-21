@@ -39,7 +39,8 @@ class Downloader:
 
         images = []
         for band in band_list:
-            url = scene.download_links[self.landsat_8.band_number(band)]
+            url = "{download_path}_B{band}.TIF".format(download_path=scene.download_path,
+                                                       band=self.landsat_8.band_number(band))
             image_dataset = gdal.Open('/vsicurl/{}'.format(url))
             images.append(Image(image_dataset))
 

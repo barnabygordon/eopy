@@ -55,7 +55,6 @@ class Searcher:
                     row=str(result['row']),
                     clouds=result['cloudCoverFull'],
                     bounds=polygon,
-                    download_links=result['download_links']['aws_s3'],
                     thumbnail_url=result['browseURL']))
 
             return search_results
