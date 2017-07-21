@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 
 
 class BCET:
@@ -8,21 +9,17 @@ class BCET:
                   L: float=0.,
                   H: float=1.,
                   E: float=0.5,
-                  clip: float=0.,
-                  bad_value=None) -> np.ndarray:
+                  clip: float=0.) -> np.ndarray:
         """ Perform a BCET on an image
         :param image: A 3D array of shape (rows, columns, bands)
         :param L: The lower limit of the output
         :param H: The upper limit of the output
         :param E: The mean of the output
         :param clip: Percentage of outliers to be clipped prior to enhancement
-        :param bad_value: Value that should be masked
         :return: A array that has been contrast enhanced
         """
-        if bad_value is not None:
-            image[image == bad_value] = np.nan
 
-        for band in range(image.shape[2]):
+        for band in tqdm(range(image.shape[2]), total=image.shape[2], desc='Calculating bands'):
 
             x = image[:, :, band]
 
