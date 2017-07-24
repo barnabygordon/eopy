@@ -52,7 +52,6 @@ class Calibration:
         metadata_file = urlopen(self.metadata_url)
         for line in metadata_file:
             data = str(line).split(' = ')
-            print(data[0].split("'")[1].strip(), parameter)
             if(data[0]).split("'")[1].strip() == parameter:
                 return float(data[1].split('\\')[0])
 
@@ -65,8 +64,6 @@ class Calibration:
         :param sun_elevation: The angle of the sun in radians
         :return: Radiometrically corrected Landsat image
         """
-
-        rho_prime = gain * dn + bias
-        rho = rho_prime / np.sin(sun_elevation)
+        rho = np.where(dn > 0, (gain*dn + bias) / math.sin(sun_elevation), 0)
 
         return rho

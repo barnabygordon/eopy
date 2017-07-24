@@ -55,7 +55,7 @@ class Downloader:
 
         filename = "LS8_{date}_{bands}.tif".format(date=scene.date, bands='b'.join(band_list))
         save_path = os.path.join(self.save_directory, filename)
-        Image.save(image_stack, image_dataset, filepath=save_path)
+        Image.save(image_stack, image_dataset, filepath=save_path, data_type=gdal.GDT_Float32)
 
         return Image(gdal.Open(save_path))
 
