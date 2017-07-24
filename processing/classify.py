@@ -16,6 +16,7 @@ class Classifier:
         """
         self.image = image
         self.classifier = classifier(n_estimators)
+        self.classes = {}
         self.trained = False
 
     def _open_class_file(self, filepath: str) -> gpd.GeoDataFrame:
@@ -45,6 +46,7 @@ class Classifier:
 
             if row[class_name] not in classes:
                 classes.append(row[class_name])
+                self.classes[row[class_name]] = classes.index(row[class_name])
 
             class_value = classes.index(row[class_name])
             class_values.extend([class_value] * len(clean_features))
@@ -62,7 +64,6 @@ class Classifier:
         test_data = test_image.reshape(-1, self.image.band_count)
         predictions = self.classifier.predict(test_data)
 
-        # TODO: return class lookup table
         return predictions.reshape((test_image.shape[0], test_image.shape[1]))
 
     def show(self, class_file_path: str, figsize: (int, int)=(15, 10)):
