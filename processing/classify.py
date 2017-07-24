@@ -52,7 +52,7 @@ class Classifier:
         self.classifier.fit(features, class_values)
         self.trained = True
 
-    def predict(self, test_image=np.ndarray) -> np.ndarray:
+    def predict(self, test_image: np.array) -> np.ndarray:
         """ Use the trained model to classify an image
         :param test_image: An array that must have the same number of bands as the input
         :return: A 2D array with integer values representing the classes
