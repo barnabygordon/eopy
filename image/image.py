@@ -21,7 +21,7 @@ class Image:
     @classmethod
     def load(cls, filepath: str):
         image_dataset = gdal.Open(filepath)
-        assert image_dataset != None, "File is not a valid image"
+        assert image_dataset is not None, "File is not a valid image"
         return Image(image_dataset)
 
     @property
