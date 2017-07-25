@@ -3,10 +3,14 @@ from IPython.display import Image as IPythonImage
 
 
 class SatelliteScene:
-    def __init__(self, date: str, clouds: float, bounds: Polygon):
+    def __init__(self, type: str, date: str, clouds: float, bounds: Polygon):
+        self.type = type
         self.date = date
         self.clouds = clouds
         self.bounds = bounds
+
+    def __repr__(self):
+        return "{} Scene | Clouds: {} | Date: {}".format(self.type, self.clouds, self.date)
 
 
 class LandsatScene(SatelliteScene):
@@ -19,7 +23,7 @@ class LandsatScene(SatelliteScene):
                  row: str,
                  bounds: Polygon,
                  thumbnail_url: str):
-        SatelliteScene.__init__(self, date, clouds, bounds)
+        SatelliteScene.__init__(self, "Landsat-8", date, clouds, bounds)
         self.product_id = product_id
         self.path = self._parse_path_row(path)
         self.row = self._parse_path_row(row)
@@ -43,16 +47,11 @@ class LandsatScene(SatelliteScene):
         else:
             return string
 
-    def __repr__(self):
-        return "Landsat-8 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
-
 
 class SentinelScene(SatelliteScene):
     """ Sentinel-2 scene metadata """
     def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, image_url: str):
-        SatelliteScene.__init__(self, date, clouds, bounds)
+        SatelliteScene.__init__(self, "Sentinel-2", date, clouds, bounds)
+        self.type = "Sentinel-2"
         self.scene_id = scene_id
         self.image_url = image_url
-
-    def __repr__(self):
-        return "Sentinel-2 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
