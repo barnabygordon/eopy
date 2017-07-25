@@ -32,6 +32,10 @@ class Visualise:
         map_window = folium.Map()
         for scene in scene_list:
             scene_geojson = geojson.Feature(geometry=scene.bounds)
-            folium.GeoJson(scene_geojson).add_to(map_window)
+            folium.GeoJson(
+                scene_geojson,
+                style_function=lambda feature: {
+                    'fillOpacity': 0,
+                }).add_to(map_window)
 
         return map_window
