@@ -3,14 +3,14 @@ from IPython.display import Image as IPythonImage
 
 
 class SatelliteScene:
-    def __init__(self, type: str, date: str, clouds: float, bounds: Polygon):
-        self.type = type
+    def __init__(self, satllite_type: str, date: str, clouds: float, bounds: Polygon):
+        self.satellite_type = satllite_type
         self.date = date
         self.clouds = clouds
         self.bounds = bounds
 
     def __repr__(self):
-        return "{} Scene | Clouds: {} | Date: {}".format(self.type, self.clouds, self.date)
+        return "{} Scene | Clouds: {} | Date: {}".format(self.satellite_type, self.clouds, self.date)
 
 
 class LandsatScene(SatelliteScene):
