@@ -1,6 +1,6 @@
 from tools import gis
 from image import Image
-from image.scene import LandsatScene
+from image.scene import SatelliteScene
 import geojson
 import folium
 
@@ -24,7 +24,7 @@ class Visualise:
         return map_window
 
     @staticmethod
-    def search_results(scene_list: [LandsatScene]):
+    def search_results(scene_list: [SatelliteScene]):
         """ Display a list of satellite scenes on a slippy Leaflet map
         :param scene_list: A list of satellite scene objects
         :return: A Folium map instance (will display automatically in Jupyter)
