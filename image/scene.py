@@ -1,7 +1,14 @@
 from shapely.geometry import Polygon
 
 
-class LandsatScene:
+class SatelliteScene:
+    def __init__(self, date: str, clouds: float, bounds: Polygon):
+        self.date = date
+        self.clouds = clouds
+        self.bounds = bounds
+
+
+class LandsatScene(SatelliteScene):
     """ Landsat-8 scene metadata """
     def __init__(self,
                  product_id: str,
@@ -11,12 +18,10 @@ class LandsatScene:
                  row: str,
                  bounds: Polygon,
                  thumbnail_url: str):
+        SatelliteScene.__init__(self, date, clouds, bounds)
         self.product_id = product_id
         self.path = self._parse_path_row(path)
         self.row = self._parse_path_row(row)
-        self.date = date
-        self.bounds = bounds
-        self.clouds = int(clouds)
         self.thumbnail_url = thumbnail_url
         self.download_path = "{url_root}/{collection}/{sensor}/{path}/{row}/{product_id}/{product_id}".format(
             url_root="https://landsat-pds.s3.amazonaws.com",
@@ -37,13 +42,11 @@ class LandsatScene:
         return "Landsat-8 Scene | Clouds: {} | Date: {}".format(self.clouds, self.date)
 
 
-class SentinelScene:
+class SentinelScene(SatelliteScene):
     """ Sentinel-2 scene metadata """
     def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, image_url: str):
+        SatelliteScene.__init__(self, date, clouds, bounds)
         self.scene_id = scene_id
-        self.date = date
-        self.clouds = clouds
-        self.bounds = bounds
         self.image_url = image_url
 
     def __repr__(self):
