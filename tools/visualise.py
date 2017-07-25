@@ -25,6 +25,10 @@ class Visualise:
 
     @staticmethod
     def search_results(scene_list: [LandsatScene]):
+        """ Display a list of satellite scenes on a slippy Leaflet map
+        :param scene_list: A list of satellite scene objects
+        :return: A Folium map instance (will display automatically in Jupyter)
+        """
         map_window = folium.Map()
         for scene in scene_list:
             scene_geojson = geojson.Feature(geometry=scene.bounds)
