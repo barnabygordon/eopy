@@ -1,4 +1,5 @@
 from shapely.geometry import Polygon
+from IPython.display import Image as IPythonImage
 
 
 class SatelliteScene:
@@ -30,6 +31,10 @@ class LandsatScene(SatelliteScene):
             path=self.path,
             row=self.row,
             product_id=self.product_id)
+
+    @property
+    def show(self):
+        return IPythonImage(self.thumbnail_url)
 
     @staticmethod
     def _parse_path_row(string):
