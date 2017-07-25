@@ -3,8 +3,9 @@ from IPython.display import Image as IPythonImage
 
 
 class SatelliteScene:
-    def __init__(self, satllite_type: str, date: str, clouds: float, bounds: Polygon):
-        self.satellite_type = satllite_type
+    """ A generic satellite scene """
+    def __init__(self, satellite_type: str, date: str, clouds: float, bounds: Polygon):
+        self.satellite_type = satellite_type
         self.date = date
         self.clouds = clouds
         self.bounds = bounds
