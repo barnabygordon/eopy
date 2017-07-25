@@ -66,7 +66,7 @@ class Image:
         return self.dataset.GetMetadata()
 
     @property
-    def epsg(self) -> str:
+    def epsg(self) -> int:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
