@@ -39,7 +39,7 @@ class Landsat8(Sensor):
 
 
 class Sentinel2(Sensor):
-    """ Sentinle2 bands and band resolutions """
+    """ Sentinel2 bands and band resolutions """
     @property
     def available_bands(self) -> list:
         return ['coastal', 'blue', 'green', 'red', 'red_edge_1', 'red_edge_2', 'red_edge_3',
