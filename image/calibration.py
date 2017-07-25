@@ -50,6 +50,7 @@ class Calibration:
         :return: value
         """
         metadata_file = urlopen(self.metadata_url)
+        # TODO: Make this less ugly!
         for line in metadata_file:
             data = str(line).split(' = ')
             if(data[0]).split("'")[1].strip() == parameter:
