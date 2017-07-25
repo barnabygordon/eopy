@@ -33,8 +33,8 @@ class Image:
 
     @property
     def bounds(self) -> Polygon:
-        x_max = self.width * self.geotransform.pixel_width
-        y_min = self.height * self.geotransform.pixel_width
+        x_max = self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width)
+        y_min = self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_width)
         x = [self.geotransform.upper_left_x, x_max, x_max,
              self.geotransform.upper_left_x, self.geotransform.upper_left_x]
         y = [self.geotransform.upper_left_y, self.geotransform.upper_left_y,
