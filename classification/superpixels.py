@@ -5,40 +5,39 @@ import geopandas as gpd
 import numpy as np
 
 from image import Image
+from image.geotransform import Geotransform
 from tools import gis
 
 
 class Superpixels:
-    def __init__(self, image: Image, n_segments: int=100, compactness: float=10.,
-                 sigma: int=0, enforce_connectivity: bool=True):
-        self.image = image.pixels
-        self.geotransform = image.geotransform
-        self.projection = image.projection
-        self.n_segments = n_segments
-        self.compactness = compactness
-        self.sigma = sigma
-        self.enforce_connectivity = enforce_connectivity
-        self.superpixels = self._extract_superpixels()
+    def __init__(self, superpixels: gpd.GeoDataFrame, geotransform: Geotransform, projection: str):
+        self.superpixels = superpixels
+        self.geotransform = geotransform
+        self.projection = projection
 
-    def _extract_superpixels(self, extract_values: bool=True) -> gpd.GeoDataFrame:
-        if self.image.ndim > 2:
+    @classmethod
+    def extract_from_image(cls, image: Image, extract_values: bool=True, n_segments: int=100,
+                           compactness: float=10., sigma: int=0, enforce_connectivity: bool=True):
+        if image.band_count > 2:
             multichannel = True
         else:
             multichannel = False
-        segments = slic(self.image, n_segments=self.n_segments, compactness=self.compactness, sigma=self.sigma,
-                        multichannel=multichannel, enforce_connectivity=self.enforce_connectivity)
+        segments = slic(image.pixels, n_segments=n_segments, compactness=compactness, sigma=sigma,
+                        multichannel=multichannel, enforce_connectivity=enforce_connectivity)
 
         superpixel_list = []
         for i in range(segments.max()):
             segment = segments == i
-            superpixel_list.append(self._vectorise_superpixel(segment))
+            superpixel_list.append(cls._vectorise_superpixel(segment))
 
         superpixels = gpd.GeoDataFrame(geometry=superpixel_list)
 
         if extract_values:
-            superpixels['value'] = superpixels.geometry.apply(lambda x: self._extract_pixel_values(x))
+            for i in range(image.band_count):
+                superpixels['band_{}'.format(i)] = superpixels.geometry.apply(
+                    lambda x: cls._extract_pixel_values(x, image.pixels[:, :, i]))
 
-        return superpixels
+        return Superpixels(superpixels, image.geotransform, image.projection)
 
     @staticmethod
     def _vectorise_superpixel(segment):
@@ -63,7 +62,8 @@ class Superpixels:
 
         return contour_polygons[0]
 
-    def _extract_pixel_values(self, superpixel: Polygon) -> gpd.GeoDataFrame:
-        pixels = gis.clip_image(self.image, superpixel)
+    @staticmethod
+    def _extract_pixel_values(superpixel: Polygon, image: np.ndarray) -> gpd.GeoDataFrame:
+        pixels = gis.clip_image(image, superpixel)
 
-        return np.nanmean(pixels, axis=2)
+        return np.nanmean(pixels)
