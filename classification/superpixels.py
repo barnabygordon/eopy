@@ -2,17 +2,13 @@ from skimage.segmentation import slic
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 import geopandas as gpd
-
-from image import Image
+import numpy as np
 
 
 class Superpixels:
-    def __init__(self, image: Image, n_segments: int=100, compactness: float=10.,
+    def __init__(self, image: np.ndarray, n_segments: int=100, compactness: float=10.,
                  sigma: int=0, enforce_connectivity: bool=True):
-        self.image = image.pixels
-        self.geotransform = image.geotransform
-        self.projection = image.projection
-        self.epsg = image.epsg
+        self.image = image
         self.n_segments = n_segments
         self.compactness = compactness
         self.sigma = sigma

@@ -1,40 +1,53 @@
 import numpy as np
+import os
 from osgeo import gdal, osr
 from tqdm import tqdm
 from shapely.geometry import Polygon
 from typing import List
 
 from image.geotransform import Geotransform
+from tools import gis
 
 GTIFF_DRIVER = 'GTiff'
 
 
 class Image:
     """ A generic image object revolving around gdal """
-    def __init__(self, image_dataset: gdal.Dataset):
-        self.dataset = image_dataset
-        self.geotransform = Geotransform(self.dataset.GetGeoTransform())
+    def __init__(self, pixels, geotransform, projection, metadata=None):
+        self.pixels = pixels
+        self.geotransform = geotransform
+        self.projection = projection
+        self.metadata = metadata
 
     def __repr__(self):
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     @classmethod
     def load(cls, filepath: str):
+        if not os.path.exists(filepath):
+            raise UserWarning("Filepath does not exist.")
         image_dataset = gdal.Open(filepath)
-        assert image_dataset is not None, "File is not a valid image"
-        return Image(image_dataset)
+        pixels = image_dataset.ReadAsArray()
+        if pixels.ndim > 2:
+            pixels = pixels.transpose(1, 2, 0)
+
+        geotransform = Geotransform(image_dataset.GetGeoTransform())
+        projection = image_dataset.GetProjection()
+        metadata = image_dataset.GetMetadata()
+
+        return Image(pixels, geotransform, projection, metadata=metadata)
 
     @property
     def width(self) -> int:
-        return self.dataset.RasterXSize
+        return self.pixels.shape[0]
 
     @property
     def height(self) -> int:
-        return self.dataset.RasterYSize
+        return self.pixels.shape[1]
 
     @property
     def shape(self) -> (int, int, int):
-        return self.width, self.height, self.band_count
+        return self.pixels.shape
 
     @property
     def bounds(self) -> Polygon:
@@ -49,38 +62,26 @@ class Image:
 
     @property
     def band_count(self) -> int:
-        return self.dataset.RasterCount
-
-    @property
-    def pixels(self) -> np.ndarray:
-        """ The pixels data as a ndarray """
-        pixels = self.dataset.ReadAsArray()
-        if self.band_count > 1:
-            return pixels.transpose(1, 2, 0)
+        if self.pixels.ndim > 2:
+            return self.pixels.shape[2]
         else:
-            return pixels
-
-    @property
-    def projection(self) -> str:
-        """ The projection of the image as a WKT string """
-        return self.dataset.GetProjection()
-
-    @property
-    def metadata(self) -> {str: str}:
-        """ The metadata of the image as a dictionary """
-        return self.dataset.GetMetadata()
+            return 1
 
     @property
     def epsg(self) -> int:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
-    def get_window(self, x: int, y: int, width: int) -> np.ndarray:
+    def get_subset(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
-        pixels = self.dataset.ReadAsArray(x, y, width, width)
-        if self.band_count > 1:
-            pixels = pixels.transpose(1, 2, 0)
-        return pixels
+        pixels = self.pixels[y:y+width, x:x+width]
+        geotransform = self._subset_geotransform(x, y)
+        return Image(pixels, geotransform=geotransform, projection=self.projection, metadata=self.metadata)
+
+    def _subset_geotransform(self, x, y):
+        upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
+        return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
+                             upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
     @staticmethod
     def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
