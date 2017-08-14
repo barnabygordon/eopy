@@ -4,18 +4,23 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import numpy as np
 
+from image import Image
+from tools import gis
+
 
 class Superpixels:
-    def __init__(self, image: np.ndarray, n_segments: int=100, compactness: float=10.,
+    def __init__(self, image: Image, n_segments: int=100, compactness: float=10.,
                  sigma: int=0, enforce_connectivity: bool=True):
-        self.image = image
+        self.image = image.pixels
+        self.geotransform = image.geotransform
+        self.projection = image.projection
         self.n_segments = n_segments
         self.compactness = compactness
         self.sigma = sigma
         self.enforce_connectivity = enforce_connectivity
         self.superpixels = self._extract_superpixels()
 
-    def _extract_superpixels(self):
+    def _extract_superpixels(self, extract_values: bool=True) -> gpd.GeoDataFrame:
         if self.image.ndim > 2:
             multichannel = True
         else:
@@ -29,6 +34,9 @@ class Superpixels:
             superpixel_list.append(self._vectorise_superpixel(segment))
 
         superpixels = gpd.GeoDataFrame(geometry=superpixel_list)
+
+        if extract_values:
+            superpixels['value'] = superpixels.geometry.apply(lambda x: self._extract_pixel_values(x))
 
         return superpixels
 
@@ -54,3 +62,8 @@ class Superpixels:
                     contour_polygons.append(polygon)
 
         return contour_polygons[0]
+
+    def _extract_pixel_values(self, superpixel: Polygon) -> gpd.GeoDataFrame:
+        pixels = gis.clip_image(self.image, superpixel)
+
+        return np.nanmean(pixels, axis=2)
