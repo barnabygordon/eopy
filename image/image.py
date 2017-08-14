@@ -13,7 +13,7 @@ class Image:
     """ A generic image object revolving around gdal """
     def __init__(self, image_dataset: gdal.Dataset):
         self.dataset = image_dataset
-        self.geotransform = Geotransform(self.dataset)
+        self.geotransform = Geotransform(self.dataset.GetGeoTransform())
 
     def __repr__(self):
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
@@ -31,6 +31,10 @@ class Image:
     @property
     def height(self) -> int:
         return self.dataset.RasterYSize
+
+    @property
+    def shape(self) -> (int, int, int):
+        return self.width, self.height, self.band_count
 
     @property
     def bounds(self) -> Polygon:
@@ -93,7 +97,8 @@ class Image:
 
     @staticmethod
     def save(image: np.ndarray,
-             image_dataset: gdal.Dataset,
+             projection: str,
+             geotransform: Geotransform,
              filepath: str,
              data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
@@ -112,8 +117,8 @@ class Image:
 
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
             .Create(filepath, height, width, number_of_bands, data_type)
-        out_image.SetGeoTransform(image_dataset.GetGeoTransform())
-        out_image.SetProjection(image_dataset.GetProjection())
+        out_image.SetGeoTransform(geotransform.geotransform)
+        out_image.SetProjection(projection)
 
         if number_of_bands > 1:
             for band in range(number_of_bands):

@@ -2,8 +2,8 @@
 
 class Geotransform:
     """ A class for easy access to the GDAL geotransform tuple """
-    def __init__(self, image_dataset):
-        self.geotransform = image_dataset.GetGeoTransform()
+    def __init__(self, geotransform_tuple):
+        self.geotransform = geotransform_tuple
         self.upper_left_x = self.geotransform[0]
         self.upper_left_y = self.geotransform[3]
         self.pixel_width = self.geotransform[1]
