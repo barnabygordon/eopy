@@ -10,10 +10,10 @@ from tools import gis
 
 
 class Superpixels:
-    def __init__(self, superpixels: gpd.GeoDataFrame, geotransform: Geotransform, projection: str):
+    def __init__(self, superpixels: gpd.GeoDataFrame, geotransform: Geotransform, epsg: int):
         self.superpixels = superpixels
         self.geotransform = geotransform
-        self.projection = projection
+        self.epsg = epsg
 
     @classmethod
     def extract_from_image(cls, image: Image, extract_values: bool=True, n_segments: int=100,
@@ -37,7 +37,7 @@ class Superpixels:
                 superpixels['band_{}'.format(i)] = superpixels.geometry.apply(
                     lambda x: cls._extract_pixel_values(x, image.pixels[:, :, i]))
 
-        return Superpixels(superpixels, image.geotransform, image.projection)
+        return Superpixels(superpixels, image.geotransform, image.epsg)
 
     @staticmethod
     def _vectorise_superpixel(segment):
@@ -67,3 +67,12 @@ class Superpixels:
         pixels = gis.clip_image(image, superpixel)
 
         return np.nanmean(pixels)
+
+    def save(self, filename: str, driver: str='GeoJSON'):
+        superpixels = self.superpixels.drop('geometry', axis=1)
+        superpixels.to_file(filename, driver=driver)
+
+    def project_to_geographic(self):
+        self.superpixels['geographic'] = self.superpixels.geometry.apply(
+            lambda x: gis.polygon_to_world(x, self.geotransform))
+        self.superpixels = self.superpixels.set_geometry('geographic')

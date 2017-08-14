@@ -56,6 +56,12 @@ def polygon_to_pixel(polygon, geotransform):
     return Polygon(points)
 
 
+def polygon_to_world(polygon, geotransform):
+    x, y = polygon.exterior.xy
+    points = [pixel_to_world(x, y, geotransform) for x, y in zip(x, y)]
+    return Polygon(points)
+
+
 def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (float, float):
     """ Tranform a coordinate to a new coordinate system
     :param x: easting/longitude
