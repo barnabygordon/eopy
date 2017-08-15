@@ -34,8 +34,8 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
     :param geotransform: the geospatial properties of the image
     :return: easting/longitude, northing/latitude
     """
-    x2 = (y * geotransform.pixel_width) + geotransform.upper_left_y
-    y2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
+    x2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
+    y2 = (y * geotransform.pixel_height) + geotransform.upper_left_y
 
     return x2, y2
 
