@@ -73,6 +73,19 @@ class Image:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
+    def get_composite(self, bands: [str]):
+        if self.band_labels is None:
+            raise UserWarning("Band labels must be defined.")
+        else:
+            composite = np.zeros((self.width, self.height, len(bands)))
+            for i, b in enumerate(bands):
+                band_number = self.band_labels[b]
+                band_pixels = self.pixels[:, :, band_number-1]
+                composite[:, :, i] = band_pixels
+
+            return Image(composite, self.geotransform, self.projection, self.metadata,
+                         band_labels={i+1: value for i, value in enumerate(bands)})
+
     def get_subset(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
         pixels = self.pixels[y:y+width, x:x+width]
@@ -98,8 +111,6 @@ class Image:
 
     def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
-        :param image: ndarray with shape (x, y) or (x, y, z)
-        :param image_dataset: a gdal Dataset returned from gdal.Open
         :param filepath: path to which the image should be saved, including extension
         :param data_type: Type of bit depth for the output image
         """
