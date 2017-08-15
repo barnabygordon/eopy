@@ -96,35 +96,23 @@ class Image:
 
             return stack, images[0].dataset
 
-    @staticmethod
-    def save(image: np.ndarray,
-             projection: str,
-             geotransform: Geotransform,
-             filepath: str,
-             data_type: int = gdal.GDT_Int16) -> None:
+    def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
         :param image: ndarray with shape (x, y) or (x, y, z)
         :param image_dataset: a gdal Dataset returned from gdal.Open
         :param filepath: path to which the image should be saved, including extension
         :param data_type: Type of bit depth for the output image
         """
-        width = image.shape[0]
-        height = image.shape[1]
-
-        if image.ndim > 2:
-            number_of_bands = image.shape[2]
-        else:
-            number_of_bands = 1
 
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(filepath, height, width, number_of_bands, data_type)
-        out_image.SetGeoTransform(geotransform.geotransform)
-        out_image.SetProjection(projection)
+            .Create(filepath, self.height, self.width, self.band_count, data_type)
+        out_image.SetGeoTransform(self.geotransform.geotransform)
+        out_image.SetProjection(self.projection)
 
-        if number_of_bands > 1:
-            for band in range(number_of_bands):
-                out_image.GetRasterBand(band+1).WriteArray(image[:, :, band])
+        if self.band_count > 1:
+            for band in range(self.band_count):
+                out_image.GetRasterBand(band+1).WriteArray(self.pixels[:, :, band])
         else:
-            out_image.GetRasterBand(1).WriteArray(image)
+            out_image.GetRasterBand(1).WriteArray(self.pixels)
 
         out_image.FlushCache()
