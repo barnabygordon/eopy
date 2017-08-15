@@ -83,18 +83,17 @@ class Image:
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
-    @staticmethod
-    def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
+    def stack(self, images: List["Image"]) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
         if len(images) == 1:
-            return images[0].pixels, images[0].dataset
+            return Image(images[0].pixels, self.geotransform, self.projection)
         else:
             stack = np.zeros((images[0].height, images[0].width, len(images)))
 
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            return stack, images[0].dataset
+            return Image(stack, self.geotransform, self.projection)
 
     def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
