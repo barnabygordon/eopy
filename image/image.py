@@ -13,17 +13,18 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object revolving around gdal """
-    def __init__(self, pixels, geotransform, projection, metadata=None):
+    def __init__(self, pixels, geotransform, projection, metadata=None, band_labels: dict=None):
         self.pixels = pixels
         self.geotransform = geotransform
         self.projection = projection
         self.metadata = metadata
+        self.band_labels = band_labels
 
     def __repr__(self):
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     @classmethod
-    def load(cls, filepath: str):
+    def load(cls, filepath: str, band_labels: {str: int}=None):
         if not os.path.exists(filepath):
             raise UserWarning("Filepath does not exist.")
         image_dataset = gdal.Open(filepath)
@@ -35,7 +36,7 @@ class Image:
         projection = image_dataset.GetProjection()
         metadata = image_dataset.GetMetadata()
 
-        return Image(pixels, geotransform, projection, metadata=metadata)
+        return Image(pixels, geotransform, projection, metadata=metadata, band_labels=band_labels)
 
     @property
     def width(self) -> int:
@@ -44,6 +45,13 @@ class Image:
     @property
     def height(self) -> int:
         return self.pixels.shape[1]
+
+    @property
+    def band_count(self) -> int:
+        if self.pixels.ndim > 2:
+            return self.pixels.shape[2]
+        else:
+            return 1
 
     @property
     def shape(self) -> (int, int, int):
@@ -61,13 +69,6 @@ class Image:
         return Polygon(zip(x, y))
 
     @property
-    def band_count(self) -> int:
-        if self.pixels.ndim > 2:
-            return self.pixels.shape[2]
-        else:
-            return 1
-
-    @property
     def epsg(self) -> int:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
@@ -76,7 +77,7 @@ class Image:
         """ A slice of the image across all bands """
         pixels = self.pixels[y:y+width, x:x+width]
         geotransform = self._subset_geotransform(x, y)
-        return Image(pixels, geotransform=geotransform, projection=self.projection, metadata=self.metadata)
+        return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
     def _subset_geotransform(self, x, y):
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
@@ -93,7 +94,7 @@ class Image:
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            return Image(stack, self.geotransform, self.projection)
+            return Image(stack, self.geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
     def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
