@@ -24,6 +24,14 @@ class Image:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     @classmethod
+    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None):
+        pixels = image_dataset.ReadAsArray()
+        geotransform = image_dataset.GetGeoTransform()
+        projection = image_dataset.GetProjection()
+
+        return Image(pixels, geotransform, projection, band_labels)
+
+    @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None):
         if not os.path.exists(filepath):
             raise UserWarning("Filepath does not exist.")
@@ -97,17 +105,21 @@ class Image:
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
-    def stack(self, images: List["Image"]) -> (np.ndarray, gdal.Dataset):
+    @staticmethod
+    def stack(images: List["Image"], band_labels: {str: int}=None) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
+        geotransform = images[0].geotransform
+        projection = images[0].projection
+        metadata = images[0].metadata
         if len(images) == 1:
-            return Image(images[0].pixels, self.geotransform, self.projection)
+            return Image(images[0].pixels, geotransform, projection)
         else:
             stack = np.zeros((images[0].height, images[0].width, len(images)))
 
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            return Image(stack, self.geotransform, self.projection, self.metadata, band_labels=self.band_labels)
+            return Image(stack, geotransform, projection, metadata, band_labels=band_labels)
 
     def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
         """ Save a ndarray as an image with geospatial metadata
