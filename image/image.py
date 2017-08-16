@@ -15,6 +15,7 @@ class Image:
     """ A generic image object revolving around gdal """
     def __init__(self, pixels, geotransform, projection, metadata=None, band_labels: dict=None):
         self.pixels = pixels
+        self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         self.projection = projection
         self.metadata = metadata
@@ -121,7 +122,7 @@ class Image:
 
             return Image(stack, geotransform, projection, metadata, band_labels=band_labels)
 
-    def save(self, filepath: str, data_type: int = gdal.GDT_Int16) -> None:
+    def save(self, filepath: str, data_type: str='uint16') -> None:
         """ Save a ndarray as an image with geospatial metadata
         :param filepath: path to which the image should be saved, including extension
         :param data_type: Type of bit depth for the output image
