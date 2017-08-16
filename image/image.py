@@ -26,7 +26,7 @@ class Image:
     @classmethod
     def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None):
         pixels = image_dataset.ReadAsArray()
-        geotransform = image_dataset.GetGeoTransform()
+        geotransform = Geotransform(image_dataset.GetGeoTransform())
         projection = image_dataset.GetProjection()
 
         return Image(pixels, geotransform, projection, band_labels)
@@ -112,9 +112,9 @@ class Image:
         projection = images[0].projection
         metadata = images[0].metadata
         if len(images) == 1:
-            return Image(images[0].pixels, geotransform, projection)
+            return Image(images[0].pixels, geotransform, projection, metadata, band_labels=band_labels)
         else:
-            stack = np.zeros((images[0].height, images[0].width, len(images)))
+            stack = np.zeros((images[0].width, images[0].height, len(images)))
 
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
@@ -129,7 +129,7 @@ class Image:
 
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
             .Create(filepath, self.height, self.width, self.band_count, data_type)
-        out_image.SetGeoTransform(self.geotransform.geotransform)
+        out_image.SetGeoTransform(self.geotransform.tuple)
         out_image.SetProjection(self.projection)
 
         if self.band_count > 1:

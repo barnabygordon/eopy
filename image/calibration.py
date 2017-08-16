@@ -3,6 +3,7 @@ import numpy as np
 import math
 
 from image import Landsat8
+from image import Image
 
 
 class Calibration:
@@ -11,25 +12,26 @@ class Calibration:
         self.landsat8 = Landsat8()
         self.metadata_url = metadata_url
 
-    def calibrate_landsat(self, image: np.ndarray, band_list: [str]) -> np.ndarray:
+    def calibrate_landsat(self, image: Image, band_list: [str]) -> np.ndarray:
         """ Calibrate a stack of Landsat bands
         :param image: Stack of Landsat bands with shape (columns, rows, bands)
         :param band_list: List of band names
         :return: Stack of calibrated Landsat bands
         """
 
-        if image.ndim == 2:
-            calibrated_image = self.calibrate_landsat_band(image, self.landsat8.band_number(band_list[0]))
+        if image.band_count == 1:
+            calibrated_image = self.calibrate_landsat_band(image.pixels, self.landsat8.band_number(band_list[0]))
 
         else:
             calibrated_image = np.zeros(image.shape)
             for i, band_name in enumerate(band_list):
-                band_array = image[:, :, i]
+                band_array = image.pixels[:, :, i]
                 band_number = self.landsat8.band_number(band_name)
 
                 calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, band_number)
 
-        return calibrated_image
+        return Image(calibrated_image, image.geotransform, image.projection, image.metadata,
+                     band_labels={i+1: band for i, band in enumerate(band_list)})
 
     def calibrate_landsat_band(self, band_array: np.ndarray, band_number: int) -> np.ndarray:
         """ Calibrate a single Landsat band
