@@ -13,7 +13,7 @@ class Image:
     """ A generic image object revolving around gdal """
     def __init__(self, image_dataset: gdal.Dataset):
         self.dataset = image_dataset
-        self.geotransform = Geotransform(self.dataset)
+        self.geotransform = Geotransform(self.dataset.GetGeoTransform())
 
     def __repr__(self):
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)

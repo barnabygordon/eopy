@@ -3,37 +3,45 @@ import time
 
 
 class URLBuilder:
-    @staticmethod
-    def build_landsat8_search_url(polygon: Polygon, start_date, cloud_min, cloud_max, search_limit):
+    def build_landsat8_search_url(self, polygon: Polygon, start_date, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
         """ Defines a Landsat-8 search url for development seed """
         url_root = 'https://api.developmentseed.org/satellites/landsat'
 
-        search_bounds = polygon.bounds
-
-        upper_left_latitude = search_bounds[3]
-        lower_right_latitude = search_bounds[1]
-        lower_left_longitude = search_bounds[0]
-        upper_right_longitude = search_bounds[2]
+        if path is None and row is None:
+            aoi_string = self.build_landsat8_geometry_string(polygon)
+        else:
+            aoi_string = "path:{}+AND+row:{}".format(path, row)
 
         today = time.strftime("%Y-%m-%d")
 
         date_string = 'acquisitionDate:[{}+TO+{}]'.format(start_date, today)
         cloud_string = 'cloudCoverFull:[{}+TO+{}]'.format(cloud_min, cloud_max)
-        left_latitude_string = 'upperLeftCornerLatitude:[{}+TO+1000]'.format(upper_left_latitude)
-        right_latitude_string = 'lowerRightCornerLatitude:[-1000+TO+{}]'.format(lower_right_latitude)
-        left_longitude_string = 'lowerLeftCornerLongitude:[-1000+TO+{}]'.format(lower_left_longitude)
-        right_longitude_string = 'upperRightCornerLongitude:[{}+TO+1000]'.format(upper_right_longitude)
         limit_string = 'limit={}'.format(search_limit)
 
-        search_string = '{}+AND+{}+AND+{}+AND+{}+AND+{}+AND+{}&{}'.format(
+        search_string = '{}+AND+{}+AND+{}&{}'.format(
             date_string, cloud_string,
-            left_latitude_string, right_latitude_string,
-            left_longitude_string, right_longitude_string,
-            limit_string)
+            aoi_string, limit_string)
 
         url = '{}?search={}'.format(url_root, search_string)
 
         return url
+
+    @staticmethod
+    def build_landsat8_geometry_string(polygon: Polygon):
+        search_bounds = polygon.bounds
+
+        min_longitude = search_bounds[0]
+        max_longitude = search_bounds[2]
+        min_latitude = search_bounds[1]
+        max_latitude = search_bounds[3]
+
+        left_latitude_string = 'upperLeftCornerLatitude:[{:.2f}+TO+1000]'.format(max_latitude)
+        right_latitude_string = 'lowerRightCornerLatitude:[-1000+TO+{:.2f}]'.format(min_latitude)
+        left_longitude_string = 'lowerLeftCornerLongitude:[-1000+TO+{:.2f}]'.format(min_longitude)
+        right_longitude_string = 'upperRightCornerLongitude:[{:.2f}+TO+1000]'.format(max_longitude)
+
+        return "{}+AND+{}+AND+{}+AND+{}".format(left_latitude_string, right_latitude_string,
+                                               left_longitude_string, right_longitude_string)
 
     @staticmethod
     def build_sentinel2_search_url(polygon: Polygon, start_date: str) -> str:

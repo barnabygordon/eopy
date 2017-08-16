@@ -53,9 +53,9 @@ class Downloader:
             calibrator = Calibration(metadata_url=metadata_url)
             image_stack = calibrator.calibrate_landsat(image_stack, band_list)
 
-        filename = "LS8_{date}_{bands}.tif".format(date=scene.date, bands='b'.join(band_list))
+        filename = "LS8_{date}_{path}_{row}.tif".format(date=scene.date, path=scene.path, row=scene.row)
         save_path = os.path.join(self.save_directory, filename)
-        Image.save(image_stack, image_dataset, filepath=save_path, data_type=gdal.GDT_Float32)
+        Image.save(image_stack*255, image_dataset, filepath=save_path, data_type=gdal.GDT_Byte)
 
         return Image(gdal.Open(save_path))
 
