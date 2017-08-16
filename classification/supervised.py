@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 
 
-class PixelClassifier:
+class SupervisedClassifier:
     """ A Random Forest-based pixel-by-pixel classifer that requires a shapefile delineating classes"""
     def __init__(self, image: Image, classifier=RandomForestClassifier, n_estimators=100):
         """
@@ -73,8 +73,3 @@ class PixelClassifier:
         ax.imshow(self.image.pixels[:, :, 0])
         self._open_class_file(class_file_path).plot(ax=ax, column='label', legend=True)
         plt.show()
-
-
-class ObjectClassifier:
-    def __init__(self):
-        raise NotImplementedError("Coming Soon!")

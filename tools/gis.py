@@ -34,8 +34,8 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
     :param geotransform: the geospatial properties of the image
     :return: easting/longitude, northing/latitude
     """
-    x2 = (y * geotransform.pixel_width) + geotransform.upper_left_y
-    y2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
+    x2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
+    y2 = (y * geotransform.pixel_height) + geotransform.upper_left_y
 
     return x2, y2
 
@@ -53,6 +53,12 @@ def polygon_to_pixel(polygon, geotransform):
         x_index, y_index = world_to_pixel(x, y, geotransform=geotransform)
         points.append((x_index, y_index))
 
+    return Polygon(points)
+
+
+def polygon_to_world(polygon, geotransform):
+    x, y = polygon.exterior.xy
+    points = [pixel_to_world(x, y, geotransform) for x, y in zip(x, y)]
     return Polygon(points)
 
 

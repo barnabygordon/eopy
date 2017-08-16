@@ -1,15 +1,13 @@
 import numpy as np
 from tqdm import tqdm
 
+from image import Image
+
 
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image: np.ndarray,
-                  L: float=0.,
-                  H: float=1.,
-                  E: float=0.5,
-                  clip: float=0.) -> np.ndarray:
+    def calculate(image: Image, L: float=0., H: float=1., E: float=0.5, clip: float=0.) -> Image:
         """ Perform a BCET on an image
         :param image: A 3D array of shape (rows, columns, bands)
         :param L: The lower limit of the output
@@ -19,9 +17,9 @@ class BCET:
         :return: A array that has been contrast enhanced
         """
 
-        for band in tqdm(range(image.shape[2]), total=image.shape[2], desc='Calculating bands'):
-
-            x = image[:, :, band]
+        bcet_image = np.zeros(image.shape)
+        for b in tqdm(range(image.band_count), total=image.band_count, desc='Calculating bands'):
+            x = image.pixels[:, :, b]
 
             l0 = np.ma.min(x)
             h0 = np.ma.max(x)
@@ -40,8 +38,9 @@ class BCET:
             a = (H - L) / ((h - l) * (h + l - 2 * b))
             c = L - a * (l - b)**2
 
-            image[:, :, band] = a * (x - b)**2 + c
+            bcet_image[:, :, b] = a * (x - b)**2 + c
 
-        image[image > H] = H
-        image[image < L] = L
-        return image
+        bcet_image[bcet_image > H] = H
+        bcet_image[bcet_image < L] = L
+
+        return Image(bcet_image, image.geotransform, image.projection, metadata=image.metadata)

@@ -44,9 +44,9 @@ class Downloader:
             url = "{download_path}_B{band}.TIF".format(download_path=scene.download_path,
                                                        band=self.landsat_8.band_number(band))
             image_dataset = gdal.Open('/vsicurl/{}'.format(url))
-            images.append(Image(image_dataset))
+            images.append(Image.load_from_dataset(image_dataset))
 
-        image_stack, image_dataset = Image.stack(images)
+        image_stack = Image.stack(images, band_labels={i+1: value for i, value in enumerate(band_list)})
 
         if calibrate:
             metadata_url = "{download_path}_MTL.txt".format(download_path=scene.download_path)
@@ -55,9 +55,10 @@ class Downloader:
 
         filename = "LS8_{date}_{path}_{row}.tif".format(date=scene.date, path=scene.path, row=scene.row)
         save_path = os.path.join(self.save_directory, filename)
-        Image.save(image_stack*255, image_dataset, filepath=save_path, data_type=gdal.GDT_Byte)
 
-        return Image(gdal.Open(save_path))
+        image_stack.save(save_path, data_type=gdal.GDT_Float32)
+
+        return image_stack
 
     def get_sentinel2_band(self, scene: SentinelScene, band: str) -> Image:
         """ Load a Sentinel-2 band into memory
