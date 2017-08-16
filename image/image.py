@@ -127,8 +127,9 @@ class Image:
         :param data_type: Type of bit depth for the output image
         """
 
+        gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(filepath, self.height, self.width, self.band_count, data_type)
+            .Create(filepath, self.height, self.width, self.band_count, gdal_data_type)
         out_image.SetGeoTransform(self.geotransform.tuple)
         out_image.SetProjection(self.projection)
 
@@ -139,3 +140,14 @@ class Image:
             out_image.GetRasterBand(1).WriteArray(self.pixels)
 
         out_image.FlushCache()
+
+    @staticmethod
+    def _get_gdal_data_type(name):
+        if name == 'uint8':
+            return gdal.GDT_Byte
+        elif name == 'uint16':
+            return gdal.GDT_UInt16
+        elif name == 'float32':
+            return gdal.GDT_Float32
+        else:
+            raise UserWarning("Unrecognised data type.")
