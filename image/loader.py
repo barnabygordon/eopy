@@ -2,8 +2,8 @@ import os
 
 from osgeo import gdal
 
-from cloud.sensor import Landsat8
 from image import Image
+from image.sensor import Landsat8
 
 
 class Loader:

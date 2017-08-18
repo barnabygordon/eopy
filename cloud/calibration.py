@@ -1,9 +1,10 @@
-from urllib.request import urlopen
-import numpy as np
 import math
+from urllib.request import urlopen
 
-from image import Landsat8
+import numpy as np
+
 from image import Image
+from image.sensor import Landsat8
 
 
 class Calibration:

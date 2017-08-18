@@ -6,9 +6,9 @@ from osgeo import gdal
 from cloud.calibration import Calibration
 from cloud.scene import LandsatScene
 from cloud.scene import SentinelScene
-from cloud.sensor import Landsat8
-from cloud.sensor import Sentinel2
 from image import Image
+from image.sensor import Landsat8
+from image.sensor import Sentinel2
 
 
 class Downloader:
