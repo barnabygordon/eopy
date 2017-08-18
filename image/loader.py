@@ -1,8 +1,10 @@
 import os
+import numpy as np
 
 from osgeo import gdal
 
 from image import Image
+from image.geotransform import Geotransform
 from image.sensor import Landsat8
 
 
@@ -33,3 +35,34 @@ class Loader:
         Image.save(stack, image_dataset, filepath=save_path)
 
         return Image(gdal.Open(save_path))
+
+    @classmethod
+    def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):
+        aster_vnir_labels = ['VNIR_Swath:ImageData1', 'VNIR_Swath:ImageData2', 'VNIR_Swath:ImageData3N']
+        aster_swir_labels = ['SWIR_Swath:ImageData4', 'SWIR_Swath:ImageData5', 'SWIR_Swath:ImageData6',
+                             'SWIR_Swath:ImageData7',
+                             'SWIR_Swath:ImageData8', 'SWIR_Swath:ImageData9']
+        aster_tir_labels = ['TIR_Swath:ImageData10', 'TIR_Swath:ImageData11', 'TIR_Swath:ImageData12',
+                            'TIR_Swath:ImageData13',
+                            'TIR_Swath:ImageData14']
+
+        hdf_dataset = gdal.Open(filename)
+        subdataset = [subdataset[0] for subdataset in hdf_dataset.GetSubDatasets()]
+
+        vnir, swir, tir = [cls.build_aster_image(labels, subdataset) for labels in
+                           [aster_vnir_labels, aster_swir_labels, aster_tir_labels]]
+
+        return vnir, swir, tir
+
+    @staticmethod
+    def build_aster_image(subdataset_labels, subdataset_list):
+        image_list = []
+        for label in subdataset_labels:
+            subdataset = [subdataset for subdataset in subdataset_list if label in subdataset][0]
+            image_dataset = gdal.Open(subdataset)
+            geotransform = Geotransform(image_dataset.GetGeoTransform())
+            projection = image_dataset.GetProjection()
+            image_list.append(image_dataset.ReadAsArray())
+
+        image_array = np.array(image_list).transpose(1, 2, 0)
+        return Image(image_array, geotransform, projection)
