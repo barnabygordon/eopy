@@ -56,7 +56,7 @@ class Downloader:
 
         filename = "LS8_{date}_{path}_{row}.tif".format(date=scene.date, path=scene.path, row=scene.row)
         save_path = os.path.join(self.save_directory, filename)
-        image_stack.save(save_path, data_type='uint16')
+        image_stack.save(save_path, data_type='float32')
 
         return image_stack
 
