@@ -5,14 +5,14 @@ import scipy.signal as spsig
 
 class Coregister:
     def __init__(self,
-                 pos_mx: int, pox_sx: int,
-                 pos_my: int, pox_sy: int,
+                 pos_mx: int, pos_sx: int,
+                 pos_my: int, pos_sy: int,
                  ex_slave: int, ex_master: int,
                  oversampling_factor: int):
         self.pos_mx = pos_mx
-        self.pos_sx = pox_sx
+        self.pos_sx = pos_sx
         self.pos_my = pos_my
-        self.pos_sy = pox_sy
+        self.pos_sy = pos_sy
         self.ex_slave = ex_slave
         self.ex_master = ex_master
         self.oversampling_factor = oversampling_factor
