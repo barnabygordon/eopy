@@ -22,18 +22,17 @@ class Coherence:
         for kk in tqdm(range(rw_stt, rw_stp + 1), total=((rw_stp + 1) - rw_stt)):
             # define extent of window
             from_rw = np.int(kk - math.floor(self.azimuth_resolution / 2.))
-            to_rw = np.int(kk + math.floor(self.range_resolution / 2.) + 1)
+            to_rw = np.int(kk + math.floor(self.azimuth_resolution / 2.) + 1)
 
             for mm in range(cl_stt, cl_stp + 1):
                 # define extent of window
-                from_cl = np.int(mm - math.floor(self.azimuth_resolution / 2.))
+                from_cl = np.int(mm - math.floor(self.range_resolution / 2.))
                 to_cl = np.int(mm + math.floor(self.range_resolution / 2.) + 1)
 
                 master_subview = master[from_rw:to_rw, from_cl:to_cl]
                 slave_subview = slave[from_rw:to_rw, from_cl:to_cl]
                 # calculate coherence (estimate)
-                numerator = master_subview * np.conj(slave_subview) * np.exp(
-                    -complex(0, 1) * model_phase[from_rw:to_rw, from_cl:to_cl])
+                numerator = master_subview * np.conj(slave_subview) * np.exp(-complex(0, 1) * model_phase[from_rw:to_rw, from_cl:to_cl])
                 denom_p1 = np.abs(master_subview) ** 2
                 denom_p2 = np.abs(slave_subview) ** 2
                 denominator = np.sqrt(denom_p1.sum() * denom_p2.sum())
