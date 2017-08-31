@@ -40,12 +40,12 @@ class Focus:
         # conducted in azimuth frequency - range time domain
 
         for k2 in range(0, size_range, 1):
-            vek2 = processed[:, k2]  # Select row in azimuth
-            vek2 = np.fft.fft(vek2)
-            corr2 = vek2 * con_azimuth_chirp
-            if_vek2 = np.fft.ifft(corr2)
-            if_vek2_sort = np.fft.ifftshift(if_vek2)
-            processed[:, k2] = if_vek2_sort
+            vek = processed[:, k2]  # Select row in azimuth
+            vek = np.fft.fft(vek)
+            corr = vek * con_azimuth_chirp
+            if_vek = np.fft.ifft(corr)
+            if_vek_sort = np.fft.ifftshift(if_vek)
+            processed[:, k2] = if_vek_sort
 
         if self.multilook is True:
             processed = self.spatial_multilook(processed, size_azimuth, size_range)
@@ -82,9 +82,9 @@ class Focus:
 
         size_chirp_a = len(t)
 
-        index_start2 = math.ceil((size_azimuth - size_chirp_a) / 2) - 1
-        index_end2 = size_chirp_a + math.ceil((size_azimuth - size_chirp_a) / 2) - 2
-        azimuth_chirp[0, index_start2:index_end2 + 1] = az_chirp_temp
+        index_start = math.ceil((size_azimuth - size_chirp_a) / 2) - 1
+        index_end = size_chirp_a + math.ceil((size_azimuth - size_chirp_a) / 2) - 2
+        azimuth_chirp[0, index_start:index_end + 1] = az_chirp_temp
 
         azimuth_chirp = np.fft.fft(azimuth_chirp)
 
