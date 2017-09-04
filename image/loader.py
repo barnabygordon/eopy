@@ -28,13 +28,10 @@ class Loader:
             file_name = [file for file in file_list if 'B{}.TIF'.format(landsat8.band_number(band)) in file][0]
             filepath = os.path.join(image_folder, file_name)
 
-            images.append(Image(gdal.Open(filepath)))
+            image = Image.load_from_dataset(gdal.Open(filepath))
+            images.append(image)
 
-        stack, image_dataset = Image.stack(images)
-        save_path = os.path.join(image_folder, 'LS8_{}.tif'.format(''.join(band_list)))
-        Image.save(stack, image_dataset, filepath=save_path)
-
-        return Image(gdal.Open(save_path))
+        return Image.stack(images)
 
     @classmethod
     def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):

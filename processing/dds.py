@@ -15,6 +15,7 @@ class DDS:
         x = np.amin(image.pixels, axis=2)
 
         dds_image = np.copy(image.pixels)
-        dds_image -= (k * x)
+        for i in range(image.band_count):
+            dds_image[:, :, i] -= (k * x)
 
         return Image(dds_image, image.geotransform, image.projection)
