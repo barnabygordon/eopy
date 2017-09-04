@@ -67,6 +67,10 @@ class Image:
         return self.pixels.shape
 
     @property
+    def dtype(self) -> str:
+        return self.pixels.dtype
+
+    @property
     def bounds(self) -> Polygon:
         x_max = self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width)
         y_min = self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_width)
