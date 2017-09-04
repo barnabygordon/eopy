@@ -24,10 +24,8 @@ class Loader:
         file_list = os.listdir(image_folder)
         images = []
         for band in band_list:
-            landsat8.band_number(band)
             file_name = [file for file in file_list if 'B{}.TIF'.format(landsat8.band_number(band)) in file][0]
             filepath = os.path.join(image_folder, file_name)
-
             images.append(Image.load_from_dataset(gdal.Open(filepath)))
 
         return Image.stack(images)

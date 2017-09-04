@@ -25,25 +25,21 @@ class Image:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     @classmethod
-    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None):
-        pixels = image_dataset.ReadAsArray()
-        geotransform = Geotransform(image_dataset.GetGeoTransform())
-        projection = image_dataset.GetProjection()
-
-        return Image(pixels, geotransform, projection, band_labels)
-
-    @classmethod
-    def load(cls, filepath: str, band_labels: {str: int}=None):
+    def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
         if not os.path.exists(filepath):
             raise UserWarning("Filepath does not exist.")
-        image_dataset = gdal.Open(filepath)
-        pixels = image_dataset.ReadAsArray()
-        if pixels.ndim > 2:
-            pixels = pixels.transpose(1, 2, 0)
 
+        return cls.load_from_dataset(gdal.Open(filepath), band_labels)
+
+    @classmethod
+    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None) -> "Image":
         geotransform = Geotransform(image_dataset.GetGeoTransform())
         projection = image_dataset.GetProjection()
         metadata = image_dataset.GetMetadata()
+        pixels = image_dataset.ReadAsArray()
+
+        if pixels.ndim > 2:
+            pixels = pixels.transpose(1, 2, 0)
 
         return Image(pixels, geotransform, projection, metadata=metadata, band_labels=band_labels)
 
