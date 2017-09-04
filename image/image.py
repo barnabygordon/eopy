@@ -95,9 +95,11 @@ class Image:
             return Image(composite, self.geotransform, self.projection, self.metadata,
                          band_labels={i+1: value for i, value in enumerate(bands)})
 
-    def subset(self, x: int, y: int, width: int) -> np.ndarray:
+    def subset(self, x: int, y: int, width: int, height: int=None) -> np.ndarray:
         """ A slice of the image across all bands """
-        pixels = self.pixels[y:y+width, x:x+width]
+        if height is None:
+            height = width
+        pixels = self.pixels[y:y+height, x:x+width]
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
