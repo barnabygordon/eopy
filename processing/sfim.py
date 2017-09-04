@@ -27,7 +27,7 @@ class SFIM:
 
             for b in range(pansharpened.shape[2]):
                 pansharpened[:, :, b] = cls._fuse_images(
-                    low_resolution_image=low_resolution_image[:, :, b],
+                    low_resolution_image=low_resolution_image.pixels[:, :, b],
                     pan_image=pan_image.pixels,
                     smoothed_pan_image=pan_smooth)
 
