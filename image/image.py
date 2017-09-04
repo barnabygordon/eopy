@@ -95,7 +95,7 @@ class Image:
             return Image(composite, self.geotransform, self.projection, self.metadata,
                          band_labels={i+1: value for i, value in enumerate(bands)})
 
-    def get_subset(self, x: int, y: int, width: int) -> np.ndarray:
+    def subset(self, x: int, y: int, width: int) -> np.ndarray:
         """ A slice of the image across all bands """
         pixels = self.pixels[y:y+width, x:x+width]
         geotransform = self._subset_geotransform(x, y)
