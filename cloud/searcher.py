@@ -26,15 +26,16 @@ class Searcher:
         self.password = config.password
         self.url_builder = URLBuilder()
 
-    def search_landsat8_scenes(self, aoi: Polygon, start_date: str, path=None, row=None, verbose=True) -> [LandsatScene]:
+    def search_landsat8_scenes(self, start_date: str, aoi: Polygon=None, path=None, row=None, verbose=True)\
+            -> [LandsatScene]:
         """ Search for downloadable Landsat-8 scenes
         :param aoi: A WKT polygon defining the search AOI
         :param start_date: Start date from which to begin the search (YYYY-MM-DD)
         :return: A list of LandsatScenes
         """
         url = self.url_builder.build_landsat8_search_url(
-            aoi,
             start_date,
+            polygon=aoi,
             path=path, row=row,
             cloud_min=self.cloud_min, cloud_max=self.cloud_max,
             search_limit=self.search_limit)
