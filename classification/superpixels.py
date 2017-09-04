@@ -10,14 +10,29 @@ from tools import gis
 
 
 class Superpixels:
+    """ A class to segment an image into superpixels for classification """
     def __init__(self, superpixels: gpd.GeoDataFrame, geotransform: Geotransform, epsg: int):
         self.superpixels = superpixels
         self.geotransform = geotransform
         self.epsg = epsg
 
     @classmethod
-    def extract_from_image(cls, image: Image, extract_values: bool=True, n_segments: int=100,
-                           compactness: float=10., sigma: int=0, enforce_connectivity: bool=True):
+    def segment_image(cls,
+                      image: Image,
+                      extract_values: bool=True,
+                      n_segments: int=100,
+                      compactness: float=10.,
+                      sigma: int=0,
+                      enforce_connectivity: bool=True) -> "Superpixels":
+        """ Extract superpixels from an image
+        :param image: An Image
+        :param extract_values: Bool
+        :param n_segments: Number of segments
+        :param compactness: How square the segments should be
+        :param sigma: How smooth the segments should be
+        :param enforce_connectivity: Bool
+        :return: Superpixels
+        """
         if image.band_count > 2:
             multichannel = True
         else:
