@@ -76,4 +76,4 @@ class Downloader:
         save_path = os.path.join(self.save_directory, filename)
         request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
 
-        return Image(gdal.Open(save_path))
+        return Image.load(save_path)

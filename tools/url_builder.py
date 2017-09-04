@@ -3,14 +3,16 @@ import time
 
 
 class URLBuilder:
-    def build_landsat8_search_url(self, polygon: Polygon, start_date, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
+    def build_landsat8_search_url(self, start_date, polygon: Polygon=None, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
         """ Defines a Landsat-8 search url for development seed """
         url_root = 'https://api.developmentseed.org/satellites/landsat'
 
-        if path is None and row is None:
-            aoi_string = self.build_landsat8_geometry_string(polygon)
-        else:
+        if all(things is not None for things in [polygon, path, row]):
+            raise UserWarning("Function requires either polygon or path & row")
+        elif polygon is None:
             aoi_string = "path:{}+AND+row:{}".format(path, row)
+        else:
+            aoi_string = "path:{}+AND+row{}".format(path, row)
 
         today = time.strftime("%Y-%m-%d")
 

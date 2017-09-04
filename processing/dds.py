@@ -12,7 +12,7 @@ class DDS:
         :param k: The factor to which the image should be saturated
         :return: A saturated image
         """
-        x = np.amin(image.pixels, axis=2)
+        x = np.amin(image.pixels, axis=0)
 
         dds_image = np.copy(image.pixels)
         for i in range(image.band_count):

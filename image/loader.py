@@ -10,8 +10,8 @@ from image.sensor import Landsat8
 
 class Loader:
     """ For loading imagery locally from standardised folder structures """
-    @staticmethod
-    def load_landsat8(image_folder: str, band_list: [str]) -> Image:
+    @classmethod
+    def load_landsat8(cls, image_folder: str, band_list: [str]) -> Image:
         """ Load landsat-8 imagery from USGS Earthexplorer download folder
         :param image_folder: Path to the folder containing image bands
         :param band_list: List of bands to be loaded
@@ -24,14 +24,11 @@ class Loader:
         file_list = os.listdir(image_folder)
         images = []
         for band in band_list:
-            landsat8.band_number(band)
             file_name = [file for file in file_list if 'B{}.TIF'.format(landsat8.band_number(band)) in file][0]
             filepath = os.path.join(image_folder, file_name)
+            images.append(Image.load(filepath))
 
-            image = Image.load_from_dataset(gdal.Open(filepath))
-            images.append(image)
-
-        return Image.stack(images)
+        return Image.stack(images, band_labels={band: i+1 for i, band in enumerate(band_list)})
 
     @classmethod
     def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):

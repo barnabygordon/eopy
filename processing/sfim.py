@@ -17,7 +17,7 @@ class SFIM:
         :return: An array the same shape as the pan_image but with the same number of bands as the lower resolution
         """
 
-        pan_smooth = cls._smooth_image(pan_image)
+        pan_smooth = cls._smooth_image(pan_image.pixels)
 
         if low_resolution_image.band_count > 2:
             pansharpened = np.zeros((
@@ -37,13 +37,12 @@ class SFIM:
                 pan_image=pan_image.pixels,
                 smoothed_pan_image=pan_smooth)
 
-        return pansharpened
+        return Image(pansharpened, pan_image.geotransform, pan_image.projection)
 
     @staticmethod
-    def _fuse_images(
-                    low_resolution_image: np.ndarray,
-                    pan_image: np.ndarray,
-                    smoothed_pan_image: np.ndarray) -> np.ndarray:
+    def _fuse_images(low_resolution_image: np.ndarray,
+                     pan_image: np.ndarray,
+                     smoothed_pan_image: np.ndarray) -> np.ndarray:
         """ Fuse together two images of the same number of dimensions
         :param low_resolution_image: A 2D lower resolution image
         :param pan_image: A 2D higher resolution image
@@ -52,7 +51,6 @@ class SFIM:
         """
         resized_image = resize(low_resolution_image, pan_image.shape[::-1])
         return (resized_image * pan_image) / smoothed_pan_image
-
 
     @staticmethod
     def _smooth_image(image: Image, sigma: int=5) -> np.ndarray:

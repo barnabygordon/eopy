@@ -25,25 +25,21 @@ class Image:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     @classmethod
-    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None):
-        pixels = image_dataset.ReadAsArray()
-        geotransform = Geotransform(image_dataset.GetGeoTransform())
-        projection = image_dataset.GetProjection()
-
-        return Image(pixels, geotransform, projection, band_labels)
-
-    @classmethod
-    def load(cls, filepath: str, band_labels: {str: int}=None):
+    def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
         if not os.path.exists(filepath):
             raise UserWarning("Filepath does not exist.")
-        image_dataset = gdal.Open(filepath)
-        pixels = image_dataset.ReadAsArray()
-        if pixels.ndim > 2:
-            pixels = pixels.transpose(1, 2, 0)
 
+        return cls.load_from_dataset(gdal.Open(filepath), band_labels)
+
+    @classmethod
+    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None) -> "Image":
         geotransform = Geotransform(image_dataset.GetGeoTransform())
         projection = image_dataset.GetProjection()
         metadata = image_dataset.GetMetadata()
+        pixels = image_dataset.ReadAsArray()
+
+        if pixels.ndim > 2:
+            pixels = pixels.transpose(1, 2, 0)
 
         return Image(pixels, geotransform, projection, metadata=metadata, band_labels=band_labels)
 
@@ -65,6 +61,10 @@ class Image:
     @property
     def shape(self) -> (int, int, int):
         return self.pixels.shape
+
+    @property
+    def dtype(self) -> str:
+        return self.pixels.dtype
 
     @property
     def bounds(self) -> Polygon:
@@ -95,13 +95,16 @@ class Image:
             return Image(composite, self.geotransform, self.projection, self.metadata,
                          band_labels={i+1: value for i, value in enumerate(bands)})
 
-    def get_subset(self, x: int, y: int, width: int) -> np.ndarray:
+    def subset(self, x: int, y: int, width: int, height: int=None) -> np.ndarray:
         """ A slice of the image across all bands """
-        pixels = self.pixels[y:y+width, x:x+width]
+        if height is None:
+            height = width
+        pixels = self.pixels[y:y+height, x:x+width]
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
-    def _subset_geotransform(self, x, y):
+    def _subset_geotransform(self, x, y) -> Geotransform:
+        """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
