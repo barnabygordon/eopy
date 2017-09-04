@@ -101,7 +101,8 @@ class Image:
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
-    def _subset_geotransform(self, x, y):
+    def _subset_geotransform(self, x, y) -> Geotransform:
+        """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
