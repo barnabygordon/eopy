@@ -24,6 +24,9 @@ class Image:
     def __repr__(self):
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
+    def __getitem__(self, band: int) -> "Image":
+        return Image(self.pixels[:, :, band], self.geotransform, self.projection, self.metadata)
+
     @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
         if not os.path.exists(filepath):
