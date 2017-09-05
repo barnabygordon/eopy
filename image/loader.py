@@ -32,13 +32,14 @@ class Loader:
 
     @classmethod
     def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):
-        aster_vnir_labels = ['VNIR_Swath:ImageData1', 'VNIR_Swath:ImageData2', 'VNIR_Swath:ImageData3N']
-        aster_swir_labels = ['SWIR_Swath:ImageData4', 'SWIR_Swath:ImageData5', 'SWIR_Swath:ImageData6',
-                             'SWIR_Swath:ImageData7',
-                             'SWIR_Swath:ImageData8', 'SWIR_Swath:ImageData9']
-        aster_tir_labels = ['TIR_Swath:ImageData10', 'TIR_Swath:ImageData11', 'TIR_Swath:ImageData12',
-                            'TIR_Swath:ImageData13',
-                            'TIR_Swath:ImageData14']
+        aster_vnir_labels = [
+            'VNIR_Swath:ImageData1', 'VNIR_Swath:ImageData2', 'VNIR_Swath:ImageData3N']
+        aster_swir_labels = [
+            'SWIR_Swath:ImageData4', 'SWIR_Swath:ImageData5', 'SWIR_Swath:ImageData6',
+            'SWIR_Swath:ImageData7', 'SWIR_Swath:ImageData8', 'SWIR_Swath:ImageData9']
+        aster_tir_labels = [
+            'TIR_Swath:ImageData10', 'TIR_Swath:ImageData11', 'TIR_Swath:ImageData12',
+            'TIR_Swath:ImageData13', 'TIR_Swath:ImageData14']
 
         hdf_dataset = gdal.Open(filename)
         subdataset = [subdataset[0] for subdataset in hdf_dataset.GetSubDatasets()]
