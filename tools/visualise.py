@@ -1,5 +1,7 @@
 import folium
 import geojson
+import numpy as np
+import matplotlib.pyplot as plt
 
 from cloud.scene import SatelliteScene
 from image import Image
@@ -15,8 +17,8 @@ class Visualise:
         :return: A Folium map instance (will display automatically in Jupyter)
         """
         unprojected_bounds = [gis.transform_polygon(image.bounds,
-                                                   in_epsg=image.epsg,
-                                                   out_epsg=gis.WGS84_EPSG) for image in image_list]
+                                                    in_epsg=image.epsg,
+                                                    out_epsg=gis.WGS84_EPSG) for image in image_list]
         geojson_bounds = [geojson.Feature(geometry=bounds) for bounds in unprojected_bounds]
         center = unprojected_bounds[0].centroid.xy
         map_window = folium.Map(location=[center[1][0], center[0][0]])
@@ -41,3 +43,31 @@ class Visualise:
                 }).add_to(map_window)
 
         return map_window
+
+    @staticmethod
+    def save_pyplot(image: np.ndarray, filepath: str, width_in_pixels: int, height_in_pixels: int, dpi: int=72):
+        """ Plot an image and save it without whitespace """
+        f = plt.figure(frameon=False, dpi=dpi)
+        f.set_size_inches(width_in_pixels/dpi, height_in_pixels/dpi)
+
+        ax = plt.Axes(f, [0., 0., 1., 1.])
+        ax.set_axis_off()
+        f.add_axes(ax)
+
+        ax.imshow(image, aspect='normal')
+        f.savefig(filepath, dpi=dpi)
+
+    @staticmethod
+    def show_3d_surface(image: Image, figsize: (int, int)=(15, 10),
+                        rstride: int=100, cstride: int=100, cmap: str='jet'):
+        """ Plots a 2D image as a surface model"""
+        if image.band_count > 1:
+            raise UserWarning("Image must be 2D")
+
+        xx, yy = np.mgrid[0:image.width, 0:image.height]
+
+        f = plt.figure(figsize=figsize)
+        ax = f.gca(projection='3d')
+
+        ax.plot_surface(xx, yy, image.pixels, rstride=rstride, cstride=cstride, cmap=cmap, linewidth=0)
+        plt.show()

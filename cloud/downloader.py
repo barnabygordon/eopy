@@ -1,6 +1,6 @@
 import os
 from urllib import request
-
+from tqdm import tqdm
 from osgeo import gdal
 
 from cloud.calibration import Calibration
@@ -60,20 +60,30 @@ class Downloader:
 
         return image_stack
 
-    def get_sentinel2_band(self, scene: SentinelScene, band: str) -> Image:
+    def get_sentinel2_band(self, scene: SentinelScene, band_list: [str], calibrate: bool=False) -> Image:
         """ Load a Sentinel-2 band into memory
 
         An example of a Sentinel-2 url is:
         http://sentinel-s2-l1c.s3.amazonaws.com/tiles/10/S/DG/2015/12/7/0/B01.jp2
 
         :param scene: A Sentinel-2 scene
-        :param band: A band string
+        :param band_list: A list of bands to download
+        :param calibrate: Pre calibrate the images
         :return: An Image object
         """
-        band_name = "B{}".format(self.sentinel_2.band_number(band))
-        filename = "S2A_{date}_{band}.jp2".format(date=scene.date, band=band_name)
+        if calibrate:
+            raise NotImplementedError("Coming soon!")
 
-        save_path = os.path.join(self.save_directory, filename)
-        request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
+        images = []
+        for band in tqdm(band_list, total=len(band_list), desc="Downloading image"):
+            band_name = "B{}".format(self.sentinel_2.band_number(band))
+            filename = "S2A_{date}_{band}.jp2".format(date=scene.date, band=band_name)
 
-        return Image.load(save_path)
+            save_path = os.path.join(self.save_directory, filename)
+            request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
+            images.append(Image.load(save_path))
+
+        if len(band_list) > 1:
+            return Image.stack(images, band_labels={i+1: value for i, value in enumerate(band_list)})
+        else:
+            return images[0]

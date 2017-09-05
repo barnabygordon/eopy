@@ -12,8 +12,12 @@ GTIFF_DRIVER = 'GTiff'
 
 
 class Image:
-    """ A generic image object revolving around gdal """
-    def __init__(self, pixels, geotransform, projection, metadata=None, band_labels: dict=None):
+    """ A generic image object using gdal """
+    def __init__(self,
+                 pixels: np.ndarray,
+                 geotransform: Geotransform,
+                 projection: str, metadata=None,
+                 band_labels: dict=None):
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
@@ -21,8 +25,11 @@ class Image:
         self.metadata = metadata
         self.band_labels = band_labels
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
+
+    def __getitem__(self, band: int) -> "Image":
+        return Image(self.pixels[:, :, band], self.geotransform, self.projection, self.metadata)
 
     @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
@@ -89,8 +96,7 @@ class Image:
             composite = np.zeros((self.width, self.height, len(bands)))
             for i, b in enumerate(bands):
                 band_number = self.band_labels[b]
-                band_pixels = self.pixels[:, :, band_number-1]
-                composite[:, :, i] = band_pixels
+                composite[:, :, i] = self.pixels[:, :, band_number-1]
 
             return Image(composite, self.geotransform, self.projection, self.metadata,
                          band_labels={i+1: value for i, value in enumerate(bands)})
@@ -103,6 +109,9 @@ class Image:
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
+    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
+        return gis.clip_image(self, polygon, mask_value=mask_value)
+
     def _subset_geotransform(self, x, y) -> Geotransform:
         """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
@@ -112,18 +121,17 @@ class Image:
     @staticmethod
     def stack(images: List["Image"], band_labels: {str: int}=None) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
-        geotransform = images[0].geotransform
-        projection = images[0].projection
-        metadata = images[0].metadata
         if len(images) == 1:
-            return Image(images[0].pixels, geotransform, projection, metadata, band_labels=band_labels)
+            raise UserWarning("Only one image has been provided")
         else:
             stack = np.zeros((images[0].width, images[0].height, len(images)))
 
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            return Image(stack, geotransform, projection, metadata, band_labels=band_labels)
+            return Image(stack,
+                         images[0].geotransform, images[0].projection, images[0].metadata,
+                         band_labels=band_labels)
 
     def save(self, filepath: str, data_type: str='uint16') -> None:
         """ Save a ndarray as an image with geospatial metadata

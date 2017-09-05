@@ -98,56 +98,25 @@ def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
     return Feature(geometry=polygon, properties=properties)
 
 
-def clip_image(image: np.array, polygon: Polygon, mask_value: float=np.nan):
-    """
-    Masks the pixels outside its pixel polygon.
-    :param image: np.array
-    :param polygon: pixel_polygon
-    :param mask_value: value of masked pixels
-    :return: clipped image
-    """
-    x, y = [], []
-    polygon_coords = []
-    for i in polygon.exterior.coords:
-        x.append(i[0])
-        y.append(i[1])
-        polygon_coords.append((i[0], i[1]))
-
-    x_min, y_min = int(min(x)), int(min(y))
-    x_max, y_max = int(max(x)), int(max(y))
-
-    extent = [y_min, y_max, x_min, x_max]
-
-    mask = _create_mask(image.shape[1], image.shape[0], polygon_coords, extent)
-
-    if image.ndim > 2:
-        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3], :].astype(np.float)
-        im_arr_clip[mask != 0, :] = mask_value
-
-    elif image.ndim == 2:
-        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3]].astype(np.float)
-        im_arr_clip[mask != 0] = mask_value
-
-    else:
-        raise Exception("Not enough dimensions in array, expected 2 or more, received {}.".format(image.ndim))
-
-    return im_arr_clip
-
-
-def _create_mask(width: int, height: int, polygon_coords: list, extent: [int]):
-    """
-    Create a clipper mask for clipping a polygon or extracting an image subset.
-    :param width: pixel width of the image (number of columns)
-    :param height: pixel height of the image (number of rows)
-    :param polygon_coords: list of coordinates from clip_image function
-    :param extent: extent of the coordinates from clip_image function
+def clip_image(image, polygon: Polygon, mask_value: float=np.nan):
+    """ Clip and image using a polygon
+    :param image: Image object
+    :param polygon: Shapely polygon object
+    :param mask_value: Non-image value
     :return:
     """
-    mask_image = PILImage.new("L", (width, height), 1)
+    polygon_coords = list(polygon.exterior.coords)
+    bounds = [int(value) for value in polygon.bounds]
+
+    mask_image = PILImage.new("L", (image.height, image.width), 1)
     ImageDraw.Draw(mask_image).polygon(polygon_coords, 0)
     mask = np.array(mask_image)
+    mask = mask[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
-    return mask[extent[0]:extent[1], extent[2]:extent[3]]
+    subset = image.subset(bounds[0], bounds[1], bounds[2] - bounds[0], bounds[3] - bounds[1])
+    subset.pixels[mask != 0] = mask_value
+
+    return subset
 
 
 def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
