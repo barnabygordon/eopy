@@ -12,8 +12,12 @@ GTIFF_DRIVER = 'GTiff'
 
 
 class Image:
-    """ A generic image object revolving around gdal """
-    def __init__(self, pixels, geotransform, projection, metadata=None, band_labels: dict=None):
+    """ A generic image object using gdal """
+    def __init__(self,
+                 pixels: np.ndarray,
+                 geotransform: Geotransform,
+                 projection: str, metadata=None,
+                 band_labels: dict=None):
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
@@ -21,7 +25,7 @@ class Image:
         self.metadata = metadata
         self.band_labels = band_labels
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     def __getitem__(self, band: int) -> "Image":
@@ -92,8 +96,7 @@ class Image:
             composite = np.zeros((self.width, self.height, len(bands)))
             for i, b in enumerate(bands):
                 band_number = self.band_labels[b]
-                band_pixels = self.pixels[:, :, band_number-1]
-                composite[:, :, i] = band_pixels
+                composite[:, :, i] = self.pixels[:, :, band_number-1]
 
             return Image(composite, self.geotransform, self.projection, self.metadata,
                          band_labels={i+1: value for i, value in enumerate(bands)})

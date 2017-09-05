@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
+from image import Image
 from image.geotransform import Geotransform
 
 WGS84_EPSG = 4326
@@ -98,7 +99,7 @@ def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
     return Feature(geometry=polygon, properties=properties)
 
 
-def clip_image(image: np.array, polygon: Polygon, mask_value: float=np.nan):
+def clip_image(image: Image, polygon: Polygon, mask_value: float=np.nan):
     """
     Masks the pixels outside its pixel polygon.
     :param image: np.array
@@ -119,19 +120,19 @@ def clip_image(image: np.array, polygon: Polygon, mask_value: float=np.nan):
     extent = [y_min, y_max, x_min, x_max]
 
     mask = _create_mask(image.shape[1], image.shape[0], polygon_coords, extent)
+    clipped_image = np.copy(image.pixels)
+    if image.band_count > 1:
+        clipped_image = clipped_image[extent[0]:extent[1], extent[2]:extent[3], :].astype(np.float)
+        clipped_image[mask != 0, :] = mask_value
 
-    if image.ndim > 2:
-        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3], :].astype(np.float)
-        im_arr_clip[mask != 0, :] = mask_value
-
-    elif image.ndim == 2:
-        im_arr_clip = image[extent[0]:extent[1], extent[2]:extent[3]].astype(np.float)
-        im_arr_clip[mask != 0] = mask_value
+    elif image.band_count == 1:
+        clipped_image = clipped_image[extent[0]:extent[1], extent[2]:extent[3]].astype(np.float)
+        clipped_image[mask != 0] = mask_value
 
     else:
-        raise Exception("Not enough dimensions in array, expected 2 or more, received {}.".format(image.ndim))
+        raise Exception("Not enough dimensions in array, expected 2 or more, received {}.".format(image.shape))
 
-    return im_arr_clip
+    return clipped_image
 
 
 def _create_mask(width: int, height: int, polygon_coords: list, extent: [int]):
