@@ -121,18 +121,17 @@ class Image:
     @staticmethod
     def stack(images: List["Image"], band_labels: {str: int}=None) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
-        geotransform = images[0].geotransform
-        projection = images[0].projection
-        metadata = images[0].metadata
         if len(images) == 1:
-            return Image(images[0].pixels, geotransform, projection, metadata, band_labels=band_labels)
+            raise UserWarning("Only one image has been provided")
         else:
             stack = np.zeros((images[0].width, images[0].height, len(images)))
 
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            return Image(stack, geotransform, projection, metadata, band_labels=band_labels)
+            return Image(stack,
+                         images[0].geotransform, images[0].projection, images[0].metadata,
+                         band_labels=band_labels)
 
     def save(self, filepath: str, data_type: str='uint16') -> None:
         """ Save a ndarray as an image with geospatial metadata
