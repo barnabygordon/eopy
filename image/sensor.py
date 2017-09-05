@@ -47,9 +47,9 @@ class Sentinel2(Sensor):
 
     def band_number(self, band_name: str) -> int:
         band_names = {
-            'coastal': '01', 'blue': '02', 'green': '02', 'red': '03', 'red_edge_1': '04', 'red_edge_2': '05',
-            'red_edge_3': '06', 'nir_1': '07', 'nir_2': '08', 'water_vapour': '09', 'swir_1': '09',
-            'swir_2': '10', 'swir_3': '11'}
+            'coastal': '01', 'blue': '02', 'green': '03', 'red': '04', 'red_edge_1': '05', 'red_edge_2': '06',
+            'red_edge_3': '07', 'nir_1': '08', 'nir_2': '8A', 'water_vapour': '09', 'swir_1': '10',
+            'swir_2': '11', 'swir_3': '12'}
         return band_names[band_name]
 
     def band_resolution(self, band_name: str) -> float:
