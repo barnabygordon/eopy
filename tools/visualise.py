@@ -45,10 +45,10 @@ class Visualise:
         return map_window
 
     @staticmethod
-    def save_pyplot(image: np.ndarray, filepath: str, width_in_inches: float, height_in_inches: float, dpi: int=100):
+    def save_pyplot(image: np.ndarray, filepath: str, width_in_pixels: int, height_in_pixels: int, dpi: int=72):
         """ Plot an image and save it without whitespace """
-        f = plt.figure(frameon=False)
-        f.set_size_inches(width_in_inches, height_in_inches)
+        f = plt.figure(frameon=False, dpi=dpi)
+        f.set_size_inches(width_in_pixels/dpi, height_in_pixels/dpi)
 
         ax = plt.Axes(f, [0., 0., 1., 1.])
         ax.set_axis_off()
