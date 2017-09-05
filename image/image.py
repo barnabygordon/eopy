@@ -109,6 +109,9 @@ class Image:
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
+    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
+        return gis.clip_image(self, polygon, mask_value=mask_value)
+
     def _subset_geotransform(self, x, y) -> Geotransform:
         """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
