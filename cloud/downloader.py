@@ -74,6 +74,8 @@ class Downloader:
         filename = "S2A_{date}_{band}.jp2".format(date=scene.date, band=band_name)
 
         save_path = os.path.join(self.save_directory, filename)
+
+        print("{}/{}.jp2".format(scene.image_url, band_name))
         request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
 
         return Image.load(save_path)
