@@ -74,7 +74,6 @@ class Searcher:
         :return: list of SentinelScene objects
         """
         url = URLBuilder.build_sentinel2_search_url(aoi, start_date)
-        utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
 
         response = requests.get(
             url,
@@ -116,6 +115,7 @@ class Searcher:
             coords = np.array([(float(coord.split(',')[0]), float(coord.split(',')[1])) for coord in coordinates])
             boundary = Polygon(coords)
 
+            utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
             image_url = URLBuilder.build_sentinel2_image_url(
                 year, int(month), int(day),
                 utm_code,
