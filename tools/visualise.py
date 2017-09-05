@@ -56,3 +56,18 @@ class Visualise:
 
         ax.imshow(image, aspect='normal')
         f.savefig(filepath, dpi=dpi)
+
+    @staticmethod
+    def show_3d_surface(image: Image, figsize: (int, int)=(15, 10),
+                        rstride: int=100, cstride: int=100, cmap: str='jet'):
+        """ Plots a 2D image as a surface model"""
+        if image.band_count > 1:
+            raise UserWarning("Image must be 2D")
+
+        xx, yy = np.mgrid[0:image.width, 0:image.height]
+
+        f = plt.figure(figsize=figsize)
+        ax = f.gca(projection='3d')
+
+        ax.plot_surface(xx, yy, image.pixels, rstride=rstride, cstride=cstride, cmap=cmap, linewidth=0)
+        plt.show()
