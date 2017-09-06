@@ -119,7 +119,8 @@ class Image:
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            band_labels = {list(image.band_labels)[0]:i+1 for i, image in enumerate(images) if image.band_labels is not None}
+            band_labels = {list(image.band_labels)[0]: i+1 for i, image in enumerate(images)
+                           if image.band_labels is not None}
             return Image(stack,
                          images[0].geotransform, images[0].projection, images[0].metadata,
                          band_labels=band_labels)
