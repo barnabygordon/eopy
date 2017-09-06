@@ -119,7 +119,7 @@ class Image:
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
     @staticmethod
-    def stack(images: List["Image"], band_labels: {str: int}=None) -> (np.ndarray, gdal.Dataset):
+    def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
@@ -129,6 +129,7 @@ class Image:
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
+            band_labels = {list(image.band_labels)[0]:i+1 for i, image in enumerate(images) if image.band_labels is not None}
             return Image(stack,
                          images[0].geotransform, images[0].projection, images[0].metadata,
                          band_labels=band_labels)
