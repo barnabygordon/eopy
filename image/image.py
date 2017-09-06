@@ -3,7 +3,7 @@ import os
 from osgeo import gdal, osr
 from tqdm import tqdm
 from shapely.geometry import Polygon
-from typing import List
+from typing import List, Union
 
 from image.geotransform import Geotransform
 from tools import gis
@@ -28,9 +28,21 @@ class Image:
     def __repr__(self) -> str:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
-    def __getitem__(self, band: int) -> "Image":
-        return Image(self.pixels[:, :, band], self.geotransform, self.projection,
-                     band_labels={list(self.band_labels)[band]: 1}, metadata=self.metadata)
+    def __getitem__(self, band: Union[int, str]) -> "Image":
+        if type(band) == int:
+            image = self._get_band_by_number(band)
+            band_labels = {list(self.band_labels)[band]: 1}
+        elif type(band) == str:
+            image = self._get_band_by_number(self.band_labels[band])
+            band_labels = {}
+        else:
+            raise UserWarning("Requires a integer or a string")
+
+        return Image(image, self.geotransform, self.projection,
+                     band_labels=band_labels, metadata=self.metadata)
+
+    def _get_band_by_number(self, band_number: int) -> np.ndarray:
+        return self.pixels[:, :, band_number-1]
 
     @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
