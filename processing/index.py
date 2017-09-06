@@ -11,7 +11,7 @@ class IndexCalculator:
             raise UserWarning("Image is missing bands: {}".format(', '.join(missing_bands)))
 
     @staticmethod
-    def save_divide(numerator, denominator):
+    def safe_divide(numerator, denominator):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             return numerator / denominator
@@ -24,9 +24,19 @@ class Landsat8(IndexCalculator):
         red = image['red'].pixels
         blue = image['blue'].pixels
 
-        iron_oxide = IndexCalculator.save_divide(red, blue)
+        iron_oxide = IndexCalculator.safe_divide(red, blue)
         return Image(iron_oxide, image.geotransform, image.projection,
                      band_labels={'iron_oxide': 1}, metadata=image.metadata)
+
+    @classmethod
+    def clay(cls, image):
+        IndexCalculator.check_bands_exist(image, ['swir_1', 'swir_2'])
+        swir_1 = image['swir_1'].pixels
+        swir_2 = image['swir_2'].pixels
+
+        clay = IndexCalculator.safe_divide(swir_2, swir_1)
+        return Image(clay, image.geotransform, image.projection,
+                     band_labels={'clay': 1}, metadata=image.metadata)
 
     @classmethod
     def ndvi(cls, image):
@@ -34,7 +44,7 @@ class Landsat8(IndexCalculator):
         nir = image['nir'].pixels
         red = image['red'].pixels
 
-        ndvi = IndexCalculator.save_divide((nir - red), (nir + red))
+        ndvi = IndexCalculator.safe_divide((nir - red), (nir + red))
         return Image(ndvi, image.geotransform, image.projection,
                      band_labels={'ndvi': 1}, metadata=image.metadata)
 

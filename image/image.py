@@ -87,17 +87,6 @@ class Image:
         return self.pixels.dtype
 
     @property
-    def bounds(self) -> Polygon:
-        x_max = self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width)
-        y_min = self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_width)
-        x = [self.geotransform.upper_left_x, x_max, x_max,
-             self.geotransform.upper_left_x, self.geotransform.upper_left_x]
-        y = [self.geotransform.upper_left_y, self.geotransform.upper_left_y,
-             y_min, y_min, self.geotransform.upper_left_y]
-
-        return Polygon(zip(x, y))
-
-    @property
     def epsg(self) -> int:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
@@ -110,14 +99,14 @@ class Image:
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
-    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
-        return gis.clip_image(self, polygon, mask_value=mask_value)
-
     def _subset_geotransform(self, x, y) -> Geotransform:
         """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
+
+    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
+        return gis.clip_image(self, polygon, mask_value=mask_value)
 
     @staticmethod
     def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
