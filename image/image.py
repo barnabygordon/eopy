@@ -34,7 +34,7 @@ class Image:
             band_labels = {list(self.band_labels)[band]: 1}
         elif type(band) == str:
             image = self._get_band_by_number(self.band_labels[band])
-            band_labels = {}
+            band_labels = {band: 1}
         else:
             raise UserWarning("Requires a integer or a string")
 
