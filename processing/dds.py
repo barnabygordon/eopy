@@ -17,4 +17,5 @@ class DDS:
         dds_image = np.copy(image.pixels)
         dds_image -= (k * x)
 
-        return Image(dds_image, image.geotransform, image.projection)
+        return Image(dds_image, image.geotransform, image.projection,
+                     band_labels=image.band_labels, metadata=image.metadata)

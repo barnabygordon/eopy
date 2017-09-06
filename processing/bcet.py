@@ -43,4 +43,5 @@ class BCET:
         bcet_image[bcet_image > H] = H
         bcet_image[bcet_image < L] = L
 
-        return Image(bcet_image, image.geotransform, image.projection, metadata=image.metadata)
+        return Image(bcet_image, image.geotransform, image.projection,
+                     band_labels=image.band_labels, metadata=image.metadata)
