@@ -21,8 +21,8 @@ class Landsat8(IndexCalculator):
     @classmethod
     def iron_oxide(cls, image):
         IndexCalculator.check_bands_exist(image, ['red', 'blue'])
-        red = image[image.band_labels['red']-1].pixels
-        blue = image[image.band_labels['blue']-1].pixels
+        red = image['red'].pixels
+        blue = image['blue'].pixels
 
         iron_oxide = IndexCalculator.save_divide(red, blue)
         return Image(iron_oxide, image.geotransform, image.projection,
@@ -31,8 +31,8 @@ class Landsat8(IndexCalculator):
     @classmethod
     def ndvi(cls, image):
         IndexCalculator.check_bands_exist(image, ['nir', 'red'])
-        nir = image[image.band_labels['nir']-1].pixels
-        red = image[image.band_labels['red']-1].pixels
+        nir = image['nir'].pixels
+        red = image['red'].pixels
 
         ndvi = IndexCalculator.save_divide((nir - red), (nir + red))
         return Image(ndvi, image.geotransform, image.projection,
