@@ -102,18 +102,6 @@ class Image:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
-    def get_composite(self, bands: [str]):
-        if self.band_labels is None:
-            raise UserWarning("Band labels must be defined.")
-        else:
-            composite = np.zeros((self.width, self.height, len(bands)))
-            for i, b in enumerate(bands):
-                band_number = self.band_labels[b]
-                composite[:, :, i] = self.pixels[:, :, band_number-1]
-
-            return Image(composite, self.geotransform, self.projection, self.metadata,
-                         band_labels={i+1: value for i, value in enumerate(bands)})
-
     def subset(self, x: int, y: int, width: int, height: int=None) -> np.ndarray:
         """ A slice of the image across all bands """
         if height is None:
