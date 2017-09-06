@@ -47,4 +47,3 @@ class Landsat8(IndexCalculator):
         ndvi = IndexCalculator.safe_divide((nir - red), (nir + red))
         return Image(ndvi, image.geotransform, image.projection,
                      band_labels={'ndvi': 1}, metadata=image.metadata)
-
