@@ -29,7 +29,8 @@ class Image:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
     def __getitem__(self, band: int) -> "Image":
-        return Image(self.pixels[:, :, band], self.geotransform, self.projection, self.metadata)
+        return Image(self.pixels[:, :, band], self.geotransform, self.projection,
+                     band_labels={list(self.band_labels)[band]: 1}, metadata=self.metadata)
 
     @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
