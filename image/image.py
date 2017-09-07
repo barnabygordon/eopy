@@ -31,7 +31,10 @@ class Image:
     def __getitem__(self, band: Union[int, str]) -> "Image":
         if type(band) == int:
             image = self._get_band_by_number(band)
-            band_labels = {list(self.band_labels)[band]: 1}
+            if bool(self.band_labels):
+                band_labels = {list(self.band_labels)[band]: 1}
+            else:
+                band_labels = None
         elif type(band) == str:
             image = self._get_band_by_number(self.band_labels[band])
             band_labels = {band: 1}
