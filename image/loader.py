@@ -28,7 +28,10 @@ class Loader:
             filepath = os.path.join(image_folder, file_name)
             images.append(Image.load(filepath, band_labels={band: i+1}))
 
-        return Image.stack(images)
+        if len(images) > 1:
+            return Image.stack(images)
+        else:
+            return images[0]
 
     @classmethod
     def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):
