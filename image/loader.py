@@ -23,12 +23,15 @@ class Loader:
 
         file_list = os.listdir(image_folder)
         images = []
-        for band in band_list:
+        for i, band in enumerate(band_list):
             file_name = [file for file in file_list if 'B{}.TIF'.format(landsat8.band_number(band)) in file][0]
             filepath = os.path.join(image_folder, file_name)
-            images.append(Image.load(filepath))
+            images.append(Image.load(filepath, band_labels={band: i+1}))
 
-        return Image.stack(images, band_labels={band: i+1 for i, band in enumerate(band_list)})
+        if len(images) > 1:
+            return Image.stack(images)
+        else:
+            return images[0]
 
     @classmethod
     def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):

@@ -18,4 +18,5 @@ class DDS:
         for i in range(image.band_count):
             dds_image[:, :, i] -= (k * x)
 
-        return Image(dds_image, image.geotransform, image.projection)
+        return Image(dds_image, image.geotransform, image.projection,
+                     band_labels=image.band_labels, metadata=image.metadata)

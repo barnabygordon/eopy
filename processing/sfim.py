@@ -1,5 +1,6 @@
 from scipy.ndimage.filters import gaussian_filter
 from cv2 import resize
+from tqdm import tqdm
 import numpy as np
 
 from image import Image
@@ -25,9 +26,9 @@ class SFIM:
                 pan_image.shape[1],
                 low_resolution_image.shape[2]))
 
-            for b in range(low_resolution_image.band_count):
+            for b in tqdm(range(pansharpened.shape[2]), total=pansharpened.shape[2], desc="Fusing images"):
                 pansharpened[:, :, b] = cls._fuse_images(
-                    low_resolution_image=low_resolution_image.pixels[:, :, b],
+                    low_resolution_image=low_resolution_image[b].pixels,
                     pan_image=pan_image.pixels,
                     smoothed_pan_image=pan_smooth)
 
@@ -37,7 +38,8 @@ class SFIM:
                 pan_image=pan_image.pixels,
                 smoothed_pan_image=pan_smooth)
 
-        return Image(pansharpened, pan_image.geotransform, pan_image.projection)
+        return Image(pansharpened, pan_image.geotransform, pan_image.projection,
+                     band_labels=low_resolution_image.band_labels, metadata=low_resolution_image.metadata)
 
     @staticmethod
     def _fuse_images(low_resolution_image: np.ndarray,

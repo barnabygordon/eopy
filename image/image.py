@@ -3,7 +3,7 @@ import os
 from osgeo import gdal, osr
 from tqdm import tqdm
 from shapely.geometry import Polygon
-from typing import List
+from typing import List, Union
 
 from image.geotransform import Geotransform
 from tools import gis
@@ -28,8 +28,24 @@ class Image:
     def __repr__(self) -> str:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
-    def __getitem__(self, band: int) -> "Image":
-        return Image(self.pixels[:, :, band], self.geotransform, self.projection, self.metadata)
+    def __getitem__(self, band: Union[int, str]) -> "Image":
+        if type(band) == int:
+            image = self._get_band_by_number(band)
+            if bool(self.band_labels):
+                band_labels = {list(self.band_labels)[band]: 1}
+            else:
+                band_labels = None
+        elif type(band) == str:
+            image = self._get_band_by_number(self.band_labels[band])
+            band_labels = {band: 1}
+        else:
+            raise UserWarning("Requires a integer or a string")
+
+        return Image(image, self.geotransform, self.projection,
+                     band_labels=band_labels, metadata=self.metadata)
+
+    def _get_band_by_number(self, band_number: int) -> np.ndarray:
+        return self.pixels[:, :, band_number-1]
 
     @classmethod
     def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
@@ -74,32 +90,9 @@ class Image:
         return self.pixels.dtype
 
     @property
-    def bounds(self) -> Polygon:
-        x_max = self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width)
-        y_min = self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_width)
-        x = [self.geotransform.upper_left_x, x_max, x_max,
-             self.geotransform.upper_left_x, self.geotransform.upper_left_x]
-        y = [self.geotransform.upper_left_y, self.geotransform.upper_left_y,
-             y_min, y_min, self.geotransform.upper_left_y]
-
-        return Polygon(zip(x, y))
-
-    @property
     def epsg(self) -> int:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
-
-    def get_composite(self, bands: [str]):
-        if self.band_labels is None:
-            raise UserWarning("Band labels must be defined.")
-        else:
-            composite = np.zeros((self.width, self.height, len(bands)))
-            for i, b in enumerate(bands):
-                band_number = self.band_labels[b]
-                composite[:, :, i] = self.pixels[:, :, band_number-1]
-
-            return Image(composite, self.geotransform, self.projection, self.metadata,
-                         band_labels={i+1: value for i, value in enumerate(bands)})
 
     def subset(self, x: int, y: int, width: int, height: int=None) -> np.ndarray:
         """ A slice of the image across all bands """
@@ -109,17 +102,17 @@ class Image:
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
-    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
-        return gis.clip_image(self, polygon, mask_value=mask_value)
-
     def _subset_geotransform(self, x, y) -> Geotransform:
         """ Update the image geotransform based on new subset coordinates """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
+    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
+        return gis.clip_image(self, polygon, mask_value=mask_value)
+
     @staticmethod
-    def stack(images: List["Image"], band_labels: {str: int}=None) -> (np.ndarray, gdal.Dataset):
+    def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
         """ Stack a list of Image objects and return a single image array and dataset """
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
@@ -129,6 +122,8 @@ class Image:
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
+            band_labels = {list(image.band_labels)[0]: i+1 for i, image in enumerate(images)
+                           if image.band_labels is not None}
             return Image(stack,
                          images[0].geotransform, images[0].projection, images[0].metadata,
                          band_labels=band_labels)
