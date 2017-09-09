@@ -1,5 +1,5 @@
 from pyproj import Proj, transform
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 from shapely.ops import transform as shapely_transform
 from geojson import Feature
 import mgrs
@@ -46,14 +46,13 @@ def polygon_to_pixel(polygon, geotransform):
     :param geotransform: Image geotransform
     :return: Polygon with coordinates in pixel indices
     """
-    x, y = polygon.exterior.xy
+    if polygon.geom_type == 'Polygon':
+        return Polygon([world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords])
+    elif polygon.geom_type == 'MultiPolygon':
+        return MultiPolygon([polygon_to_pixel(sub_polygon, geotransform) for sub_polygon in polygon])
 
-    points = []
-    for x, y in zip(x, y):
-        x_index, y_index = world_to_pixel(x, y, geotransform=geotransform)
-        points.append((x_index, y_index))
-
-    return Polygon(points)
+    else:
+        raise UserWarning("polygon has an unexpected type.")
 
 
 def polygon_to_world(polygon, geotransform):
