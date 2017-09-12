@@ -113,6 +113,7 @@ def clip_image(image, polygon: Polygon, mask_value: float=np.nan):
     mask = mask[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
     subset = image.subset(bounds[0], bounds[1], bounds[2] - bounds[0], bounds[3] - bounds[1])
+    subset.pixels = np.copy(subset.pixels)
     subset.pixels[mask != 0] = mask_value
 
     return subset
