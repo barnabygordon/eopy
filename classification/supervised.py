@@ -71,7 +71,7 @@ class Supervised:
 
         results_list = self.model.predict(features)
         results_image = results_list.reshape(image.width, image.height)
-        results_image[image[0].pixels == np.nan] = 0.
+        results_image[np.isnan(image[0].pixels)] = 0.
 
         return Image(results_image, self.image.geotransform, self.image.projection)
 
@@ -90,7 +90,7 @@ class Supervised:
 
         self._plot_confusion_matrix(confusion_matrix)
 
-    def plot_features(self):
+    def plot_features(self, ylabel: str=None, xticks: [str]=None):
         """ Plot the averages of all class features and their variance """
         plt.figure(figsize=(15, 10))
 
@@ -103,6 +103,10 @@ class Supervised:
             plt.plot(mean_feature, label=c)
             plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.6)
 
+        if ylabel:
+            plt.ylabel(ylabel, fontsize=20)
+        if xticks:
+            plt.xticks(np.arange(len(xticks)), xticks, rotation=45, fontsize=15)
         plt.legend()
         plt.show()
 
