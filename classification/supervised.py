@@ -98,10 +98,10 @@ class Supervised:
             all_features = np.vstack(self.vectors.loc[self.vectors[self.label_name] == c].features.tolist())
 
             mean_feature = np.mean(all_features, axis=0)
-            variance = np.var(all_features, axis=0)
+            variance = np.std(all_features, axis=0)
 
+            plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.1)
             plt.plot(mean_feature, label=c)
-            plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.6)
 
         if ylabel:
             plt.ylabel(ylabel, fontsize=20)
