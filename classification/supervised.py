@@ -128,6 +128,6 @@ class Supervised:
                 plt.text(j, i, confusion_matrix[i, j], horizontalalignment='center')
 
         plt.tight_layout()
-        plt.ylabel('Observed')
-        plt.xlabel('Predicted')
+        plt.ylabel('Observed', fontsize=20)
+        plt.xlabel('Predicted', fontsize=20)
         plt.show()
