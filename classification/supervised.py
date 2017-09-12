@@ -76,16 +76,16 @@ class Supervised:
         return Image(results_image, self.image.geotransform, self.image.projection)
 
     def test_model(self, output_image: Image, truth_vectors: gpd.GeoDataFrame):
-        truth_image = PILImage.new("L", output_image.shape, 9999)
+        truth_image = PILImage.new("L", (output_image.height, output_image.width), 200)
         for i, row in truth_vectors.iterrows():
             class_value = truth_vectors[self.label_name].unique().tolist().index(row[self.label_name])
             polygon = list(row['pixel_polygon'].exterior.coords)
 
             ImageDraw.Draw(truth_image).polygon(polygon, class_value)
-        truth_image = np.array(truth_image)
+        truth_image = np.array(truth_image).astype('float')
 
-        truth = truth_image.ravel()
-        predictions = output_image.pixels.ravel()
+        truth = truth_image[truth_image != 200]
+        predictions = output_image.pixels[truth_image != 200]
         confusion_matrix = metrics.confusion_matrix(truth, predictions)
 
         self._plot_confusion_matrix(confusion_matrix)
