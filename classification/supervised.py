@@ -33,6 +33,7 @@ class Supervised:
         gdf = gpd.read_file(vector_filepath)
         gdf['pixel_polygon'] = gdf.geometry.apply(lambda x: gis.polygon_to_pixel(x, self.image.geotransform))
         gdf['features'] = gdf.pixel_polygon.apply(lambda x: self._extract_features(x))
+        gdf = gdf.set_geometry('pixel_polygon')
 
         return gdf
 
