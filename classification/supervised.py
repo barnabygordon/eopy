@@ -7,69 +7,63 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 
 
-class SupervisedClassifier:
-    """ A Random Forest-based pixel-by-pixel classifer that requires a shapefile delineating classes"""
-    def __init__(self, image: Image, classifier=RandomForestClassifier, n_estimators=100):
-        """
-        :param image: An image object with n-number of bands
-        :param n_estimators: number of estimators to be used in the Random Forest
-        """
+class Supervised:
+    def __init__(self, image, vector_filepath, label_name='class', model=RandomForestClassifier, estimators=100):
         self.image = image
-        self.classifier = classifier(n_estimators)
-        self.classes = {}
+        self.vectors = self._gather_data(vector_filepath)
+        self.label_name = label_name
+        self.model = model(estimators)
         self.trained = False
 
-    def _open_class_file(self, filepath: str) -> gpd.GeoDataFrame:
-        """ Open a shapefile and return a geopandas dataframe """
-        class_data = gpd.read_file(filepath)
+    def _gather_data(self, vector_filepath):
+        gdf = gpd.read_file(vector_filepath)
+        gdf['pixel_polygon'] = gdf.geometry.apply(lambda x: gis.polygon_to_pixel(x, self.image.geotransform))
+        gdf['features'] = gdf.pixel_polygon.apply(lambda x: self._extract_features(x))
 
-        class_data.geometry = class_data.geometry.apply(
-            lambda x: gis.polygon_to_pixel(x, self.image.geotransform))
+        return gdf
 
-        return class_data
+    def _extract_features(self, polygon):
+        clipped_image = self.image.clip_with(polygon)
+        features = clipped_image.pixels.reshape((clipped_image.width * clipped_image.height, clipped_image.band_count))
+        clean_features = np.array([feature for feature in features if not np.isnan(feature.min())])
 
-    def train(self, class_data_filepath: str, class_name: str='label') -> None:
-        """ Train a model using a shapefile as labelled class data
-        :param class_data_filepath: Path to the shapefile containing class polygons
-        :param class_name: Name of the attribute column
-        """
-        class_data = self._open_class_file(class_data_filepath)
+        return clean_features
 
-        classes, class_values = [], []
-        features = []
-        for i, row in class_data.iterrows():
-            clip = gis.clip_image(self.image.pixels, row.geometry)
-            flat_clip = clip.reshape(clip.shape[0] * clip.shape[1], clip.shape[2])
-            clean_features = [features for features in flat_clip if not np.isnan(np.sum(features))]
+    def train_model(self):
+        labels, features = [], []
 
-            features.extend(clean_features)
+        for c in self.vectors[self.label_name].unique():
+            all_features = np.vstack(self.vectors.loc[self.vectors[self.label_name] == c].features.tolist())
 
-            if row[class_name] not in classes:
-                classes.append(row[class_name])
-                self.classes[row[class_name]] = classes.index(row[class_name])
+            features.extend(all_features)
+            labels.extend([self.vectors[self.label_name].unique().tolist().index(c)] * len(all_features))
 
-            class_value = classes.index(row[class_name])
-            class_values.extend([class_value] * len(clean_features))
-
-        self.classifier.fit(features, class_values)
+        self.model.fit(features, labels)
         self.trained = True
 
-    def predict(self, test_image: np.array) -> np.ndarray:
-        """ Use the trained model to classify an image
-        :param test_image: An array that must have the same number of bands as the input
-        :return: A 2D array with integer values representing the classes
-        """
-        assert (self.trained is True, "Model must first be trained.")
-        assert (test_image.shape[2] == self.image.band_count, "Train and test images must have same band count.")
-        test_data = test_image.reshape(-1, self.image.band_count)
-        predictions = self.classifier.predict(test_data)
+    def test_model(self, image):
+        if not self.trained:
+            raise UserWarning("Model needs to be trained before it can be tested.")
+        features = image.pixels.reshape(image.width * image.height, image.band_count)
+        features[np.isnan(features)] = 0
 
-        return predictions.reshape((test_image.shape[0], test_image.shape[1]))
+        results_list = self.model.predict(features)
+        results_image = results_list.reshape(image.width, image.height)
+        results_image[image[0].pixels == np.nan] = 0.
 
-    def show(self, class_file_path: str, figsize: (int, int)=(15, 10)):
-        """ Plot the image data with the labels overlain """
-        f, ax = plt.subplots(figsize=figsize)
+        return results_image
 
-        ax.imshow(self.image.pixels[:, :, 0])
-        self._open_class_file(class_file_path).plot(ax=ax, column='label', legend=True)
+    def plot_features(self):
+        plt.figure(figsize=(15, 10))
+
+        for c in self.vectors[self.label_name].unique():
+            all_features = np.vstack(self.vectors.loc[self.vectors[self.label_name] == c].features.tolist())
+
+            mean_feature = np.mean(all_features, axis=0)
+            variance = np.var(all_features, axis=0)
+
+            plt.plot(mean_feature, label=c)
+            plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.6)
+
+        plt.legend()
         plt.show()
