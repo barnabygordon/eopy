@@ -45,22 +45,6 @@ class Supervised:
 
         return clean_features
 
-    def plot_features(self):
-        """ Plot the averages of all class features and their variance """
-        plt.figure(figsize=(15, 10))
-
-        for c in self.vectors[self.label_name].unique():
-            all_features = np.vstack(self.vectors.loc[self.vectors[self.label_name] == c].features.tolist())
-
-            mean_feature = np.mean(all_features, axis=0)
-            variance = np.var(all_features, axis=0)
-
-            plt.plot(mean_feature, label=c)
-            plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.6)
-
-        plt.legend()
-        plt.show()
-
     def train_model(self) -> None:
         """ Train the model """
         labels, features = [], []
@@ -86,3 +70,26 @@ class Supervised:
         results_image[image[0].pixels == np.nan] = 0.
 
         return Image(results_image, self.image.geotransform, self.image.projection)
+
+    def plot_features(self):
+        """ Plot the averages of all class features and their variance """
+        plt.figure(figsize=(15, 10))
+
+        for c in self.vectors[self.label_name].unique():
+            all_features = np.vstack(self.vectors.loc[self.vectors[self.label_name] == c].features.tolist())
+
+            mean_feature = np.mean(all_features, axis=0)
+            variance = np.var(all_features, axis=0)
+
+            plt.plot(mean_feature, label=c)
+            plt.fill_between(np.arange(len(mean_feature)), mean_feature - variance, mean_feature + variance, alpha=0.6)
+
+        plt.legend()
+        plt.show()
+
+    def plot_vectors(self, image: np.ndarray):
+        """ Plot vectors over an image """
+        f, ax = plt.subplots(figsize=(15, 10))
+        ax.imshow(image)
+        self.vectors.plot(column=self.label_name, ax=ax, legend=True, linewidth=0.1)
+        plt.show()
