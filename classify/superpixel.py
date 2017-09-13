@@ -10,10 +10,11 @@ from tools import gis
 
 class Superpixels:
     """ A class to segment an image into superpixels for classification """
-    def __init__(self, gdf: gpd.GeoDataFrame, geotransform: Geotransform, epsg: int):
+    def __init__(self, gdf: gpd.GeoDataFrame, geotransform: Geotransform, epsg: int, number_of_features: int):
         self.gdf = gdf
         self.geotransform = geotransform
         self.epsg = epsg
+        self.number_of_features = number_of_features
 
     @classmethod
     def segment_image(cls,
@@ -53,10 +54,13 @@ class Superpixels:
             else:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
 
-        return Superpixels(gdf, image.geotransform, image.epsg)
+        return Superpixels(gdf, image.geotransform, image.epsg, number_of_features=image.band_count)
 
     def cluster(self, n_clusters: int=2) -> None:
-        features = [[feature] for feature in self.gdf.features.tolist()]
+        if self.number_of_features == 1:
+            features = [[feature] for feature in self.gdf.features.tolist()]
+        else:
+            features = self.gdf.features.tolist()
         self.gdf['cluster'] = KMeans(n_clusters=n_clusters).fit_predict(features)
 
     def save(self, filename: str, driver: str='GeoJSON'):
