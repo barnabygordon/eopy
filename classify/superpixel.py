@@ -46,12 +46,10 @@ class Superpixels:
         gdf = gpd.GeoDataFrame(geometry=superpixel_list)
 
         if extract_values:
-            if image.band_count == 1:
-                gdf['band_1'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
+            if multichannel:
+                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
             else:
-                for i in range(image.band_count):
-                    gdf['band_{}'.format(i)] = gdf.geometry.apply(
-                        lambda x: np.nanmean(image[i].clip_with(x).pixels))
+                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
 
         return Superpixels(gdf, image.geotransform, image.epsg)
 
