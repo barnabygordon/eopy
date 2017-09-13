@@ -6,8 +6,7 @@ import numpy as np
 
 from image import Image
 from image.geotransform import Geotransform
-from classification.superpixels import Superpixels
-from tools import gis
+from classify.superpixels import Superpixels
 
 
 class SuperpixelExtractor:
@@ -49,9 +48,12 @@ class SuperpixelExtractor:
         superpixels = gpd.GeoDataFrame(geometry=superpixel_list)
 
         if extract_values:
-            for i in range(image.band_count):
-                superpixels['band_{}'.format(i)] = superpixels.geometry.apply(
-                    lambda x: cls._extract_pixel_values(x, image.pixels[:, :, i]))
+            if image.band_count == 1:
+                superpixels['band_1'] = superpixels.geometry.apply(lambda x: cls._extract_pixel_values(x, image))
+            else:
+                for i in range(image.band_count):
+                    superpixels['band_{}'.format(i)] = superpixels.geometry.apply(
+                        lambda x: cls._extract_pixel_values(x, image[i]))
 
         return Superpixels(superpixels, image.geotransform, image.epsg)
 
@@ -79,7 +81,7 @@ class SuperpixelExtractor:
         return contour_polygons[0]
 
     @staticmethod
-    def _extract_pixel_values(superpixel: Polygon, image: np.ndarray) -> gpd.GeoDataFrame:
-        pixels = gis.clip_image(image, superpixel)
+    def _extract_pixel_values(superpixel: Polygon, image: Image) -> gpd.GeoDataFrame:
+        clip_image = image.clip_with(superpixel)
 
-        return np.nanmean(pixels)
+        return np.nanmean(clip_image.pixels)
