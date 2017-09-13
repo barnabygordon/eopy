@@ -5,6 +5,8 @@ from geojson import Feature
 import mgrs
 from functools import partial
 import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
@@ -135,3 +137,39 @@ def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
     square = mgrs_code[3:5]
 
     return utm_code, latitude_band, square
+
+
+def vectorise_image(image: np.ndarray, levels: [float]) -> gpd.GeoDataFrame:
+    """ Converts a 2D array into a collection of polygon features
+    :param image: 2D array
+    :param levels: The value intervals where polygons should be drawn (adjust for binary output)
+    :return: Geopandas dataframe acting as a feature collection
+    """
+    contour_collection = plt.contourf(
+        image,
+        levels=levels,
+        origin='upper')
+    plt.close()
+
+    contour_polygons = []
+    for i, contour in enumerate(contour_collection.collections):
+        path_polygons = []
+        for path in contour.get_paths():
+            path.should_simplify = False
+            polygon = path.to_polygons()
+
+            holes, exterior = [], []
+            if len(polygon) > 0 and len(polygon[0]) > 3:
+                exterior = polygon[0]
+                if len(polygon) > 1:
+                    holes = [h for h in polygon[1:] if len(h) > 3]
+
+            if len(exterior) > 3:
+                path_polygons.append(Polygon(exterior, holes))
+
+            if len(path_polygons) > 1:
+                contour_polygons.append(MultiPolygon(path_polygons))
+            elif len(path_polygons) == 1:
+                contour_polygons.append(path_polygons[0])
+
+    return gpd.GeoDataFrame(contour_polygons, columns=['geom'], geometry='geom')
