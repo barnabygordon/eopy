@@ -147,8 +147,7 @@ def vectorise_image(image: np.ndarray, levels: [float]) -> gpd.GeoDataFrame:
     """
     contour_collection = plt.contourf(
         image,
-        levels=levels,
-        origin='upper')
+        levels=levels)
     plt.close()
 
     contour_polygons = []
