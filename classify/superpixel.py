@@ -46,6 +46,7 @@ class Superpixels:
 
         gdf = gpd.GeoDataFrame(geometry=superpixel_list)
 
+        image.pixels = np.copy(image.pixels).astype(float)
         if extract_values:
             if multichannel:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
