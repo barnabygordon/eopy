@@ -1,4 +1,5 @@
 from skimage.segmentation import slic
+from sklearn.cluster import KMeans
 import geopandas as gpd
 import numpy as np
 
@@ -52,6 +53,10 @@ class Superpixels:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
 
         return Superpixels(gdf, image.geotransform, image.epsg)
+
+    def cluster(self, n_clusters: int=2) -> None:
+        features = [[feature] for feature in self.gdf.features.tolist()]
+        self.gdf['cluster'] = KMeans(n_clusters=n_clusters).fit_predict(features)
 
     def save(self, filename: str, driver: str='GeoJSON'):
         gdf = self.gdf.drop('geometry', axis=1)
