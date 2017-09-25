@@ -33,7 +33,7 @@ class Superpixels:
         :param enforce_connectivity: Bool
         :return: Superpixels
         """
-        if image.band_count > 2:
+        if image.band_count > 1:
             multichannel = True
         else:
             multichannel = False
