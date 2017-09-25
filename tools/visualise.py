@@ -71,3 +71,19 @@ class Visualise:
 
         ax.plot_surface(xx, yy, image.pixels, rstride=rstride, cstride=cstride, cmap=cmap, linewidth=0)
         plt.show()
+
+    @staticmethod
+    def show_superpixel_spectra(superpixels):
+        """ Plot the average spectra for each superpixel cluster """
+        plt.figure(figsize=(15, 10))
+
+        for cluster in superpixels.gdf.cluster.unique():
+            features = np.stack(superpixels.gdf.loc[superpixels.gdf.cluster == cluster].features.tolist())
+            mean = np.nanmean(features, axis=0)
+            std = np.nanmean(features, axis=0)
+
+            plt.plot(mean, label=cluster)
+            plt.fill_between([x for x in range(len(mean))], mean-std, mean=std, alpha=0.2)
+
+        plt.legend()
+        plt.show()
