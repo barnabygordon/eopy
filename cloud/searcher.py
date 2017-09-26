@@ -68,13 +68,20 @@ class Searcher:
 
             return search_results
 
-    def search_sentinel2_scenes(self, aoi: Polygon, start_date) -> [SentinelScene]:
-        """ Search for downloadable Sentinel-2 scenes within AOI and after date
+    def search_sentinel2_scenes(self, aoi: Polygon, start_date: str) -> [SentinelScene]:
+        return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-2')
+
+    def search_sentinel1_scenes(self, aoi: Polygon, start_date: str) -> [SentinelScene]:
+        return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-1')
+
+    def search_sentinel_scenes(self, aoi: Polygon, start_date, platform) -> [SentinelScene]:
+        """ Search for downloadable Sentinel scenes within AOI and after date
         :param aoi: WKT polygon AOI
         :param start_date: date of start of search (YYYY-MM-DD)
         :return: list of SentinelScene objects
         """
-        url = URLBuilder.build_sentinel2_search_url(aoi, start_date, 0)
+
+        url = URLBuilder.build_sentinel_search_url(aoi, start_date, platform, 0)
         response = requests.get(url, auth=(self.username, self.password))
 
         assert response.status_code == 200, 'Search error: {}'.format(response.reason)
@@ -87,7 +94,7 @@ class Searcher:
         search_results = []
         pagination_count = math.ceil(results_count / 100)
         for i in tqdm(range(pagination_count), total=pagination_count, desc='Paginating search results'):
-            url = URLBuilder.build_sentinel2_search_url(aoi, start_date, i*100)
+            url = URLBuilder.build_sentinel_search_url(aoi, start_date, platform, i*100)
             response = requests.get(url, auth=(self.username, self.password))
 
             content = json.loads(response.content.decode('utf-8'))
@@ -96,14 +103,15 @@ class Searcher:
             for r in feed['entry']:
                 date = r['date'][0]['content'].split('T')[0]
                 year, month, day = date.split('-')
-                if type(r['double']) == list:
-                    for metric in r['double']:
-                        if metric['name'] == 'cloudcoverpercentage':
-                            cloud_percentage = metric['content']
-                elif r['double']['name'] == 'cloudcoverpercentage':
-                    cloud_percentage = r['double']['content']
+
+                if platform == 'Sentinel-2':
+                    if type(r['double']) == list:
+                        for metric in r['double']:
+                            if metric['name'] == 'cloudcoverpercentage':
+                                cloud_percentage = metric['content']
+                    elif r['double']['name'] == 'cloudcoverpercentage':
+                        cloud_percentage = r['double']['content']
                 else:
-                    print('Cloud Percentage not recorded')
                     cloud_percentage = 999
                 name = r['title']
 
