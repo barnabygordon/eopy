@@ -46,7 +46,7 @@ class URLBuilder:
                                                left_longitude_string, right_longitude_string)
 
     @staticmethod
-    def build_sentinel2_search_url(polygon: Polygon, start_date: str) -> str:
+    def build_sentinel2_search_url(polygon: Polygon, start_date: str, start_row: int) -> str:
         """ Constructs the search url for Scihub
         :param polygon: A WKT polygon
         :param start_date: Search start date in YYYY-MM-DD format
@@ -56,9 +56,10 @@ class URLBuilder:
         ingestiondate:[{date}T00:00:00.000Z TO NOW]\
          AND platformname:Sentinel-2\
          AND footprint:"Intersects({polygon})"\
-         &format=json'.format(
+         &start={start}&rows=100&format=json'.format(
             date=start_date,
-            polygon=polygon)
+            polygon=polygon,
+            start=start_row)
 
         return url
 

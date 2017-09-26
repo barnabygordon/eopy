@@ -1,9 +1,9 @@
 import json
-from xml.etree import ElementTree
-
 import numpy as np
 import requests
+import math
 from shapely.geometry import Polygon
+from shapely import wkt
 
 import config
 from cloud.scene import LandsatScene, SentinelScene
@@ -73,61 +73,56 @@ class Searcher:
         :param start_date: date of start of search (YYYY-MM-DD)
         :return: list of SentinelScene objects
         """
-        url = URLBuilder.build_sentinel2_search_url(aoi, start_date)
+        url = URLBuilder.build_sentinel2_search_url(aoi, start_date, 0)
 
-        response = requests.get(
-            url,
-            auth=(
-                self.username,
-                self.password))
+        response = requests.get(url, auth=(self.username, self.password))
 
         assert response.status_code == 200, 'Search error: {}'.format(response.reason)
 
         content = json.loads(response.content.decode('utf-8'))
 
         feed = content['feed']
-        results_count = feed['opensearch:totalResults']
-
+        results_count = int(feed['opensearch:totalResults'])
         print('Found {} results'.format(results_count))
 
         search_results = []
-        for r in feed['entry']:
-            date = r['summary'].split(',')[0].split(' ')[1].split('T')[0]
-            year, month, day = date.split('-')
-            if type(r['double']) == list:
-                for metric in r['double']:
-                    if metric['name'] == 'cloudcoverpercentage':
-                        cloud_percentage = metric['content']
-            elif r['double']['name'] == 'cloudcoverpercentage':
-                cloud_percentage = r['double']['content']
-            else:
-                print('Cloud Percentage not recorded')
-                cloud_percentage = 999
-            name = r['title']
+        for i in range(math.ceil(results_count / 100)):
+            url = URLBuilder.build_sentinel2_search_url(aoi, start_date, i*100)
+            response = requests.get(url, auth=(self.username, self.password))
 
-            boundary_xml = ElementTree.fromstring(r['str'][1]['content'])
+            content = json.loads(response.content.decode('utf-8'))
+            feed = content['feed']
 
-            for boundary in boundary_xml.findall('{http://www.opengis.net/gml}outerBoundaryIs'):
-                for ring in boundary.findall('{http://www.opengis.net/gml}LinearRing'):
-                    for coord in ring.findall('{http://www.opengis.net/gml}coordinates'):
-                        coordinates = coord.text.split(' ')
 
-            coords = np.array([(float(coord.split(',')[0]), float(coord.split(',')[1])) for coord in coordinates])
-            boundary = Polygon(coords)
+            for r in feed['entry']:
+                date = r['summary'].split(',')[0].split(' ')[1].split('T')[0]
+                year, month, day = date.split('-')
+                if type(r['double']) == list:
+                    for metric in r['double']:
+                        if metric['name'] == 'cloudcoverpercentage':
+                            cloud_percentage = metric['content']
+                elif r['double']['name'] == 'cloudcoverpercentage':
+                    cloud_percentage = r['double']['content']
+                else:
+                    print('Cloud Percentage not recorded')
+                    cloud_percentage = 999
+                name = r['title']
 
-            utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
-            image_url = URLBuilder.build_sentinel2_image_url(
-                year, int(month), int(day),
-                utm_code,
-                latitude_band,
-                square)
+                boundary = wkt.loads([i for i in r['str'] if 'POLYGON' in i['content']][0]['content'])
 
-            search_results.append(
-                SentinelScene(
-                    scene_id=name,
-                    date=date,
-                    clouds=cloud_percentage,
-                    bounds=boundary,
-                    image_url=image_url))
+                utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
+                image_url = URLBuilder.build_sentinel2_image_url(
+                    year, int(month), int(day),
+                    utm_code,
+                    latitude_band,
+                    square)
+
+                search_results.append(
+                    SentinelScene(
+                        scene_id=name,
+                        date=date,
+                        clouds=cloud_percentage,
+                        bounds=boundary,
+                        image_url=image_url))
 
         return search_results
