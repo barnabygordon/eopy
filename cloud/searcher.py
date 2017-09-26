@@ -2,10 +2,11 @@ import json
 import numpy as np
 import requests
 import math
+import config
+
 from shapely.geometry import Polygon
 from shapely import wkt
-
-import config
+from tqdm import tqdm
 from cloud.scene import LandsatScene, SentinelScene
 from tools import gis
 from tools.url_builder import URLBuilder
@@ -86,7 +87,8 @@ class Searcher:
         print('Found {} results'.format(results_count))
 
         search_results = []
-        for i in range(math.ceil(results_count / 100)):
+        pagination_count = math.ceil(results_count / 100)
+        for i in tqdm(range(pagination_count), total=pagination_count, desc='Paginating search results'):
             url = URLBuilder.build_sentinel2_search_url(aoi, start_date, i*100)
             response = requests.get(url, auth=(self.username, self.password))
 
