@@ -33,12 +33,14 @@ class Superpixels:
         :param enforce_connectivity: Bool
         :return: Superpixels
         """
-        if image.band_count > 1:
-            multichannel = True
-        else:
-            multichannel = False
-        segments = slic(image.pixels, n_segments=n_segments, compactness=compactness, sigma=sigma,
-                        multichannel=multichannel, enforce_connectivity=enforce_connectivity)
+        pixels = image.pixels
+        pixels[np.isnan(pixels)] = 0.
+
+        if image.band_count == 1:
+            pixels = np.dstack((pixels, pixels, pixels))
+
+        segments = slic(pixels, n_segments=n_segments, compactness=compactness, sigma=sigma,
+                        enforce_connectivity=enforce_connectivity)
 
         superpixel_list = []
         for i in range(segments.max()):
@@ -49,7 +51,7 @@ class Superpixels:
 
         image.pixels = np.copy(image.pixels).astype(float)
         if extract_values:
-            if multichannel:
+            if image.band_count == 1:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
             else:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
