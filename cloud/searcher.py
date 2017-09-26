@@ -75,13 +75,11 @@ class Searcher:
         :return: list of SentinelScene objects
         """
         url = URLBuilder.build_sentinel2_search_url(aoi, start_date, 0)
-
         response = requests.get(url, auth=(self.username, self.password))
 
         assert response.status_code == 200, 'Search error: {}'.format(response.reason)
 
         content = json.loads(response.content.decode('utf-8'))
-
         feed = content['feed']
         results_count = int(feed['opensearch:totalResults'])
         print('Found {} results'.format(results_count))
