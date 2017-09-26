@@ -93,9 +93,8 @@ class Searcher:
             content = json.loads(response.content.decode('utf-8'))
             feed = content['feed']
 
-
             for r in feed['entry']:
-                date = r['summary'].split(',')[0].split(' ')[1].split('T')[0]
+                date = r['date'][0]['content'].split('T')[0]
                 year, month, day = date.split('-')
                 if type(r['double']) == list:
                     for metric in r['double']:
@@ -113,9 +112,7 @@ class Searcher:
                 utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
                 image_url = URLBuilder.build_sentinel2_image_url(
                     year, int(month), int(day),
-                    utm_code,
-                    latitude_band,
-                    square)
+                    utm_code, latitude_band, square)
 
                 search_results.append(
                     SentinelScene(
