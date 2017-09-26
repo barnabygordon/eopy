@@ -50,8 +50,8 @@ class LandsatScene(SatelliteScene):
 
 
 class SentinelScene(SatelliteScene):
-    """ Sentinel-2 scene metadata """
+    """ Sentinel scene metadata """
     def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, image_url: str):
-        SatelliteScene.__init__(self, "Sentinel-2", date, clouds, bounds)
+        SatelliteScene.__init__(self, "Sentinel", date, clouds, bounds)
         self.scene_id = scene_id
         self.image_url = image_url
