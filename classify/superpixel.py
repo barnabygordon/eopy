@@ -52,9 +52,9 @@ class Superpixels:
         image.pixels = np.copy(image.pixels).astype(float)
         if extract_values:
             if image.band_count == 1:
-                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
-            else:
                 gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
+            else:
+                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
 
         return Superpixels(gdf, image.geotransform, image.epsg, number_of_features=image.band_count)
 
