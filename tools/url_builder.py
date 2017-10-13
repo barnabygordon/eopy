@@ -29,7 +29,11 @@ class URLBuilder:
         return url
 
     @staticmethod
-    def build_landsat8_geometry_string(polygon: Polygon):
+    def build_landsat8_geometry_string(polygon):
+        """
+        :type polygon: shapely.geometry.Polygon
+        :rtype: str
+        """
         search_bounds = polygon.bounds
 
         min_longitude = search_bounds[0]
@@ -46,13 +50,13 @@ class URLBuilder:
                                                left_longitude_string, right_longitude_string)
 
     @staticmethod
-    def build_sentinel_search_url(polygon: Polygon, start_date: str, platform: str, start_row: int) -> str:
+    def build_sentinel_search_url(polygon, start_date, platform, start_row):
         """ Constructs the search url for Scihub
-        :param polygon: A WKT polygon
-        :param start_date: Search start date in YYYY-MM-DD format
-        :param platform: Satellite name
-        :param start_row: Row index to start
-        :return: A url string
+        :type polygon: shapely.geometry.Polygon
+        :type start_date: str
+        :type platform: str
+        :type start_row: int
+        :rtype: str
         """
         url = 'https://scihub.copernicus.eu/dhus/search?q=\
         ingestiondate:[{date}T00:00:00.000Z TO NOW]\
@@ -67,15 +71,15 @@ class URLBuilder:
         return url
 
     @staticmethod
-    def build_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square) -> str:
+    def build_sentinel2_image_url(year, month, day, utm_zone, latitude_band, grid_square):
         """ Generate a url for the Sentinel2 AWS storage
-        :param year: year of the image capture
-        :param month: month of the image capture
-        :param day: day of the image capture
-        :param utm_zone: MGRS UTM zone
-        :param latitude_band: MGRS latitude band
-        :param grid_square: MGRS grid square
-        :return: a url string
+        :type year: str
+        :type month: str
+        :type day: str
+        :type utm_zone: str
+        :type latitude_band: str
+        :type grid_square: str
+        :rtype: str
         """
         url_root = 'http://sentinel-s2-l1c.s3.amazonaws.com/tiles'
         sequence = '0'

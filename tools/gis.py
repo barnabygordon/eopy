@@ -10,17 +10,15 @@ import matplotlib.pyplot as plt
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
-from image.geotransform import Geotransform
-
 WGS84_EPSG = 4326
 
 
-def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int):
+def world_to_pixel(x, y, geotransform):
     """ Transform a projected coordinates to image pixel indices
-    :param x: easting/longitude
-    :param y: northing/latitude
-    :param geotransform: the geospatial properties of the image
-    :return: x, y in pixel indices
+    :type x: float
+    :type y: float
+    :type geotransform: geotransform.Geotransform
+    :rtype: tuple(int, int)
     """
 
     x = np.round((x - geotransform.upper_left_x) / geotransform.pixel_width).astype(np.int)
@@ -29,12 +27,12 @@ def world_to_pixel(x: float, y: float, geotransform: Geotransform) -> (int, int)
     return x, y
 
 
-def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float):
+def pixel_to_world(x, y, geotransform):
     """ Transform a pixel indices into projected coordinates
-    :param x: column
-    :param y: row
-    :param geotransform: the geospatial properties of the image
-    :return: easting/longitude, northing/latitude
+    :type x: int
+    :type y: int
+    :type geotransform: geotransform.Geotransform
+    :rtype: tuple(float, float)
     """
     x2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
     y2 = (y * geotransform.pixel_height) + geotransform.upper_left_y
@@ -44,9 +42,9 @@ def pixel_to_world(x: int, y: int, geotransform: Geotransform) -> (float, float)
 
 def polygon_to_pixel(polygon, geotransform):
     """ Reproject polygon coordinates to image indices
-    :param polygon: Shapely polygon projected in the image projection
-    :param geotransform: Image geotransform
-    :return: Polygon with coordinates in pixel indices
+    :type polygon: shapely.geometry.Polygon
+    :type geotransform: geotransform.Geotransform
+    :rtype: shapely.geometry.Polygon
     """
     if polygon.geom_type == 'Polygon':
         return Polygon([world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords])
@@ -58,18 +56,24 @@ def polygon_to_pixel(polygon, geotransform):
 
 
 def polygon_to_world(polygon, geotransform):
+    """
+    :type polygon: shapely.geometry.Polygon
+    :type geotransform: geotransform.Geotransform
+    :rtype: shapely.geometry.Polygon
+    """
+
     x, y = polygon.exterior.xy
     points = [pixel_to_world(x, y, geotransform) for x, y in zip(x, y)]
     return Polygon(points)
 
 
-def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (float, float):
+def transform_coordinate(x, y, in_epsg, out_epsg):
     """ Tranform a coordinate to a new coordinate system
-    :param x: easting/longitude
-    :param y: northing/latitude
-    :param in_epsg: input EPSG code
-    :param out_epsg: output EPSG code
-    :return: reprojected easting/longitude, northing/latitude
+    :type x: float
+    :type y: float
+    :type in_epsg: int
+    :type out_epsg: int
+    :rtype: tuple(float, float)
     """
     in_proj = Proj(init='epsg:{}'.format(in_epsg))
     out_proj = Proj(init='epsg:{}'.format(out_epsg))
@@ -79,12 +83,12 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> (fl
     return x2, y2
 
 
-def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
+def transform_polygon(polygon, in_epsg, out_epsg):
     """ Transform a polygon to a new coordinate system
-    :param polygon: WKT Shapely polygon
-    :param in_epsg: input EPSG code
-    :param out_epsg: output EPSG code
-    :return: reprojected polygon
+    :type polygon: shapely.geometry.Polygon
+    :type in_epsg: int
+    :type out_epsg: int
+    :rtype: shapely.geometry.Polygon
     """
     projection = partial(
         transform,
@@ -94,17 +98,22 @@ def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
     return shapely_transform(projection, polygon)
 
 
-def wkt_to_geojson(polygon: Polygon, properties: dict=dict) -> Feature:
+def wkt_to_geojson(polygon, properties=dict):
+    """
+    :type polygon: shapely.geometry.Polygon
+    :type properties: dict
+    :rtype: geojson.Feature
+    """
     """ Convert a WKT polygon to GeoJSON """
     return Feature(geometry=polygon, properties=properties)
 
 
-def clip_image(image, polygon: Polygon, mask_value: float=np.nan):
+def clip_image(image, polygon, mask_value=np.nan):
     """ Clip and image using a polygon
-    :param image: Image object
-    :param polygon: Shapely polygon object
-    :param mask_value: Non-image value
-    :return:
+    :type image: image.Image
+    :type polygon: shapely.geometry.Polygon
+    :type mask_value: float
+    :rtype: image.Image
     """
     polygon_coords = list(polygon.exterior.coords)
     bounds = [int(value) for value in polygon.bounds]
@@ -121,11 +130,12 @@ def clip_image(image, polygon: Polygon, mask_value: float=np.nan):
     return subset
 
 
-def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
-    """ Gets MGRS info for a polygon
-    :param wkt_polygon: WKT Polygon
-    :return: UTM Code, Latitude Band, Square
+def get_mgrs_info(wkt_polygon):
     """
+    :type wkt_polygon: shapely.geometry.Polygon
+    :rtype: tuple(str, str, str)
+    """
+
     center = wkt_polygon.centroid
     longitude, latitude = center.x, center.y
 
@@ -139,11 +149,11 @@ def get_mgrs_info(wkt_polygon: Polygon) -> (str, str, str):
     return utm_code, latitude_band, square
 
 
-def vectorise_image(image: np.ndarray, levels: [float]) -> gpd.GeoDataFrame:
+def vectorise_image(image, levels):
     """ Converts a 2D array into a collection of polygon features
-    :param image: 2D array
-    :param levels: The value intervals where polygons should be drawn (adjust for binary output)
-    :return: Geopandas dataframe acting as a feature collection
+    :type image: numpy.ndarray
+    :type levels: list[float]
+    :rtype: geopandas.GeoDataFrame
     """
     contour_collection = plt.contourf(
         image,
