@@ -1,4 +1,4 @@
 .idea/
 notebooks/
-*config.py
+notebooks/config.py
 *__pycache__
