@@ -1,10 +1,15 @@
-from shapely.geometry import Polygon
 from IPython.display import Image as IPythonImage
 
 
 class SatelliteScene:
     """ A generic satellite scene """
-    def __init__(self, satellite_type: str, date: str, clouds: float, bounds: Polygon):
+    def __init__(self, satellite_type, date, clouds, bounds):
+        """
+        :type satellite_type: str
+        :type date: str
+        :type clouds: float
+        :type bounds: shapely.geometry.Polygon
+        """
         self.satellite_type = satellite_type
         self.date = date
         self.clouds = clouds
@@ -16,14 +21,16 @@ class SatelliteScene:
 
 class LandsatScene(SatelliteScene):
     """ Landsat-8 scene metadata """
-    def __init__(self,
-                 product_id: str,
-                 date: str,
-                 clouds: float,
-                 path: str,
-                 row: str,
-                 bounds: Polygon,
-                 thumbnail_url: str):
+    def __init__(self, product_id, date, clouds, path, row, bounds, thumbnail_url):
+        """
+        :type product_id: str
+        :type date: str
+        :type clouds: float
+        :type path: str
+        :type row: str
+        :type bounds: shapely.geometry.Polygon
+        :type thumbnail_url: str
+        """
         SatelliteScene.__init__(self, "Landsat-8", date, clouds, bounds)
         self.product_id = product_id
         self.path = self._parse_path_row(path)
@@ -51,7 +58,14 @@ class LandsatScene(SatelliteScene):
 
 class SentinelScene(SatelliteScene):
     """ Sentinel scene metadata """
-    def __init__(self, scene_id: str, date: str, clouds: float, bounds: Polygon, image_url: str):
+    def __init__(self, scene_id, date, clouds, bounds, image_url):
+        """
+        :type scene_id: str
+        :type date: str
+        :type clouds: float
+        :type bounds: shapely.geometry.Polygon
+        :type image_url: str
+        """
         SatelliteScene.__init__(self, "Sentinel", date, clouds, bounds)
         self.scene_id = scene_id
         self.image_url = image_url

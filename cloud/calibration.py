@@ -9,15 +9,18 @@ from image.sensor import Landsat8
 
 class Calibration:
     """ Functionality to calibrate satellite data """
-    def __init__(self, metadata_url: str):
+    def __init__(self, metadata_url):
+        """
+        :type metadata_url: str
+        """
         self.landsat8 = Landsat8()
         self.metadata_url = metadata_url
 
-    def calibrate_landsat(self, image: Image, band_list: [str]) -> np.ndarray:
+    def calibrate_landsat(self, image, band_list):
         """ Calibrate a stack of Landsat bands
-        :param image: Stack of Landsat bands with shape (columns, rows, bands)
-        :param band_list: List of band names
-        :return: Stack of calibrated Landsat bands
+        :type image: image.Image
+        :type band_list: list[str]
+        :rtype: numpy.ndarray
         """
 
         if image.band_count == 1:
@@ -34,11 +37,11 @@ class Calibration:
         return Image(calibrated_image, image.geotransform, image.projection, image.metadata,
                      band_labels={i+1: band for i, band in enumerate(band_list)})
 
-    def calibrate_landsat_band(self, band_array: np.ndarray, band_number: int) -> np.ndarray:
+    def calibrate_landsat_band(self, band_array, band_number):
         """ Calibrate a single Landsat band
-        :param band_array: 2D numpy array
-        :param band_number: Number of the band
-        :return: 2D calibrated numpy array
+        :type band_array: numpy.ndarray
+        :type band_number: int
+        :rtype: numpy.ndarray
         """
         gain = self.get_landsat_metadata_value('REFLECTANCE_MULT_BAND_{}'.format(band_number))
         bias = self.get_landsat_metadata_value('REFLECTANCE_ADD_BAND_{}'.format(band_number))
@@ -49,8 +52,8 @@ class Calibration:
 
     def get_landsat_metadata_value(self, parameter):
         """ Extract value from metadata txt file
-        :param parameter: The desired parameter
-        :return: value
+        :type parameter: str
+        :rtype: float
         """
         metadata_file = urlopen(self.metadata_url)
         # TODO: Make this less ugly!
@@ -60,13 +63,13 @@ class Calibration:
                 return float(data[1].split('\\')[0])
 
     @staticmethod
-    def calculate_landsat_toa_reflectance(dn: np.ndarray, gain: float, bias: float, sun_elevation: float):
+    def calculate_landsat_toa_reflectance(dn, gain, bias, sun_elevation):
         """ Calculate Top of Atmosphere reflectance taking into account solar geometry
-        :param dn: Digital Number
-        :param gain: The band specific multiplicative rescaling factor
-        :param bias: The band specific addititive rescaling factor
-        :param sun_elevation: The angle of the sun in radians
-        :return: Radiometrically corrected Landsat image
+        :type dn: numpy.ndarray
+        :type gain: float
+        :type bias: float
+        :type sun_elevation: float
+        :rtype: numpy.ndarray
         """
         rho = np.where(dn > 0, (gain*dn + bias) / math.sin(sun_elevation), 0)
 

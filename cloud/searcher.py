@@ -14,11 +14,11 @@ from tools.url_builder import URLBuilder
 
 class Searcher:
     """ A class to search for satellite imagery """
-    def __init__(self, cloud_min: int=0, cloud_max: int=100, search_limit: int=100):
+    def __init__(self, cloud_min=0, cloud_max=100, search_limit=100):
         """
-        :param cloud_min: Minimum percentage of clouds per scene
-        :param cloud_max: Maximum percentage of clouds per scene
-        :param search_limit: Search limit
+        :type cloud_min: int
+        :type cloud_max: int
+        :type search_limit: int
         """
         self.cloud_min = cloud_min
         self.cloud_max = cloud_max
@@ -27,15 +27,14 @@ class Searcher:
         self.password = config.password
         self.url_builder = URLBuilder()
 
-    def search_landsat8_scenes(self, start_date: str, aoi: Polygon=None, path=None, row=None, verbose=True)\
-            -> [LandsatScene]:
+    def search_landsat8_scenes(self, start_date, aoi=None, path=None, row=None, verbose=True):
         """ Search for downloadable Landsat-8 scenes
-        :param start_date: Start date from which to begin the search (YYYY-MM-DD)
-        :param aoi: A WKT polygon defining the search AOI
-        :param path: Landsat path
-        :param row: Landsat row
-        :param verbose: Shall I make noise?
-        :return: A list of LandsatScenes
+        :type start_date: str
+        :type aoi: shapely.geometry.Polygon
+        :type path: int
+        :type row: int
+        :type verbose: bool
+        :rtype: list[cloud.scene.LandsatScene]
         """
         url = self.url_builder.build_landsat8_search_url(
             start_date,
@@ -68,17 +67,27 @@ class Searcher:
 
             return search_results
 
-    def search_sentinel2_scenes(self, aoi: Polygon, start_date: str) -> [SentinelScene]:
+    def search_sentinel2_scenes(self, aoi, start_date):
+        """
+        :type aoi: shapely.geometry.Polygon
+        :type start_date: str
+        :rtype: list[cloud.scene.SentinelScene]
+        """
         return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-2')
 
-    def search_sentinel1_scenes(self, aoi: Polygon, start_date: str) -> [SentinelScene]:
+    def search_sentinel1_scenes(self, aoi, start_date):
+        """
+        :type aoi: shapely.geometry.Polygon
+        :type start_date: str
+        :rtype: list[cloud.scene.SentinelScene]
+        """
         return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-1')
 
-    def search_sentinel_scenes(self, aoi: Polygon, start_date, platform) -> [SentinelScene]:
+    def search_sentinel_scenes(self, aoi, start_date, platform):
         """ Search for downloadable Sentinel scenes within AOI and after date
-        :param aoi: WKT polygon AOI
-        :param start_date: date of start of search (YYYY-MM-DD)
-        :return: list of SentinelScene objects
+        :type aoi: shapely.geometry.Polygon
+        :type start_date: str
+        :rtype: list[cloud.scene.SentinelScene]
         """
 
         url = URLBuilder.build_sentinel_search_url(aoi, start_date, platform, 0)

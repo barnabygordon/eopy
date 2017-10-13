@@ -4,8 +4,6 @@ from tqdm import tqdm
 from osgeo import gdal
 
 from cloud.calibration import Calibration
-from cloud.scene import LandsatScene
-from cloud.scene import SentinelScene
 from image import Image
 from image.sensor import Landsat8
 from image.sensor import Sentinel2
@@ -13,7 +11,10 @@ from image.sensor import Sentinel2
 
 class Downloader:
     """ A class for downloading satellite imagery """
-    def __init__(self, save_directory: str):
+    def __init__(self, save_directory):
+        """
+        :type save_directory: str
+        """
         self.save_directory = save_directory
         self.landsat_8 = Landsat8()
         self.sentinel_2 = Sentinel2()
@@ -28,16 +29,16 @@ class Downloader:
         """ List the available Sentinel-2 band options """
         return ", ".join(self.sentinel_2.available_bands)
 
-    def get_landsat8_bands(self, scene: LandsatScene, band_list: [str], calibrate: bool=True) -> Image:
+    def get_landsat8_bands(self, scene, band_list, calibrate=True):
         """ Load Landsat-8 bands into memory
 
         An example of a landsat url is:
         https://landsat-pds.s3.amazonaws.com/c1/L8/139/045/LC08_L1TP_139045_20170304_20170316_01_T1/LC08_L1TP_139045_20170304_20170316_01_T1_B1.TIF
 
-        :param scene: A LandsatScene from the Searcher
-        :param band_list: List of the bands you want to download
-        :param calibrate: Do you want to calibrate the image to Top of Atmosphere reflectance?
-        :return: An Image object
+        :type scene: cloud.scene.LandsatScene
+        :type band_list: list[str]
+        :type calibrate: bool
+        :rtype: image.Image
         """
 
         images = []
@@ -60,16 +61,16 @@ class Downloader:
 
         return image_stack
 
-    def get_sentinel2_band(self, scene: SentinelScene, band_list: [str], calibrate: bool=False) -> Image:
+    def get_sentinel2_band(self, scene, band_list, calibrate=False):
         """ Load a Sentinel-2 band into memory
 
         An example of a Sentinel-2 url is:
         http://sentinel-s2-l1c.s3.amazonaws.com/tiles/10/S/DG/2015/12/7/0/B01.jp2
 
-        :param scene: A Sentinel-2 scene
-        :param band_list: A list of bands to download
-        :param calibrate: Pre calibrate the images
-        :return: An Image object
+        :type scene: cloud.scene.SentinelScene
+        :type band_list: list[str]
+        :type calibrate: bool
+        :rtype: image.Image
         """
         if calibrate:
             raise NotImplementedError("Coming soon!")
