@@ -6,11 +6,11 @@ from image import Image
 class DDS:
     """ Direct Decorrelation Stretch """
     @staticmethod
-    def calculate(image: Image, k: float=0.6) -> Image:
+    def calculate(image, k=0.6):
         """ Saturates an image according to the k factor
-        :param image: A 3D image with 3 bands and shape (columns, rows, bands)
-        :param k: The factor to which the image should be saturated
-        :return: A saturated image
+        :type image: image.Image
+        :type k: float
+        :rtype: image.Image
         """
         x = np.amin(image.pixels, axis=0)
 

@@ -3,35 +3,34 @@ from sklearn.cluster import KMeans
 import geopandas as gpd
 import numpy as np
 
-from image import Image
-from image.geotransform import Geotransform
 from tools import gis
 
 
 class Superpixels:
     """ A class to segment an image into superpixels for classification """
-    def __init__(self, gdf: gpd.GeoDataFrame, geotransform: Geotransform, epsg: int, number_of_features: int):
+    def __init__(self, gdf, geotransform, epsg, number_of_features):
+        """
+        :param gdf: geopandas.GeoDataFrame
+        :param geotransform: geotransform.Geotransform
+        :param epsg: int
+        :param number_of_features: int
+        """
         self.gdf = gdf
         self.geotransform = geotransform
         self.epsg = epsg
         self.number_of_features = number_of_features
 
     @classmethod
-    def segment_image(cls,
-                      image: Image,
-                      extract_values: bool=True,
-                      n_segments: int=100,
-                      compactness: float=10.,
-                      sigma: int=0,
-                      enforce_connectivity: bool=True) -> "Superpixels":
+    def segment_image(cls, image, extract_values=True, n_segments=100, compactness=10.,
+                      sigma=0, enforce_connectivity=True):
         """ Extract superpixels from an image
-        :param image: An Image
-        :param extract_values: Bool
-        :param n_segments: Number of segments
-        :param compactness: How square the segments should be
-        :param sigma: How smooth the segments should be
-        :param enforce_connectivity: Bool
-        :return: Superpixels
+        :type image: image.Image
+        :type extract_values: Bool
+        :type n_segments: int
+        :type compactness: float
+        :type sigma: int
+        :type enforce_connectivity: Bool
+        :return: classify.superpixel.Superpixels
         """
         pixels = image.pixels
         pixels[np.isnan(pixels)] = 0.
@@ -58,14 +57,21 @@ class Superpixels:
 
         return Superpixels(gdf, image.geotransform, image.epsg, number_of_features=image.band_count)
 
-    def cluster(self, n_clusters: int=2) -> None:
+    def cluster(self, n_clusters=2):
+        """
+        :type n_clusters: int
+        """
         if self.number_of_features == 1:
             features = [[feature] for feature in self.gdf.features.tolist()]
         else:
             features = self.gdf.features.tolist()
         self.gdf['cluster'] = KMeans(n_clusters=n_clusters).fit_predict(features)
 
-    def save(self, filename: str, driver: str='GeoJSON'):
+    def save(self, filename, driver='GeoJSON'):
+        """
+        :type filename: str
+        :type driver: str
+        """
         gdf = self.gdf.drop('geometry', axis=1)
         gdf.to_file(filename, driver=driver)
 

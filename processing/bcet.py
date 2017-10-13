@@ -7,14 +7,14 @@ from image import Image
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image: Image, L: float=0., H: float=1., E: float=0.5, clip: float=0.) -> Image:
+    def calculate(image, L=0., H=1., E=0.5, clip=0.):
         """ Perform a BCET on an image
-        :param image: A 3D array of shape (rows, columns, bands)
-        :param L: The lower limit of the output
-        :param H: The upper limit of the output
-        :param E: The mean of the output
-        :param clip: Percentage of outliers to be clipped prior to enhancement
-        :return: A array that has been contrast enhanced
+        :type image: image.Image
+        :type L: float
+        :type H: float
+        :type E: float
+        :type clip: float
+        :rtype: image.Image
         """
 
         bcet_image = np.zeros(image.shape)

@@ -1,16 +1,15 @@
 from sklearn.decomposition import PCA
 import pandas as pd
-import numpy as np
 
 
 class ImagePCA:
     """ Principal Components Analysis """
     @staticmethod
-    def calculate(image: np.ndarray, band_names: [str]=None) -> (np.ndarray, pd.DataFrame):
+    def calculate(image, band_names=None):
         """ Calculate PCs for each image band
-        :param image: An image array of shape: (rows, columns, bands)
-        :param band_names: List of band names to be shown in eigenvector output
-        :return: The PCs of the image array with the same shape as well as a dataframe of the eigenvectors
+        :type image: numpy.ndarray
+        :type band_names: list[str]
+        :return: tuple(numpy.ndarray, pandas.DataFrame)
         """
         pca = PCA(n_components=image.shape[2])
 

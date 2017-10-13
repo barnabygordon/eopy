@@ -11,11 +11,11 @@ class SFIM:
     A class for fusing together images for pansharpening
     """
     @classmethod
-    def calculate(cls, low_resolution_image: Image, pan_image: Image) -> Image:
+    def calculate(cls, low_resolution_image, pan_image):
         """ Fuse a low resolution image with a higher resolution one
-        :param low_resolution_image: An array with shapes of either (rows, cols) or (rows, cols, bands)
-        :param pan_image: A 2D array that is 2x the size of the lower resolution image
-        :return: An array the same shape as the pan_image but with the same number of bands as the lower resolution
+        :type low_resolution_image: image.Image
+        :type pan_image: image.Image
+        :rtype: image.Image
         """
 
         pan_smooth = cls._smooth_image(pan_image.pixels)
@@ -42,19 +42,21 @@ class SFIM:
                      band_labels=low_resolution_image.band_labels, metadata=low_resolution_image.metadata)
 
     @staticmethod
-    def _fuse_images(low_resolution_image: np.ndarray,
-                     pan_image: np.ndarray,
-                     smoothed_pan_image: np.ndarray) -> np.ndarray:
+    def _fuse_images(low_resolution_image, pan_image, smoothed_pan_image):
         """ Fuse together two images of the same number of dimensions
-        :param low_resolution_image: A 2D lower resolution image
-        :param pan_image: A 2D higher resolution image
-        :param smoothed_pan_image: The smoothed higher resolution image
-        :return: Fused image
+        :type low_resolution_image: numpy.ndarray
+        :type pan_image: numpy.ndarray
+        :type smoothed_pan_image: numpy.ndarray
+        :rtype: numpy.ndarray
         """
         resized_image = resize(low_resolution_image, pan_image.shape[::-1])
         return (resized_image * pan_image) / smoothed_pan_image
 
     @staticmethod
-    def _smooth_image(image: Image, sigma: int=5) -> np.ndarray:
-        """ Perform a gaussian filter on an image """
+    def _smooth_image(image, sigma=5):
+        """ Perform a gaussian filter on an image
+        :type image: image.Image
+        :type sigma: int
+        :rtype: numpy.ndarray
+        """
         return gaussian_filter(image.pixels, sigma=sigma)
