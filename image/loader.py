@@ -11,11 +11,11 @@ from image.sensor import Landsat8
 class Loader:
     """ For loading imagery locally from standardised folder structures """
     @classmethod
-    def load_landsat8(cls, image_folder: str, band_list: [str]) -> Image:
+    def load_landsat8(cls, image_folder, band_list):
         """ Load landsat-8 imagery from USGS Earthexplorer download folder
-        :param image_folder: Path to the folder containing image bands
-        :param band_list: List of bands to be loaded
-        :return: A stacked Image object of the requested bands
+        :type image_folder: str
+        :type band_list: list[str]
+        :rtype: image.Image
         """
         landsat8 = Landsat8()
         resolutions = [landsat8.band_resolution(band) for band in band_list]
@@ -34,7 +34,11 @@ class Loader:
             return images[0]
 
     @classmethod
-    def load_aster_hdf(cls, filename: str) -> (Image, Image, Image):
+    def load_aster_hdf(cls, filename):
+        """
+        :type filename: str
+        :rtype: tuple(image.Image, image.Image, image.Image)
+        """
         aster_vnir_labels = [
             'VNIR_Swath:ImageData1', 'VNIR_Swath:ImageData2', 'VNIR_Swath:ImageData3N']
         aster_swir_labels = [
@@ -54,6 +58,11 @@ class Loader:
 
     @staticmethod
     def build_aster_image(subdataset_labels, subdataset_list):
+        """
+        :type subdataset_labels: list[str]
+        :type subdataset_list: list[str]
+        :rtype: image.Image
+        """
         image_list = []
         for label in subdataset_labels:
             subdataset = [subdataset for subdataset in subdataset_list if label in subdataset][0]

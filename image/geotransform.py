@@ -2,7 +2,10 @@
 
 class Geotransform:
     """ A class for easy access to the GDAL geotransform tuple """
-    def __init__(self, geotransform_tuple: tuple):
+    def __init__(self, geotransform_tuple):
+        """
+        :type geotransform_tuple: tuple(float)
+        """
         self.tuple = geotransform_tuple
         self.upper_left_x = self.tuple[0]
         self.upper_left_y = self.tuple[3]
