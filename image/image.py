@@ -2,8 +2,6 @@ import numpy as np
 import os
 from osgeo import gdal, osr
 from tqdm import tqdm
-from shapely.geometry import Polygon
-from typing import List, Union
 
 from image.geotransform import Geotransform
 from tools import gis
@@ -13,11 +11,14 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal """
-    def __init__(self,
-                 pixels: np.ndarray,
-                 geotransform: Geotransform,
-                 projection: str, metadata=None,
-                 band_labels: dict=None):
+    def __init__(self, pixels, geotransform, projection, metadata=None, band_labels=None):
+        """
+        :type pixels: numpy.ndarray
+        :type geotransform: geotransform.Geotransform
+        :param projection: str
+        :param metadata: dict
+        :param band_labels: dict
+        """
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
@@ -28,7 +29,11 @@ class Image:
     def __repr__(self) -> str:
         return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
-    def __getitem__(self, band: Union[int, str]) -> "Image":
+    def __getitem__(self, band):
+        """
+        :type band: list[int, str
+        :rtype: image.Image
+        """
         if type(band) == int:
             image = self.pixels[:, :, band]
             if bool(self.band_labels):
@@ -44,18 +49,32 @@ class Image:
         return Image(image, self.geotransform, self.projection,
                      band_labels=band_labels, metadata=self.metadata)
 
-    def _get_band_by_number(self, band_number: int) -> np.ndarray:
+    def _get_band_by_number(self, band_number):
+        """
+        :type band_number: int
+        :rtype: numpy.ndarray
+        """
         return self.pixels[:, :, band_number-1]
 
     @classmethod
-    def load(cls, filepath: str, band_labels: {str: int}=None) -> "Image":
+    def load(cls, filepath, band_labels=None):
+        """
+        :type filepath: str
+        :type band_labels: dict{str: int}
+        :rtype: image.Image
+        """
         if not os.path.exists(filepath):
             raise UserWarning("Filepath does not exist.")
 
         return cls.load_from_dataset(gdal.Open(filepath), band_labels)
 
     @classmethod
-    def load_from_dataset(cls, image_dataset: gdal.Dataset, band_labels: dict=None) -> "Image":
+    def load_from_dataset(cls, image_dataset, band_labels=None):
+        """
+        :type image_dataset: osgeo.gdal.Dataset
+        :type band_labels: dict
+        :rtype: image.Image
+        """
         geotransform = Geotransform(image_dataset.GetGeoTransform())
         projection = image_dataset.GetProjection()
         metadata = image_dataset.GetMetadata()
@@ -67,53 +86,89 @@ class Image:
         return Image(pixels, geotransform, projection, metadata=metadata, band_labels=band_labels)
 
     @property
-    def width(self) -> int:
+    def width(self):
+        """
+        :rtype: int
+        """
         return self.pixels.shape[0]
 
     @property
-    def height(self) -> int:
+    def height(self):
+        """
+        :rtype: int
+        """
         return self.pixels.shape[1]
 
     @property
-    def band_count(self) -> int:
+    def band_count(self):
+        """
+        :rtype: int
+        """
         if self.pixels.ndim > 2:
             return self.pixels.shape[2]
         else:
             return 1
 
     @property
-    def shape(self) -> (int, int, int):
+    def shape(self):
+        """
+        :rtype: tuple(int)
+        """
         return self.pixels.shape
 
     @property
-    def dtype(self) -> str:
+    def dtype(self):
+        """
+        :rtype: str
+        """
         return self.pixels.dtype
 
     @property
-    def epsg(self) -> int:
+    def epsg(self):
+        """
+        :rtype: int
+        """
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
-    def subset(self, x: int, y: int, width: int, height: int=None) -> np.ndarray:
-        """ A slice of the image across all bands """
+    def subset(self, x, y, width, height=None):
+        """ A slice of the image across all bands
+        :type x: int
+        :type y: int
+        :type width: int
+        :type height: int
+        :rtype: image.Image
+        """
         if height is None:
             height = width
         pixels = self.pixels[y:y+height, x:x+width]
         geotransform = self._subset_geotransform(x, y)
         return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
 
-    def _subset_geotransform(self, x, y) -> Geotransform:
-        """ Update the image geotransform based on new subset coordinates """
+    def _subset_geotransform(self, x, y):
+        """ Update the image geotransform based on the new subset coordinates
+        :param x: int
+        :param y: int
+        :return: geotransform.Geotransform
+        """
         upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
         return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
                              upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
 
-    def clip_with(self, polygon: Polygon, mask_value: float=np.nan):
+    def clip_with(self, polygon, mask_value=np.nan):
+        """
+        :param polygon: shapely.Polygon
+        :param mask_value: float
+        :rtype: image.Image
+        """
         return gis.clip_image(self, polygon, mask_value=mask_value)
 
     @staticmethod
-    def stack(images: List["Image"]) -> (np.ndarray, gdal.Dataset):
-        """ Stack a list of Image objects and return a single image array and dataset """
+    def stack(images):
+        """ Stack a list of Image objects and return a single Image
+        :param images: list[image.Image]
+        :return: image.Image
+        """
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
         else:
@@ -128,10 +183,10 @@ class Image:
                          images[0].geotransform, images[0].projection, images[0].metadata,
                          band_labels=band_labels)
 
-    def save(self, filepath: str, data_type: str='uint16') -> None:
+    def save(self, filepath, data_type='uint16'):
         """ Save a ndarray as an image with geospatial metadata
-        :param filepath: path to which the image should be saved, including extension
-        :param data_type: Type of bit depth for the output image
+        :type filepath: str
+        :type data_type: str
         """
 
         gdal_data_type = self._get_gdal_data_type(data_type)
