@@ -10,10 +10,10 @@ class Superpixels:
     """ A class to segment an image into superpixels for classification """
     def __init__(self, gdf, geotransform, epsg, number_of_features):
         """
-        :param gdf: geopandas.GeoDataFrame
-        :param geotransform: geotransform.Geotransform
-        :param epsg: int
-        :param number_of_features: int
+        :type gdf: geopandas.GeoDataFrame
+        :type geotransform: geotransform.Geotransform
+        :type epsg: int
+        :type number_of_features: int
         """
         self.gdf = gdf
         self.geotransform = geotransform
@@ -30,7 +30,7 @@ class Superpixels:
         :type compactness: float
         :type sigma: int
         :type enforce_connectivity: Bool
-        :return: classify.superpixel.Superpixels
+        :rtype: classify.superpixel.Superpixels
         """
         pixels = image.pixels
         pixels[np.isnan(pixels)] = 0.
