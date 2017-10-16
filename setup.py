@@ -5,6 +5,7 @@ Remote Sensing!.
 from codecs import open
 from os.path import abspath, dirname, join
 from setuptools import find_packages, setup
+from remotesensing import __version__
 
 this_dir = abspath(dirname(__file__))
 with open(join(this_dir, 'README.md'), encoding='utf-8') \
@@ -39,11 +40,9 @@ setup(
         'numpy',
         'pandas',
         'pillow',
-        'pyproj',
         'scipy',
         'shapely',
         'sklearn',
-        'scikit-image',
         'tqdm',
     ],
     namespace_packages=['remotesensing']
