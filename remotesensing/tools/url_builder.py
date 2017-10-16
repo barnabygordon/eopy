@@ -12,7 +12,7 @@ class URLBuilder:
         elif polygon is None:
             aoi_string = "path:{}+AND+row:{}".format(path, row)
         else:
-            aoi_string = "path:{}+AND+row{}".format(path, row)
+            aoi_string = self.build_landsat8_geometry_string(polygon)
 
         today = time.strftime("%Y-%m-%d")
 

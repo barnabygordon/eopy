@@ -21,16 +21,6 @@ setup(
     url='https://github.com/barnabygordon/remote-sensing',
     author='Barney Gordon',
     author_email='barney@hummingbirdtech.com',
-    license='copyright',
-    classifiers=[
-        'Intended Audience :: Developers',
-        'Topic :: Utilities',
-        'License :: Copyright',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
-    ],
-    keywords='imageprocessing',
     packages=find_packages(exclude=['docs', 'tests*']),
     install_requires=[
         'folium',
