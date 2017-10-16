@@ -5,35 +5,31 @@ import numpy as np
 import requests
 from shapely import wkt
 from shapely.geometry import Polygon
-from tools.url_builder import URLBuilder
 from tqdm import tqdm
 
 from notebooks import config
 from remotesensing.cloud.scene import LandsatScene, SentinelScene
+from remotesensing.tools.url_builder import URLBuilder
 from remotesensing.tools import gis
 
 
 class Searcher:
     """ A class to search for satellite imagery """
-    def __init__(self, cloud_min=0, cloud_max=100, search_limit=100):
-        """
-        :type cloud_min: int
-        :type cloud_max: int
-        :type search_limit: int
-        """
-        self.cloud_min = cloud_min
-        self.cloud_max = cloud_max
-        self.search_limit = search_limit
+    def __init__(self):
         self.username = config.username
         self.password = config.password
         self.url_builder = URLBuilder()
 
-    def search_landsat8_scenes(self, start_date, aoi=None, path=None, row=None, verbose=True):
+    def search_landsat8_scenes(self, start_date, aoi=None, path=None, row=None,
+                               cloud_min=0, cloud_max=100, search_limit=300, verbose=True):
         """ Search for downloadable Landsat-8 scenes
         :type start_date: str
         :type aoi: shapely.geometry.Polygon
         :type path: int
         :type row: int
+        :type cloud_min: int
+        :type cloud_max: int
+        :type search_limit: int
         :type verbose: bool
         :rtype: list[cloud.scene.LandsatScene]
         """
@@ -41,8 +37,8 @@ class Searcher:
             start_date,
             polygon=aoi,
             path=path, row=row,
-            cloud_min=self.cloud_min, cloud_max=self.cloud_max,
-            search_limit=self.search_limit)
+            cloud_min=cloud_min, cloud_max=cloud_max,
+            search_limit=search_limit)
 
         response = requests.get(url).json()
 
@@ -88,6 +84,7 @@ class Searcher:
         """ Search for downloadable Sentinel scenes within AOI and after date
         :type aoi: shapely.geometry.Polygon
         :type start_date: str
+        :type platform: str
         :rtype: list[cloud.scene.SentinelScene]
         """
 

@@ -1,11 +1,11 @@
 import os
 from urllib import request
 
-from cloud.calibration import Calibration
-from image import Image
 from osgeo import gdal
 from tqdm import tqdm
 
+from remotesensing.cloud.calibration import Calibration
+from remotesensing.image import Image
 from remotesensing.image.sensor import Landsat8
 from remotesensing.image.sensor import Sentinel2
 
@@ -62,7 +62,7 @@ class Downloader:
 
         return image_stack
 
-    def get_sentinel2_band(self, scene, band_list, calibrate=False):
+    def get_sentinel2_bands(self, scene, band_list, calibrate=False):
         """ Load a Sentinel-2 band into memory
 
         An example of a Sentinel-2 url is:
@@ -82,10 +82,12 @@ class Downloader:
             filename = "S2A_{date}_{band}.jp2".format(date=scene.date, band=band_name)
 
             save_path = os.path.join(self.save_directory, filename)
-            request.urlretrieve("{}/{}.jp2".format(scene.image_url, band_name), save_path)
+            url = "{}/{}.jp2".format(scene.image_url, band_name)
+
+            request.urlretrieve(url, save_path)
             images.append(Image.load(save_path))
 
         if len(band_list) > 1:
-            return Image.stack(images, band_labels={i+1: value for i, value in enumerate(band_list)})
+            return Image.stack(images)
         else:
             return images[0]
