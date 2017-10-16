@@ -42,8 +42,6 @@ class Searcher:
 
         response = requests.get(url).json()
 
-        print(url)
-
         try:
             print(response['error']['message'])
         except:
