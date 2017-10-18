@@ -1,4 +1,5 @@
 from IPython.display import Image as IPythonImage
+from datetime import datetime
 
 
 class SatelliteScene:
@@ -11,7 +12,7 @@ class SatelliteScene:
         :type bounds: shapely.geometry.Polygon
         """
         self.satellite_type = satellite_type
-        self.date = date
+        self.date = datetime.strptime(date, "%Y%m%d")
         self.clouds = clouds
         self.bounds = bounds
 
@@ -38,17 +39,27 @@ class LandsatScene(SatelliteScene):
         self.path = self._parse_path_row(path)
         self.row = self._parse_path_row(row)
         self.thumbnail_url = thumbnail_url
-        self.download_path = "{url_root}/{collection}/{sensor}/{path}/{row}/{product_id}/{product_id}".format(
-            url_root="https://landsat-pds.s3.amazonaws.com",
-            collection='c1',
-            sensor='L8',
-            path=self.path,
-            row=self.row,
-            product_id=self.product_id)
+        self.pre_collection_date = datetime.strptime("20170501", "%Y%m%d")
+        self.url_root = "https://landsat-pds.s3.amazonaws.com"
+        self.download_path = self._construct_download_link()
 
     @property
     def show(self):
         return IPythonImage(self.thumbnail_url)
+
+    def _construct_download_link(self):
+        if self.date < self.pre_collection_date:
+            return '{url_root}/L8/{path}/{row}/{scene_id}/{scene_id}'.format(
+                url_root=self.url_root,
+                path=self.path,
+                row=self.row,
+                scene_id=self.scene_id.split('LGN')[0] + 'LGN00')
+        else:
+            return '{url_root}/c1/L8/{path}/{row}/{product_id}/{product_id}'.format(
+                url_root=self.url_root,
+                path=self.path,
+                row=self.row,
+                product_id=self.product_id)
 
     @staticmethod
     def _parse_path_row(string):
