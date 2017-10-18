@@ -20,13 +20,14 @@ class Searcher:
         self.password = config.password
         self.url_builder = URLBuilder()
 
-    def search_landsat8_scenes(self, start_date, aoi=None, path=None, row=None,
+    def search_landsat8_scenes(self, start_date, end_date, aoi=None, path=None, row=None,
                                cloud_min=0, cloud_max=100, search_limit=300, verbose=True):
         """ Search for downloadable Landsat-8 scenes
         :type start_date: str
+        :type end_date: str
         :type aoi: shapely.geometry.Polygon
-        :type path: int
-        :type row: int
+        :type path: str
+        :type row: str
         :type cloud_min: int
         :type cloud_max: int
         :type search_limit: int
@@ -34,7 +35,7 @@ class Searcher:
         :rtype: list[cloud.scene.LandsatScene]
         """
         url = self.url_builder.build_landsat8_search_url(
-            start_date,
+            start_date, end_date,
             polygon=aoi,
             path=path, row=row,
             cloud_min=cloud_min, cloud_max=cloud_max,
@@ -55,7 +56,8 @@ class Searcher:
                 polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
                 search_results.append(LandsatScene(
                     product_id=result['LANDSAT_PRODUCT_ID'],
-                    date="".join(result['acquisitionDate'].split('-')),
+                    scene_id=result['scene_id'],
+                    date="".join(result['date'].split('-')),
                     path=str(result['path']),
                     row=str(result['row']),
                     clouds=result['cloudCoverFull'],

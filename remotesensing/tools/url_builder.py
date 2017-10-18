@@ -3,7 +3,18 @@ import time
 
 
 class URLBuilder:
-    def build_landsat8_search_url(self, start_date, polygon: Polygon=None, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
+    def build_landsat8_search_url(self, start_date=None, end_date=None, polygon: Polygon=None, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
+        """ Defines a Landsat-8 search url for development seed
+        :type end_date: str
+        :type start_date: str
+        :type polygon: shapely.geometry.Polygon
+        :type path: str
+        :type row: str
+        :type cloud_min: int
+        :type cloud_max: int
+        :type search_limit: int
+        :rtype: str
+        """
         """ Defines a Landsat-8 search url for development seed """
         url_root = 'https://api.developmentseed.org/satellites/landsat'
 
@@ -14,9 +25,13 @@ class URLBuilder:
         else:
             aoi_string = self.build_landsat8_geometry_string(polygon)
 
-        today = time.strftime("%Y-%m-%d")
+        if end_date is None:
+            end_date = time.strftime("%Y-%m-%d")
 
-        date_string = 'acquisitionDate:[{}+TO+{}]'.format(start_date, today)
+        if start_date is None:
+            start_date = "1993-07-15"
+
+        date_string = 'acquisitionDate:[{}+TO+{}]'.format(start_date, end_date)
         cloud_string = 'cloudCoverFull:[{}+TO+{}]'.format(cloud_min, cloud_max)
         limit_string = 'limit={}'.format(search_limit)
 

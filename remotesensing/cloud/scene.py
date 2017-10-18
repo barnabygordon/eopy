@@ -21,9 +21,10 @@ class SatelliteScene:
 
 class LandsatScene(SatelliteScene):
     """ Landsat-8 scene metadata """
-    def __init__(self, product_id, date, clouds, path, row, bounds, thumbnail_url):
+    def __init__(self, product_id, scene_id, date, clouds, path, row, bounds, thumbnail_url):
         """
         :type product_id: str
+        :type scene_id: str
         :type date: str
         :type clouds: float
         :type path: str
@@ -33,6 +34,7 @@ class LandsatScene(SatelliteScene):
         """
         SatelliteScene.__init__(self, "Landsat-8", date, clouds, bounds)
         self.product_id = product_id
+        self.scene_id = scene_id
         self.path = self._parse_path_row(path)
         self.row = self._parse_path_row(row)
         self.thumbnail_url = thumbnail_url
