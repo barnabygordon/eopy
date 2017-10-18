@@ -66,31 +66,34 @@ class Searcher:
 
             return search_results
 
-    def search_sentinel2_scenes(self, aoi, start_date):
+    def search_sentinel2_scenes(self, aoi, start_date=None, end_date=None):
         """
         :type aoi: shapely.geometry.Polygon
         :type start_date: str
+        :type end_date: str
         :rtype: list[cloud.scene.SentinelScene]
         """
-        return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-2')
+        return self.search_sentinel_scenes(aoi, platform='Sentinel-2', start_date=start_date, end_date=end_date)
 
-    def search_sentinel1_scenes(self, aoi, start_date):
+    def search_sentinel1_scenes(self, aoi, start_date=None, end_date=None):
         """
         :type aoi: shapely.geometry.Polygon
         :type start_date: str
+        :type end_date: str
         :rtype: list[cloud.scene.SentinelScene]
         """
-        return self.search_sentinel_scenes(aoi, start_date, platform='Sentinel-1')
+        return self.search_sentinel_scenes(aoi, platform='Sentinel-1', start_date=start_date, end_date=end_date)
 
-    def search_sentinel_scenes(self, aoi, start_date, platform):
+    def search_sentinel_scenes(self, aoi, platform, start_date=None, end_date=None):
         """ Search for downloadable Sentinel scenes within AOI and after date
         :type aoi: shapely.geometry.Polygon
-        :type start_date: str
         :type platform: str
+        :type start_date: str
+        :type end_date: str
         :rtype: list[cloud.scene.SentinelScene]
         """
 
-        url = URLBuilder.build_sentinel_search_url(aoi, start_date, platform, 0)
+        url = URLBuilder.build_sentinel_search_url(aoi, platform, 0, start_date, end_date)
         response = requests.get(url, auth=(self.username, self.password))
 
         assert response.status_code == 200, 'Search error: {}'.format(response.reason)
@@ -103,7 +106,7 @@ class Searcher:
         search_results = []
         pagination_count = math.ceil(results_count / 100)
         for i in tqdm(range(pagination_count), total=pagination_count, desc='Paginating search results'):
-            url = URLBuilder.build_sentinel_search_url(aoi, start_date, platform, i*100)
+            url = URLBuilder.build_sentinel_search_url(aoi, platform, i*100, start_date, end_date)
             response = requests.get(url, auth=(self.username, self.password))
 
             content = json.loads(response.content.decode('utf-8'))

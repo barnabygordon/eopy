@@ -1,9 +1,10 @@
 from shapely.geometry import Polygon
-import time
+from datetime import datetime
 
 
 class URLBuilder:
-    def build_landsat8_search_url(self, start_date=None, end_date=None, polygon: Polygon=None, path=None, row=None, cloud_min=0, cloud_max=100, search_limit=100):
+    def build_landsat8_search_url(self, start_date=None, end_date=None, polygon: Polygon=None, path=None, row=None,
+                                  cloud_min=0, cloud_max=100, search_limit=100):
         """ Defines a Landsat-8 search url for development seed
         :type end_date: str
         :type start_date: str
@@ -26,7 +27,7 @@ class URLBuilder:
             aoi_string = self.build_landsat8_geometry_string(polygon)
 
         if end_date is None:
-            end_date = time.strftime("%Y-%m-%d")
+            end_date = datetime.strftime(datetime.today(), "%Y-%m-%d")
 
         if start_date is None:
             start_date = "1993-07-15"
@@ -62,26 +63,35 @@ class URLBuilder:
         right_longitude_string = 'upperRightCornerLongitude:[{:.2f}+TO+1000]'.format(max_longitude)
 
         return "{}+AND+{}+AND+{}+AND+{}".format(left_latitude_string, right_latitude_string,
-                                               left_longitude_string, right_longitude_string)
+                                                left_longitude_string, right_longitude_string)
 
     @staticmethod
-    def build_sentinel_search_url(polygon, start_date, platform, start_row):
+    def build_sentinel_search_url(polygon, platform, start_row, start_date, end_date):
         """ Constructs the search url for Scihub
         :type polygon: shapely.geometry.Polygon
-        :type start_date: str
         :type platform: str
-        :type start_row: int
+        :type start_row: str
+        :type start_date: str
+        :type end_date: str
         :rtype: str
         """
+        if start_date is None:
+            start_date = "1993-07-15"
+        if end_date is None:
+            end_date = datetime.strftime(datetime.today(), "%Y-%m-%d")
+
         url = 'https://scihub.copernicus.eu/dhus/search?q=\
-        ingestiondate:[{date}T00:00:00.000Z TO NOW]\
+        ingestiondate:[{start_date}T00:00:00.000Z TO {end_date}]\
          AND platformname:{platform}\
          AND footprint:"Intersects({polygon})"\
          &start={start}&rows=100&format=json'.format(
-            date=start_date,
+            start_date=start_date,
+            end_date=end_date,
             platform=platform,
             polygon=polygon,
             start=start_row)
+
+        print(url)
 
         return url
 
