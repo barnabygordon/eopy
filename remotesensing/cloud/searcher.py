@@ -20,7 +20,7 @@ class Searcher:
         self.password = config.password
         self.url_builder = URLBuilder()
 
-    def search_landsat8_scenes(self, start_date, end_date, aoi=None, path=None, row=None,
+    def search_landsat8_scenes(self, start_date=None, end_date=None, aoi=None, path=None, row=None,
                                cloud_min=0, cloud_max=100, search_limit=300, verbose=True):
         """ Search for downloadable Landsat-8 scenes
         :type start_date: str
