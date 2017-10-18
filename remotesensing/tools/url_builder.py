@@ -91,8 +91,6 @@ class URLBuilder:
             polygon=polygon,
             start=start_row)
 
-        print(url)
-
         return url
 
     @staticmethod
