@@ -81,7 +81,7 @@ class URLBuilder:
             end_date = datetime.strftime(datetime.today(), "%Y-%m-%d")
 
         url = 'https://scihub.copernicus.eu/dhus/search?q=\
-        ingestiondate:[{start_date}T00:00:00.000Z TO {end_date}]\
+        ingestiondate:[{start_date}T00:00:00.000Z TO {end_date}T00:00:00.000Z]\
          AND platformname:{platform}\
          AND footprint:"Intersects({polygon})"\
          &start={start}&rows=100&format=json'.format(

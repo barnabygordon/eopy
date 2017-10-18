@@ -1,3 +1,5 @@
+from remotesensing.image.sensor import Landsat8
+
 from IPython.display import Image as IPythonImage
 from datetime import datetime
 
@@ -34,6 +36,7 @@ class LandsatScene(SatelliteScene):
         :type thumbnail_url: str
         """
         SatelliteScene.__init__(self, "Landsat-8", date, clouds, bounds)
+        self.landsat_8 = Landsat8()
         self.product_id = product_id
         self.scene_id = scene_id
         self.path = self._parse_path_row(path)
@@ -67,6 +70,13 @@ class LandsatScene(SatelliteScene):
             return '0{}'.format(string)
         else:
             return string
+
+    def get_download_path_for_band(self, band):
+        url = "{download_path}_B{band}.TIF".format(
+            download_path=self.download_path,
+            band=self.landsat_8.band_number(band))
+
+        return url
 
 
 class SentinelScene(SatelliteScene):
