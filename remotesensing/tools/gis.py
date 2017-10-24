@@ -47,13 +47,14 @@ def polygon_to_pixel(polygon, geotransform):
     :rtype: shapely.geometry.Polygon
     """
     if polygon.geom_type == 'Polygon':
+        exterior = [world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords]
         if len(polygon.interiors) > 0:
-            exterior = [world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords]
-            interior = [[world_to_pixel(x, y, geotransform) for x, y, in interior.coords] for interior in polygon.interiors]
+            interior = [[world_to_pixel(x, y, geotransform) for x, y, in interior.coords]
+                        for interior in polygon.interiors]
 
             return Polygon(exterior, interior)
         else:
-            return Polygon([world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords])
+            return Polygon(exterior)
     elif polygon.geom_type == 'MultiPolygon':
         return MultiPolygon([polygon_to_pixel(sub_polygon, geotransform) for sub_polygon in polygon])
 
