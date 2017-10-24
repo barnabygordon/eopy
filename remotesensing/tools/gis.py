@@ -115,11 +115,18 @@ def clip_image(image, polygon, mask_value=np.nan):
     :type mask_value: float
     :rtype: image.Image
     """
-    polygon_coords = list(polygon.exterior.coords)
-    bounds = [int(value) for value in polygon.bounds]
 
+    bounds = [int(value) for value in polygon.bounds]
     mask_image = PILImage.new("L", (image.height, image.width), 1)
-    ImageDraw.Draw(mask_image).polygon(polygon_coords, 0)
+
+    if polygon.geom_type == 'MultiPolygon':
+        polygon_coords_list = [list(sub_polygon.exterior.coords) for sub_polygon in polygon]
+        [ImageDraw.Draw(mask_image).polygon(polygon_coords, 0) for polygon_coords in polygon_coords_list]
+
+    else:
+        polygon_coords = list(polygon.exterior.coords)
+        ImageDraw.Draw(mask_image).polygon(polygon_coords, 0)
+
     mask = np.array(mask_image)
     mask = mask[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
