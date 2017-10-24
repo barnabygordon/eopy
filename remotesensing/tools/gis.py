@@ -125,15 +125,9 @@ def clip_image(image, polygon, mask_value=np.nan):
 
     bounds = [int(value) for value in polygon.bounds]
     mask_image = PILImage.new("L", (image.height, image.width), 1)
+    polygon_coords_list = _get_polygon_coords(polygon)
 
-    if polygon.geom_type == 'MultiPolygon':
-        polygon_coords_list = [list(sub_polygon.exterior.coords) for sub_polygon in polygon]
-        [ImageDraw.Draw(mask_image).polygon(polygon_coords, 0) for polygon_coords in polygon_coords_list]
-
-    else:
-        polygon_coords = list(polygon.exterior.coords)
-        ImageDraw.Draw(mask_image).polygon(polygon_coords, 0)
-
+    [ImageDraw.Draw(mask_image).polygon(polygon_coords, 0) for polygon_coords in polygon_coords_list]
     mask = np.array(mask_image)
     mask = mask[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
@@ -142,6 +136,19 @@ def clip_image(image, polygon, mask_value=np.nan):
     subset.pixels[mask != 0] = mask_value
 
     return subset
+
+
+def _get_polygon_coords(polygon):
+    """
+    :type polygon: shapely.geometry.Polygon
+    :rtype: List[List[float]]
+    """
+
+    if polygon.geom_type == 'MultiPolygon':
+        return [list(sub_polygon.exterior.coords) for sub_polygon in polygon]
+
+    else:
+        return [list(polygon.exterior.coords)]
 
 
 def get_mgrs_info(wkt_polygon):
