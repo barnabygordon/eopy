@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
+from remotesensing.image import Geotransform
+
 WGS84_EPSG = 4326
 
 
@@ -136,6 +138,18 @@ def clip_image(image, polygon, mask_value=np.nan):
     subset.pixels[mask != 0] = mask_value
 
     return subset
+
+
+def subset_geotransform(geotransform, x, y):
+    """ Update the image geotransform based on the new subset coordinates
+    :param geotransform: remotesensing.image.image.Geotransform
+    :param x: int
+    :param y: int
+    :return: geotransform.Geotransform
+    """
+    upper_left_x, upper_left_y = pixel_to_world(x, y, geotransform)
+    return Geotransform((upper_left_x, geotransform.pixel_width, geotransform.rotation_x,
+                         upper_left_y, geotransform.rotation_y, geotransform.pixel_height))
 
 
 def _get_polygon_coords(polygon):

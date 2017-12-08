@@ -1,75 +1,57 @@
-import os
-
-import numpy as np
 from remotesensing.image import Image
 from remotesensing.image import Geotransform
-from osgeo import gdal
+from remotesensing.tools import gis
 
-from remotesensing.image.sensor import Landsat8
+from osgeo import gdal, osr
 
 
 class Loader:
-    """ For loading imagery locally from standardised folder structures """
-    @classmethod
-    def load_landsat8(cls, image_folder, band_list):
-        """ Load landsat-8 imagery from USGS Earthexplorer download folder
-        :type image_folder: str
-        :type band_list: list[str]
+    def load(self, filepath, band_labels=None, extent=None):
+        """
+        :type filepath: str
+        :type band_labels: dict{str: int}
+        :type extent: shapely.geometry.Polygon
         :rtype: image.Image
         """
-        landsat8 = Landsat8()
-        resolutions = [landsat8.band_resolution(band) for band in band_list]
-        assert len(set(resolutions)) == 1, "All bands must have the same resolution."
 
-        file_list = os.listdir(image_folder)
-        images = []
-        for i, band in enumerate(band_list):
-            file_name = [file for file in file_list if 'B{}.TIF'.format(landsat8.band_number(band)) in file][0]
-            filepath = os.path.join(image_folder, file_name)
-            images.append(Image.load(filepath, band_labels={band: i+1}))
-
-        if len(images) > 1:
-            return Image.stack(images)
+        if extent:
+            return self.load_from_dataset_and_clip(gdal.Open(filepath), band_labels, extent)
         else:
-            return images[0]
+            return self.load_from_dataset(gdal.Open(filepath), band_labels)
 
-    @classmethod
-    def load_aster_hdf(cls, filename):
+    def load_from_dataset_and_clip(self, image_dataset, band_labels, extent):
         """
-        :type filename: str
-        :rtype: tuple(image.Image, image.Image, image.Image)
+        :type image_dataset: osgeo.gdal.Dataset
+        :type band_labels: dict
+        :type extent: shapely.geometry.Polygon
+        :rtype: remotesensing.image.image.Image
         """
-        aster_vnir_labels = [
-            'VNIR_Swath:ImageData1', 'VNIR_Swath:ImageData2', 'VNIR_Swath:ImageData3N']
-        aster_swir_labels = [
-            'SWIR_Swath:ImageData4', 'SWIR_Swath:ImageData5', 'SWIR_Swath:ImageData6',
-            'SWIR_Swath:ImageData7', 'SWIR_Swath:ImageData8', 'SWIR_Swath:ImageData9']
-        aster_tir_labels = [
-            'TIR_Swath:ImageData10', 'TIR_Swath:ImageData11', 'TIR_Swath:ImageData12',
-            'TIR_Swath:ImageData13', 'TIR_Swath:ImageData14']
+        geotransform = Geotransform(image_dataset.GetGeoTransform())
+        projection = image_dataset.GetProjection()
+        epsg = osr.SpatialReference(wkt=projection).GetAttrValue("AUTHORITY", 1)
+        pixel_polygon = gis.polygon_to_pixel(gis.transform_polygon(extent, in_epsg=4326, out_epsg=epsg), geotransform)
 
-        hdf_dataset = gdal.Open(filename)
-        subdataset = [subdataset[0] for subdataset in hdf_dataset.GetSubDatasets()]
+        bounds = [int(bound) for bound in pixel_polygon.bounds]
 
-        vnir, swir, tir = [cls.build_aster_image(labels, subdataset) for labels in
-                           [aster_vnir_labels, aster_swir_labels, aster_tir_labels]]
+        pixels = image_dataset.ReadAsArray(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2])
+        geotransform = gis.subset_geotransform(geotransform, bounds[0], bounds[2])
 
-        return vnir, swir, tir
+        if pixels.ndim > 2:
+            pixels = pixels.transpose(1, 2, 0)
 
-    @staticmethod
-    def build_aster_image(subdataset_labels, subdataset_list):
+        return Image(pixels, geotransform, projection, band_labels=band_labels)
+
+    def load_from_dataset(self, image_dataset, band_labels=None):
         """
-        :type subdataset_labels: list[str]
-        :type subdataset_list: list[str]
-        :rtype: image.Image
+        :type image_dataset: osgeo.gdal.Dataset
+        :type band_labels: dict
+        :rtype: remotesensing.image.image.Image
         """
-        image_list = []
-        for label in subdataset_labels:
-            subdataset = [subdataset for subdataset in subdataset_list if label in subdataset][0]
-            image_dataset = gdal.Open(subdataset)
-            geotransform = Geotransform(image_dataset.GetGeoTransform())
-            projection = image_dataset.GetProjection()
-            image_list.append(image_dataset.ReadAsArray())
+        geotransform = Geotransform(image_dataset.GetGeoTransform())
+        projection = image_dataset.GetProjection()
+        pixels = image_dataset.ReadAsArray()
 
-        image_array = np.array(image_list).transpose(1, 2, 0)
-        return Image(image_array, geotransform, projection)
+        if pixels.ndim > 2:
+            pixels = pixels.transpose(1, 2, 0)
+
+        return Image(pixels, geotransform, projection, band_labels=band_labels)

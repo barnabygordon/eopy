@@ -6,17 +6,9 @@ from abc import abstractclassmethod
 class Sensor(metaclass=ABCMeta):
     """ Abstract class describing what a sensor should look like """
     @abstractproperty
-    def available_bands(self):
+    def bands(self):
         """ What bands are available for the sensor
-        :rtype: list
-        """
-        pass
-
-    @abstractclassmethod
-    def band_number(self, band_name):
-        """
-        :type band_name: str
-        :rtype: int
+        :rtype: typing.Dict{str: int}
         """
         pass
 
@@ -32,12 +24,9 @@ class Sensor(metaclass=ABCMeta):
 class Landsat8(Sensor):
     """ Landsat8 bands and band resolutions """
     @property
-    def available_bands(self):
-        return ['coastal', 'blue', 'green', 'red', 'nir', 'swir_1',
-                'swir_2', 'pan', 'cirrus', 'tirs_1', 'tirs_2', 'BQA']
-
-    def band_number(self, band_name):
-        return self.available_bands.index(band_name) + 1
+    def bands(self):
+        return {'coastal': 1, 'blue': 2, 'green': 3, 'red': 4, 'nir': 5, 'swir_1': 6,
+                'swir_2': 7, 'pan': 8, 'cirrus': 9, 'tirs_1': 10, 'tirs_2': 11, 'BQA': 12}
 
     @classmethod
     def band_resolution(cls, band_name):
@@ -50,16 +39,9 @@ class Landsat8(Sensor):
 class Sentinel2(Sensor):
     """ Sentinel2 bands and band resolutions """
     @property
-    def available_bands(self):
-        return ['coastal', 'blue', 'green', 'red', 'red_edge_1', 'red_edge_2', 'red_edge_3',
-                'nir_1', 'nir_2', 'water_vapour', 'swir_1', 'swir_2', 'swir_3']
-
-    def band_number(self, band_name: str) -> int:
-        band_names = {
-            'coastal': '01', 'blue': '02', 'green': '03', 'red': '04', 'red_edge_1': '05', 'red_edge_2': '06',
-            'red_edge_3': '07', 'nir_1': '08', 'nir_2': '8A', 'water_vapour': '09', 'swir_1': '10',
-            'swir_2': '11', 'swir_3': '12'}
-        return band_names[band_name]
+    def bands(self):
+        return {'coastal': 0, 'blue': 1, 'green': 2, 'red': 3, 'red_edge_1': 4, 'red_edge_2': 5, 'red_edge_3': 6,
+                'nir_1': 7, 'nir_2': 8, 'water_vapour': 9, 'swir_1': 10, 'swir_2': 11, 'swir_3': 12}
 
     def band_resolution(self, band_name: str) -> float:
         resolutions = {

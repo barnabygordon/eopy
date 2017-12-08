@@ -1,145 +1,64 @@
-import json
-import math
-
-import numpy as np
 import requests
-from shapely import wkt
-from shapely.geometry import Polygon
-from tqdm import tqdm
+from shapely.geometry import shape
 
-from notebooks import config
-from remotesensing.cloud.scene import LandsatScene, SentinelScene
-from remotesensing.tools.url_builder import URLBuilder
-from remotesensing.tools import gis
+from remotesensing.cloud.scene import Scene
 
 
 class Searcher:
     """ A class to search for satellite imagery """
     def __init__(self):
-        self.username = config.username
-        self.password = config.password
-        self.url_builder = URLBuilder()
+        self._api_url = "api.developmentseed.org/satellites/"
 
-    def search_landsat8_scenes(self, start_date=None, end_date=None, aoi=None, path=None, row=None,
-                               cloud_min=0, cloud_max=100, search_limit=300, verbose=True):
-        """ Search for downloadable Landsat-8 scenes
+    def search(self, start_date=None, end_date=None, boundary=None, longitude_latitude=None, path=None, row=None,
+               cloud_min=0, cloud_max=100, search_limit=1000):
+        """
         :type start_date: str
         :type end_date: str
-        :type aoi: shapely.geometry.Polygon
-        :type path: str
-        :type row: str
-        :type cloud_min: int
-        :type cloud_max: int
+        :type boundary: str
+        :type longitude_latitude: typing.Tuple(float)
+        :type path: int
+        :type row: int
+        :type cloud_min: float
+        :type cloud_max: float
         :type search_limit: int
-        :type verbose: bool
-        :rtype: list[cloud.scene.LandsatScene]
+        :rtype: typing.List[cloud.scene.Scene]
         """
-        url = self.url_builder.build_landsat8_search_url(
-            start_date, end_date,
-            polygon=aoi,
-            path=path, row=row,
-            cloud_min=cloud_min, cloud_max=cloud_max,
-            search_limit=search_limit)
+
+        url = "https://{root}?cloud_from={cloud_from}&cloud_to={cloud_to}&limit={limit}".format(
+            root=self._api_url,
+            cloud_from=cloud_min,
+            cloud_to=cloud_max,
+            limit=search_limit)
+
+        if start_date:
+            url += "&date_from={}".format(start_date)
+        if end_date:
+            url += "&date_to={}".format(end_date)
+        if boundary:
+            url += "&intersects={}".format(boundary)
+        if longitude_latitude:
+            url += "&contains={longitude},{latitude}".format(
+                longitude=longitude_latitude[0],
+                latitude=longitude_latitude[1])
+        if path:
+            url += "&path={}".format(path)
+        if row:
+            url += "&row={}".format(row)
 
         response = requests.get(url).json()
 
-        try:
-            print(response['error']['message'])
-        except:
-            results_count = len(response['results'])
-            if verbose:
-                print('Found {} results'.format(results_count))
+        scene_list = []
+        for result in response['results']:
+            scene_list.append(
+                Scene(
+                    identity=result['scene_id'],
+                    satellite_name=result['satellite_name'],
+                    cloud_coverage=result['cloud_coverage'],
+                    date=result['date'],
+                    thumbnail=result['thumbnail'],
+                    links=result['download_links']['aws_s3'],
+                    polygon=shape(result['data_geometry'])
+                )
+            )
 
-            search_results = []
-            for i, result in enumerate(response['results']):
-                bounds = np.squeeze(np.array(result['data_geometry']['coordinates']))
-                polygon = Polygon(zip(bounds[:, 0], bounds[:, 1]))
-                search_results.append(LandsatScene(
-                    product_id=result['LANDSAT_PRODUCT_ID'],
-                    scene_id=result['scene_id'],
-                    date="".join(result['date'].split('-')),
-                    path=str(result['path']),
-                    row=str(result['row']),
-                    clouds=result['cloudCoverFull'],
-                    bounds=polygon,
-                    thumbnail_url=result['browseURL']))
-
-            return search_results
-
-    def search_sentinel2_scenes(self, aoi, start_date=None, end_date=None):
-        """
-        :type aoi: shapely.geometry.Polygon
-        :type start_date: str
-        :type end_date: str
-        :rtype: list[cloud.scene.SentinelScene]
-        """
-        return self.search_sentinel_scenes(aoi, platform='Sentinel-2', start_date=start_date, end_date=end_date)
-
-    def search_sentinel1_scenes(self, aoi, start_date=None, end_date=None):
-        """
-        :type aoi: shapely.geometry.Polygon
-        :type start_date: str
-        :type end_date: str
-        :rtype: list[cloud.scene.SentinelScene]
-        """
-        return self.search_sentinel_scenes(aoi, platform='Sentinel-1', start_date=start_date, end_date=end_date)
-
-    def search_sentinel_scenes(self, aoi, platform, start_date=None, end_date=None):
-        """ Search for downloadable Sentinel scenes within AOI and after date
-        :type aoi: shapely.geometry.Polygon
-        :type platform: str
-        :type start_date: str
-        :type end_date: str
-        :rtype: list[cloud.scene.SentinelScene]
-        """
-
-        url = URLBuilder.build_sentinel_search_url(aoi, platform, 0, start_date, end_date)
-        response = requests.get(url, auth=(self.username, self.password))
-
-        assert response.status_code == 200, 'Search error: {}'.format(response.reason)
-
-        content = json.loads(response.content.decode('utf-8'))
-        feed = content['feed']
-        results_count = int(feed['opensearch:totalResults'])
-        print('Found {} results'.format(results_count))
-
-        search_results = []
-        pagination_count = math.ceil(results_count / 100)
-        for i in tqdm(range(pagination_count), total=pagination_count, desc='Paginating search results'):
-            url = URLBuilder.build_sentinel_search_url(aoi, platform, i*100, start_date, end_date)
-            response = requests.get(url, auth=(self.username, self.password))
-
-            content = json.loads(response.content.decode('utf-8'))
-            feed = content['feed']
-
-            for r in feed['entry']:
-                date = r['date'][0]['content'].split('T')[0]
-                year, month, day = date.split('-')
-
-                if platform == 'Sentinel-2':
-                    if type(r['double']) == list:
-                        for metric in r['double']:
-                            if metric['name'] == 'cloudcoverpercentage':
-                                cloud_percentage = metric['content']
-                    elif r['double']['name'] == 'cloudcoverpercentage':
-                        cloud_percentage = r['double']['content']
-                else:
-                    cloud_percentage = 999
-                name = r['title']
-
-                boundary = wkt.loads([i for i in r['str'] if 'POLYGON' in i['content']][0]['content'])
-
-                utm_code, latitude_band, square = gis.get_mgrs_info(aoi)
-                image_url = URLBuilder.build_sentinel2_image_url(
-                    year, int(month), int(day),
-                    utm_code, latitude_band, square)
-
-                search_results.append(
-                    SentinelScene(
-                        scene_id=name,
-                        date=date,
-                        clouds=cloud_percentage,
-                        bounds=boundary,
-                        image_url=image_url))
-
-        return search_results
+        return scene_list

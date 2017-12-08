@@ -1,10 +1,7 @@
-import os
-
 import numpy as np
 from osgeo import gdal, osr
 from tqdm import tqdm
 
-from remotesensing.image import Geotransform
 from remotesensing.tools import gis
 
 GTIFF_DRIVER = 'GTiff'
@@ -12,19 +9,17 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal """
-    def __init__(self, pixels, geotransform, projection, metadata=None, band_labels=None):
+    def __init__(self, pixels, geotransform, projection, band_labels=None):
         """
         :type pixels: numpy.ndarray
         :type geotransform: geotransform.Geotransform
         :param projection: str
-        :param metadata: dict
         :param band_labels: dict
         """
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         self.projection = projection
-        self.metadata = metadata
         self.band_labels = band_labels
 
     def __repr__(self) -> str:
@@ -48,7 +43,7 @@ class Image:
             raise UserWarning("Requires a integer or a string")
 
         return Image(image, self.geotransform, self.projection,
-                     band_labels=band_labels, metadata=self.metadata)
+                     band_labels=band_labels)
 
     def _get_band_by_number(self, band_number):
         """
@@ -56,35 +51,6 @@ class Image:
         :rtype: numpy.ndarray
         """
         return self.pixels[:, :, band_number-1]
-
-    @classmethod
-    def load(cls, filepath, band_labels=None):
-        """
-        :type filepath: str
-        :type band_labels: dict{str: int}
-        :rtype: image.Image
-        """
-        if not os.path.exists(filepath):
-            raise UserWarning("Filepath does not exist.")
-
-        return cls.load_from_dataset(gdal.Open(filepath), band_labels)
-
-    @classmethod
-    def load_from_dataset(cls, image_dataset, band_labels=None):
-        """
-        :type image_dataset: osgeo.gdal.Dataset
-        :type band_labels: dict
-        :rtype: image.Image
-        """
-        geotransform = Geotransform(image_dataset.GetGeoTransform())
-        projection = image_dataset.GetProjection()
-        metadata = image_dataset.GetMetadata()
-        pixels = image_dataset.ReadAsArray()
-
-        if pixels.ndim > 2:
-            pixels = pixels.transpose(1, 2, 0)
-
-        return Image(pixels, geotransform, projection, metadata=metadata, band_labels=band_labels)
 
     @property
     def width(self):
@@ -143,18 +109,8 @@ class Image:
         if height is None:
             height = width
         pixels = self.pixels[y:y+height, x:x+width]
-        geotransform = self._subset_geotransform(x, y)
-        return Image(pixels, geotransform, self.projection, self.metadata, band_labels=self.band_labels)
-
-    def _subset_geotransform(self, x, y):
-        """ Update the image geotransform based on the new subset coordinates
-        :param x: int
-        :param y: int
-        :return: geotransform.Geotransform
-        """
-        upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self.geotransform)
-        return Geotransform((upper_left_x, self.geotransform.pixel_width, self.geotransform.rotation_x,
-                             upper_left_y, self.geotransform.rotation_y, self.geotransform.pixel_height))
+        geotransform = gis.subset_geotransform(self.geotransform, x, y)
+        return Image(pixels, geotransform, self.projection, band_labels=self.band_labels)
 
     def clip_with(self, polygon, mask_value=np.nan):
         """
@@ -181,7 +137,7 @@ class Image:
             band_labels = {list(image.band_labels)[0]: i+1 for i, image in enumerate(images)
                            if image.band_labels is not None}
             return Image(stack,
-                         images[0].geotransform, images[0].projection, images[0].metadata,
+                         images[0].geotransform, images[0].projection,
                          band_labels=band_labels)
 
     def save(self, filepath, data_type='uint16'):
