@@ -33,13 +33,14 @@ class Loader:
 
         bounds = [int(bound) for bound in pixel_polygon.bounds]
 
-        pixels = image_dataset.ReadAsArray(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2])
-        geotransform = gis.subset_geotransform(geotransform, bounds[0], bounds[2])
+        pixels = image_dataset.ReadAsArray(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1])
+        geotransform = gis.subset_geotransform(geotransform, bounds[0], bounds[1])
+        pixel_polygon = gis.polygon_to_pixel(gis.transform_polygon(extent, in_epsg=4326, out_epsg=epsg), geotransform)
 
         if pixels.ndim > 2:
             pixels = pixels.transpose(1, 2, 0)
 
-        return Image(pixels, geotransform, projection, band_labels=band_labels)
+        return Image(pixels, geotransform, projection, band_labels=band_labels).clip_with(pixel_polygon, mask_value=0)
 
     def load_from_dataset(self, image_dataset, band_labels=None):
         """
