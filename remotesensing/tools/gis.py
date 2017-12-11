@@ -148,8 +148,13 @@ def subset_geotransform(geotransform, x, y):
     :return: geotransform.Geotransform
     """
     upper_left_x, upper_left_y = pixel_to_world(x, y, geotransform)
-    return Geotransform((upper_left_x, geotransform.pixel_width, geotransform.rotation_x,
-                         upper_left_y, geotransform.rotation_y, geotransform.pixel_height))
+    return Geotransform(
+        upper_left_x=upper_left_x,
+        upper_left_y=upper_left_y,
+        pixel_width=geotransform.pixel_width,
+        pixel_height=geotransform.pixel_height,
+        rotation_x=geotransform.rotation_x,
+        rotation_y=geotransform.rotation_y)
 
 
 def _get_polygon_coords(polygon):

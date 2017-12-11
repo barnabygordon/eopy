@@ -1,4 +1,5 @@
 import requests
+import geojson
 from shapely.geometry import shape
 
 from remotesensing.cloud.scene import Scene
@@ -14,7 +15,7 @@ class Searcher:
         """
         :type start_date: str
         :type end_date: str
-        :type boundary: str
+        :type boundary: shapely.geometry.Polygon
         :type longitude_latitude: typing.Tuple(float)
         :type path: int
         :type row: int
@@ -35,7 +36,7 @@ class Searcher:
         if end_date:
             url += "&date_to={}".format(end_date)
         if boundary:
-            url += "&intersects={}".format(boundary)
+            url += "&intersects={}".format(str(geojson.Feature(geometry=boundary)))
         if longitude_latitude:
             url += "&contains={longitude},{latitude}".format(
                 longitude=longitude_latitude[0],
@@ -47,8 +48,13 @@ class Searcher:
 
         response = requests.get(url).json()
 
+        if len(response['results']) == 0:
+            raise NoSearchResultsFound
+
         scene_list = []
         for result in response['results']:
+            polygon = shape(result['data_geometry'])
+
             scene_list.append(
                 Scene(
                     identity=result['scene_id'],
@@ -57,8 +63,11 @@ class Searcher:
                     date=result['date'],
                     thumbnail=result['thumbnail'],
                     links=result['download_links']['aws_s3'],
-                    polygon=shape(result['data_geometry'])
-                )
+                    polygon=polygon)
             )
 
         return scene_list
+
+
+class NoSearchResultsFound(Exception):
+    pass

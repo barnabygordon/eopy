@@ -33,6 +33,18 @@ class Scene:
     def links(self):
         return self._links
 
+    @property
+    def cloud_coverage(self):
+        return self._cloud_coverage
+
+    @property
+    def polygon(self):
+        return self._polygon
+
+    @property
+    def date(self):
+        return self._date
+
     def __repr__(self):
         return "<Scene: {}>".format(self._identity)
 

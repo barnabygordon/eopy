@@ -42,8 +42,7 @@ class Image:
         else:
             raise UserWarning("Requires a integer or a string")
 
-        return Image(image, self.geotransform, self.projection,
-                     band_labels=band_labels)
+        return Image(image, self.geotransform, self.projection, band_labels=band_labels)
 
     def _get_band_by_number(self, band_number):
         """
@@ -136,9 +135,7 @@ class Image:
 
             band_labels = {list(image.band_labels)[0]: i+1 for i, image in enumerate(images)
                            if image.band_labels is not None}
-            return Image(stack,
-                         images[0].geotransform, images[0].projection,
-                         band_labels=band_labels)
+            return Image(stack, images[0].geotransform, images[0].projection, band_labels=band_labels)
 
     def save(self, filepath, data_type='uint16'):
         """ Save a ndarray as an image with geospatial metadata
