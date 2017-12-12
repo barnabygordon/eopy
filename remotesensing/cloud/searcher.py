@@ -25,6 +25,36 @@ class Searcher:
         :rtype: typing.List[cloud.scene.Scene]
         """
 
+        url = self._build_url(start_date, end_date, boundary, longitude_latitude, path, row, cloud_min, cloud_max,
+                              search_limit)
+
+        response = requests.get(url).json()
+
+        if len(response['results']) == 0:
+            raise NoSearchResultsFound
+
+        scene_list = []
+        for result in response['results']:
+            polygon = shape(result['data_geometry'])
+            area_coverage = self._calculate_area_coverage(boundary, polygon)
+
+            scene_list.append(
+                Scene(
+                    identity=result['scene_id'],
+                    satellite_name=result['satellite_name'],
+                    cloud_coverage=result['cloud_coverage'],
+                    area_coverage=area_coverage,
+                    date=result['date'],
+                    thumbnail=result['thumbnail'],
+                    links=result['download_links']['aws_s3'],
+                    polygon=polygon)
+            )
+
+        return scene_list
+
+    def _build_url(self, start_date, end_date, boundary, longitude_latitude, path, row, cloud_min, cloud_max,
+                   search_limit):
+
         url = "https://{root}?cloud_from={cloud_from}&cloud_to={cloud_to}&limit={limit}".format(
             root=self._api_url,
             cloud_from=cloud_min,
@@ -46,27 +76,21 @@ class Searcher:
         if row:
             url += "&row={}".format(row)
 
-        response = requests.get(url).json()
+        return url
 
-        if len(response['results']) == 0:
-            raise NoSearchResultsFound
+    def _calculate_area_coverage(self, search_boundary, scene_boundary):
+        """
+        :type search_boundary: shapely.geometry.Polygon
+        :type scene_boundary: shapely.geometry.Polygon
+        :rtype: float
+        """
 
-        scene_list = []
-        for result in response['results']:
-            polygon = shape(result['data_geometry'])
+        intersection_area = scene_boundary.intersection(search_boundary).area
 
-            scene_list.append(
-                Scene(
-                    identity=result['scene_id'],
-                    satellite_name=result['satellite_name'],
-                    cloud_coverage=result['cloud_coverage'],
-                    date=result['date'],
-                    thumbnail=result['thumbnail'],
-                    links=result['download_links']['aws_s3'],
-                    polygon=polygon)
-            )
-
-        return scene_list
+        if intersection_area != 0.:
+            return (search_boundary.area / intersection_area) * 100
+        else:
+            return 0.
 
 
 class NoSearchResultsFound(Exception):

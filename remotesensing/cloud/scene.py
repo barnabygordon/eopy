@@ -2,11 +2,12 @@ from IPython.display import Image as IPythonImage
 
 
 class Scene:
-    def __init__(self, identity, satellite_name, cloud_coverage, date, thumbnail, polygon, links):
+    def __init__(self, identity, satellite_name, cloud_coverage, area_coverage, date, thumbnail, polygon, links):
         """
         :type identity: str
         :type satellite_name: str
         :type cloud_coverage: float
+        :type area_coverage: float
         :type date: str
         :type thumbnail: str
         :type polygon: shapely.geometry.Polygon
@@ -16,6 +17,7 @@ class Scene:
         self._identity = identity
         self._satellite_name = satellite_name
         self._cloud_coverage = cloud_coverage
+        self._area_coverage = area_coverage
         self._date = date
         self._thumbnail = thumbnail
         self._polygon = polygon
@@ -36,6 +38,10 @@ class Scene:
     @property
     def cloud_coverage(self):
         return self._cloud_coverage
+
+    @property
+    def area_coverage(self):
+        return self._area_coverage
 
     @property
     def polygon(self):
