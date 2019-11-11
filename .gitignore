@@ -3,3 +3,4 @@ notebooks/
 notebooks/config.py
 *__pycache__
 *.pyc
+*.egg-info

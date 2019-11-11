@@ -20,7 +20,7 @@ setup(
     long_description=long_description,
     url='https://github.com/barnabygordon/remote-sensing',
     author='Barney Gordon',
-    author_email='barney@hummingbirdtech.com',
+    author_email='barnaby_gordon@yahoo.com',
     packages=find_packages(exclude=['docs', 'tests*']),
     install_requires=[
         'folium',

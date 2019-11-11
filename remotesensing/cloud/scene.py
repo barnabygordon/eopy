@@ -52,7 +52,7 @@ class Scene:
         return self._date
 
     def __repr__(self):
-        return "<Scene: {}>".format(self._identity)
+        return f"<Scene: {self._identity}>"
 
     @property
     def show(self):

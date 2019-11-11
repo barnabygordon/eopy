@@ -1,21 +1,19 @@
 import numpy as np
+from typing import List, Tuple
 from osgeo import gdal, osr
 from tqdm import tqdm
+from shapely.geometry import Polygon
 
 from remotesensing.tools import gis
+from remotesensing.image import Geotransform
 
 GTIFF_DRIVER = 'GTiff'
 
 
 class Image:
     """ A generic image object using gdal """
-    def __init__(self, pixels, geotransform, projection, band_labels=None):
-        """
-        :type pixels: numpy.ndarray
-        :type geotransform: geotransform.Geotransform
-        :param projection: str
-        :param band_labels: dict
-        """
+    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, band_labels: dict =None):
+
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
@@ -23,13 +21,11 @@ class Image:
         self.band_labels = band_labels
 
     def __repr__(self) -> str:
-        return "Image - Shape: {}x{}x{} | EPSG: {}".format(self.width, self.height, self.band_count, self.epsg)
 
-    def __getitem__(self, band):
-        """
-        :type band: list[int, str
-        :rtype: image.Image
-        """
+        return f'Image - Shape: {self.width}x{self.height}x{self.band_count} | EPSG: {self.epsg}'
+
+    def __getitem__(self, band) -> "Image":
+
         if type(band) == int:
             image = self.pixels[:, :, band]
             if bool(self.band_labels):
@@ -44,87 +40,59 @@ class Image:
 
         return Image(image, self.geotransform, self.projection, band_labels=band_labels)
 
-    def _get_band_by_number(self, band_number):
-        """
-        :type band_number: int
-        :rtype: numpy.ndarray
-        """
+    def _get_band_by_number(self, band_number: int) -> np.ndarray:
+
         return self.pixels[:, :, band_number-1]
 
     @property
-    def width(self):
-        """
-        :rtype: int
-        """
+    def width(self) -> int:
+
         return self.pixels.shape[0]
 
     @property
-    def height(self):
-        """
-        :rtype: int
-        """
+    def height(self) -> int:
+
         return self.pixels.shape[1]
 
     @property
-    def band_count(self):
-        """
-        :rtype: int
-        """
+    def band_count(self) -> int:
+
         if self.pixels.ndim > 2:
             return self.pixels.shape[2]
         else:
             return 1
 
     @property
-    def shape(self):
-        """
-        :rtype: tuple(int)
-        """
+    def shape(self) -> Tuple[int]:
+
         return self.pixels.shape
 
     @property
-    def dtype(self):
-        """
-        :rtype: str
-        """
+    def dtype(self) -> str:
+
         return self.pixels.dtype
 
     @property
-    def epsg(self):
-        """
-        :rtype: int
-        """
+    def epsg(self) -> int:
+
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
-    def subset(self, x, y, width, height=None):
-        """ A slice of the image across all bands
-        :type x: int
-        :type y: int
-        :type width: int
-        :type height: int
-        :rtype: image.Image
-        """
+    def subset(self, x: int, y: int, width: int, height: int = None) -> "Image":
+
         if height is None:
             height = width
         pixels = self.pixels[y:y+height, x:x+width]
         geotransform = gis.subset_geotransform(self.geotransform, x, y)
         return Image(pixels, geotransform, self.projection, band_labels=self.band_labels)
 
-    def clip_with(self, polygon, mask_value=np.nan):
-        """
-        :param polygon: shapely.Polygon
-        :param mask_value: float
-        :rtype: image.Image
-        """
+    def clip_with(self, polygon: Polygon, mask_value: float = np.nan) -> "Image":
+
         return gis.clip_image(self, polygon, mask_value=mask_value)
 
     @staticmethod
-    def stack(images):
-        """ Stack a list of Image objects and return a single Image
-        :param images: list[image.Image]
-        :return: image.Image
-        """
+    def stack(images: List["Image"]) -> "Image":
+
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
         else:
@@ -137,11 +105,7 @@ class Image:
                            if image.band_labels is not None}
             return Image(stack, images[0].geotransform, images[0].projection, band_labels=band_labels)
 
-    def save(self, filepath, data_type='uint16'):
-        """ Save a ndarray as an image with geospatial metadata
-        :type filepath: str
-        :type data_type: str
-        """
+    def save(self, filepath: str, data_type: str='uint16'):
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
@@ -158,7 +122,7 @@ class Image:
         out_image.FlushCache()
 
     @staticmethod
-    def _get_gdal_data_type(name):
+    def _get_gdal_data_type(name: str):
         if name == 'uint8':
             return gdal.GDT_Byte
         elif name == 'uint16':

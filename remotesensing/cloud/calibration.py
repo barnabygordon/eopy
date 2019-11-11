@@ -42,8 +42,8 @@ class Calibration:
         :type band_number: int
         :rtype: numpy.ndarray
         """
-        gain = self.get_landsat_metadata_value('REFLECTANCE_MULT_BAND_{}'.format(band_number))
-        bias = self.get_landsat_metadata_value('REFLECTANCE_ADD_BAND_{}'.format(band_number))
+        gain = self.get_landsat_metadata_value(f'REFLECTANCE_MULT_BAND_{band_number}')
+        bias = self.get_landsat_metadata_value(f'REFLECTANCE_ADD_BAND_{band_number}')
         sun_elevation_degrees = self.get_landsat_metadata_value('SUN_ELEVATION')
         sun_elevation_radians = math.radians(sun_elevation_degrees)
 

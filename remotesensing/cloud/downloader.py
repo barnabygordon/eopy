@@ -21,7 +21,6 @@ class Downloader:
         """ List the available Sentinel-2 band options """
         return ", ".join(self._sentinel_2.bands)
 
-
     def download(self, scene, bands, extent=None):
         """
         :type scene: remotesensing.cloud.scene.Scene
@@ -52,4 +51,5 @@ class Downloader:
             return self._compute_gdal_virtual_url(band_url)
 
     def _compute_gdal_virtual_url(self, url):
-        return "/vsicurl/{}".format(url.split("https://")[1])
+
+        return f"/vsicurl/{url.split('https://')[1]}"

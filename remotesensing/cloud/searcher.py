@@ -55,26 +55,20 @@ class Searcher:
     def _build_url(self, start_date, end_date, boundary, longitude_latitude, path, row, cloud_min, cloud_max,
                    search_limit):
 
-        url = "https://{root}?cloud_from={cloud_from}&cloud_to={cloud_to}&limit={limit}".format(
-            root=self._api_url,
-            cloud_from=cloud_min,
-            cloud_to=cloud_max,
-            limit=search_limit)
+        url = f"https://{self._api_url}?cloud_from={cloud_min}&cloud_to={cloud_max}&limit={search_limit}"
 
         if start_date:
-            url += "&date_from={}".format(start_date)
+            url += f"&date_from={start_date}"
         if end_date:
-            url += "&date_to={}".format(end_date)
+            url += f"&date_to={end_date}"
         if boundary:
-            url += "&intersects={}".format(str(geojson.Feature(geometry=boundary)))
+            url += f"&intersects={str(geojson.Feature(geometry=boundary))}"
         if longitude_latitude:
-            url += "&contains={longitude},{latitude}".format(
-                longitude=longitude_latitude[0],
-                latitude=longitude_latitude[1])
+            url += f"&contains={longitude_latitude[0]},{longitude_latitude[1]}"
         if path:
-            url += "&path={}".format(path)
+            url += f"&path={path}"
         if row:
-            url += "&row={}".format(row)
+            url += f"&row={path}"
 
         return url
 
