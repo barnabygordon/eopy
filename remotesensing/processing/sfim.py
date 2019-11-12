@@ -11,12 +11,7 @@ class SFIM:
     A class for fusing together images for pansharpening
     """
     @classmethod
-    def calculate(cls, low_resolution_image, pan_image):
-        """ Fuse a low resolution image with a higher resolution one
-        :type low_resolution_image: image.Image
-        :type pan_image: image.Image
-        :rtype: image.Image
-        """
+    def calculate(cls, low_resolution_image: Image, pan_image: Image) -> Image:
 
         pan_smooth = cls._smooth_image(pan_image.pixels)
 
@@ -42,21 +37,12 @@ class SFIM:
                      band_labels=low_resolution_image.band_labels, metadata=low_resolution_image.metadata)
 
     @staticmethod
-    def _fuse_images(low_resolution_image, pan_image, smoothed_pan_image):
-        """ Fuse together two images of the same number of dimensions
-        :type low_resolution_image: numpy.ndarray
-        :type pan_image: numpy.ndarray
-        :type smoothed_pan_image: numpy.ndarray
-        :rtype: numpy.ndarray
-        """
+    def _fuse_images(low_resolution_image: np.ndarray, pan_image: np.ndarray, smoothed_pan_image: np.ndarray) -> np.ndarray:
+
         resized_image = resize(low_resolution_image, pan_image.shape[::-1])
         return (resized_image * pan_image) / smoothed_pan_image
 
     @staticmethod
-    def _smooth_image(image, sigma=5):
-        """ Perform a gaussian filter on an image
-        :type image: image.Image
-        :type sigma: int
-        :rtype: numpy.ndarray
-        """
+    def _smooth_image(image: Image, sigma: int = 5) -> np.ndarray:
+
         return gaussian_filter(image.pixels, sigma=sigma)

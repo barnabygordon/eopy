@@ -7,15 +7,7 @@ from remotesensing.image import Image
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image, L=0., H=1., E=0.5, clip=0.):
-        """ Perform a BCET on an image
-        :type image: image.Image
-        :type L: float
-        :type H: float
-        :type E: float
-        :type clip: float
-        :rtype: image.Image
-        """
+    def calculate(image: Image, L: float = 0., H: float = 1., E: float = 0.5, clip: float = 0.) -> Image:
 
         bcet_image = np.zeros(image.shape)
         for i in tqdm(range(image.band_count), total=image.band_count, desc='Calculating bands'):
@@ -43,5 +35,4 @@ class BCET:
         bcet_image[bcet_image > H] = H
         bcet_image[bcet_image < L] = L
 
-        return Image(bcet_image, image.geotransform, image.projection,
-                     band_labels=image.band_labels, metadata=image.metadata)
+        return Image(bcet_image, image.geotransform, image.projection, band_labels=image.band_labels, metadata=image.metadata)

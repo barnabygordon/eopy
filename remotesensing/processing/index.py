@@ -1,18 +1,20 @@
 import warnings
+from typing import List
+import numpy as np
 
 from remotesensing.image import Image
 
 
 class IndexCalculator:
     @staticmethod
-    def check_bands_exist(image, band_list):
+    def check_bands_exist(image: Image, band_list: List[str]):
         missing_bands = [band for band in band_list if band not in image.band_labels]
 
         if len(missing_bands) > 0:
             raise UserWarning("Image is missing bands: {}".format(', '.join(missing_bands)))
 
     @staticmethod
-    def safe_divide(numerator, denominator):
+    def safe_divide(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             return numerator / denominator
@@ -20,31 +22,28 @@ class IndexCalculator:
 
 class Landsat8(IndexCalculator):
     @classmethod
-    def iron_oxide(cls, image):
+    def iron_oxide(cls, image: Image) -> Image:
         IndexCalculator.check_bands_exist(image, ['red', 'blue'])
         red = image['red'].pixels
         blue = image['blue'].pixels
 
         iron_oxide = IndexCalculator.safe_divide(red, blue)
-        return Image(iron_oxide, image.geotransform, image.projection,
-                     band_labels={'iron_oxide': 1}, metadata=image.metadata)
+        return Image(iron_oxide, image.geotransform, image.projection, band_labels={'iron_oxide': 1}, metadata=image.metadata)
 
     @classmethod
-    def clay(cls, image):
+    def clay(cls, image: Image) -> Image:
         IndexCalculator.check_bands_exist(image, ['swir_1', 'swir_2'])
         swir_1 = image['swir_1'].pixels
         swir_2 = image['swir_2'].pixels
 
         clay = IndexCalculator.safe_divide(swir_2, swir_1)
-        return Image(clay, image.geotransform, image.projection,
-                     band_labels={'clay': 1}, metadata=image.metadata)
+        return Image(clay, image.geotransform, image.projection, band_labels={'clay': 1}, metadata=image.metadata)
 
     @classmethod
-    def ndvi(cls, image):
+    def ndvi(cls, image: Image) -> Image:
         IndexCalculator.check_bands_exist(image, ['nir', 'red'])
         nir = image['nir'].pixels
         red = image['red'].pixels
 
         ndvi = IndexCalculator.safe_divide((nir - red), (nir + red))
-        return Image(ndvi, image.geotransform, image.projection,
-                     band_labels={'ndvi': 1}, metadata=image.metadata)
+        return Image(ndvi, image.geotransform, image.projection, band_labels={'ndvi': 1}, metadata=image.metadata)

@@ -1,4 +1,5 @@
 import math
+from typing import List
 from urllib.request import urlopen
 
 import numpy as np
@@ -7,20 +8,13 @@ from remotesensing.image.sensor import Landsat8
 
 
 class Calibration:
-    """ Functionality to calibrate satellite data """
-    def __init__(self, metadata_url):
-        """
-        :type metadata_url: str
-        """
+
+    def __init__(self, metadata_url: str):
+
         self.landsat8 = Landsat8()
         self.metadata_url = metadata_url
 
-    def calibrate_landsat(self, image, band_list):
-        """ Calibrate a stack of Landsat bands
-        :type image: image.Image
-        :type band_list: list[str]
-        :rtype: numpy.ndarray
-        """
+    def calibrate_landsat(self, image: Image, band_list: List[str]) -> Image:
 
         if image.band_count == 1:
             calibrated_image = self.calibrate_landsat_band(image.pixels, self.landsat8.band_number(band_list[0]))
@@ -33,15 +27,10 @@ class Calibration:
 
                 calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, band_number)
 
-        return Image(calibrated_image, image.geotransform, image.projection, image.metadata,
-                     band_labels={i+1: band for i, band in enumerate(band_list)})
+        return Image(calibrated_image, image.geotransform, image.projection, image.metadata, band_labels={i+1: band for i, band in enumerate(band_list)})
 
-    def calibrate_landsat_band(self, band_array, band_number):
-        """ Calibrate a single Landsat band
-        :type band_array: numpy.ndarray
-        :type band_number: int
-        :rtype: numpy.ndarray
-        """
+    def calibrate_landsat_band(self, band_array: np.ndarray, band_number: int) -> np.ndarray:
+
         gain = self.get_landsat_metadata_value(f'REFLECTANCE_MULT_BAND_{band_number}')
         bias = self.get_landsat_metadata_value(f'REFLECTANCE_ADD_BAND_{band_number}')
         sun_elevation_degrees = self.get_landsat_metadata_value('SUN_ELEVATION')
@@ -49,11 +38,9 @@ class Calibration:
 
         return self.calculate_landsat_toa_reflectance(band_array, gain, bias, sun_elevation_radians)
 
-    def get_landsat_metadata_value(self, parameter):
-        """ Extract value from metadata txt file
-        :type parameter: str
-        :rtype: float
-        """
+    def get_landsat_metadata_value(self, parameter: float) -> float:
+        """ Extract value from metadata txt file"""
+
         metadata_file = urlopen(self.metadata_url)
         # TODO: Make this less ugly!
         for line in metadata_file:
@@ -62,14 +49,9 @@ class Calibration:
                 return float(data[1].split('\\')[0])
 
     @staticmethod
-    def calculate_landsat_toa_reflectance(dn, gain, bias, sun_elevation):
-        """ Calculate Top of Atmosphere reflectance taking into account solar geometry
-        :type dn: numpy.ndarray
-        :type gain: float
-        :type bias: float
-        :type sun_elevation: float
-        :rtype: numpy.ndarray
-        """
+    def calculate_landsat_toa_reflectance(dn: np.ndarray, gain: float, bias: float, sun_elevation: float) -> np.ndarray:
+        """ Calculate Top of Atmosphere reflectance taking into account solar geometry"""
+
         rho = np.where(dn > 0, (gain*dn + bias) / math.sin(sun_elevation), 0)
 
         return rho

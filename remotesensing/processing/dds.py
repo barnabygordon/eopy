@@ -6,12 +6,8 @@ from remotesensing.image import Image
 class DDS:
     """ Direct Decorrelation Stretch """
     @staticmethod
-    def calculate(image, k=0.6):
-        """ Saturates an image according to the k factor
-        :type image: image.Image
-        :type k: float
-        :rtype: image.Image
-        """
+    def calculate(image: Image, k: float = 0.6) -> Image:
+
         x = np.amin(image.pixels, axis=0)
 
         dds_image = np.copy(image.pixels)

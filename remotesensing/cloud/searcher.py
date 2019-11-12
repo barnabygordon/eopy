@@ -1,6 +1,7 @@
 import requests
-import geojson
-from shapely.geometry import shape
+from datetime import datetime
+from typing import List
+from shapely.geometry import shape, Polygon
 
 from remotesensing.cloud.scene import Scene
 
@@ -8,76 +9,50 @@ from remotesensing.cloud.scene import Scene
 class Searcher:
     """ A class to search for satellite imagery """
     def __init__(self):
-        self._api_url = "api.developmentseed.org/satellites/"
+        self._api_url = 'https://sat-api.developmentseed.org/stac'
 
-    def search(self, start_date=None, end_date=None, boundary=None, longitude_latitude=None, path=None, row=None,
-               cloud_min=0, cloud_max=100, search_limit=1000):
-        """
-        :type start_date: str
-        :type end_date: str
-        :type boundary: shapely.geometry.Polygon
-        :type longitude_latitude: typing.Tuple(float)
-        :type path: int
-        :type row: int
-        :type cloud_min: float
-        :type cloud_max: float
-        :type search_limit: int
-        :rtype: typing.List[cloud.scene.Scene]
-        """
+    def search(
+            self,
+            boundary: Polygon,
+            start: datetime = None, end: datetime = None,
+            cloud_min: float = 0, cloud_max: float = 100,
+            limit: int = 1000) -> List[Scene]:
 
-        url = self._build_url(start_date, end_date, boundary, longitude_latitude, path, row, cloud_min, cloud_max,
-                              search_limit)
+        url = f'{self._api_url}/search?bbox={list(boundary.bounds)}&limit={limit}'
 
-        response = requests.get(url).json()
+        if start:
+            time = f'&time={start.strftime("%Y-%m-%dT%H:%M:%SZ")}'
+            if end:
+                time = time + f'/{end.strftime("%Y-%m-%dT%H:%M:%SZ")}'
+            url = url + time
 
-        if len(response['results']) == 0:
-            raise NoSearchResultsFound
+        response = requests.get(url)
+        response_json = response.json()
+
+        if len(response_json['features']) == 0:
+            raise NoSearchResultsFound()
 
         scene_list = []
-        for result in response['results']:
-            polygon = shape(result['data_geometry'])
+        for result in response_json['features']:
+            polygon = shape(result.get('geometry'))
             area_coverage = self._calculate_area_coverage(boundary, polygon)
 
             scene_list.append(
                 Scene(
-                    identity=result['scene_id'],
-                    satellite_name=result['satellite_name'],
-                    cloud_coverage=result['cloud_coverage'],
+                    identity=result.get('id'),
+                    satellite_name=result.get('properties', {}).get('eo:platform'),
+                    cloud_coverage=result.get('properties', {}).get('eo:cloud_cover'),
                     area_coverage=area_coverage,
-                    date=result['date'],
-                    thumbnail=result['thumbnail'],
-                    links=result['download_links']['aws_s3'],
+                    date=result.get('datetime'),
+                    thumbnail=result.get('assets', {}).get('thumbnail', {}).get('href'),
+                    links=result.get('download_links', {}).get('aws_s3'),
                     polygon=polygon)
             )
 
         return scene_list
 
-    def _build_url(self, start_date, end_date, boundary, longitude_latitude, path, row, cloud_min, cloud_max,
-                   search_limit):
-
-        url = f"https://{self._api_url}?cloud_from={cloud_min}&cloud_to={cloud_max}&limit={search_limit}"
-
-        if start_date:
-            url += f"&date_from={start_date}"
-        if end_date:
-            url += f"&date_to={end_date}"
-        if boundary:
-            url += f"&intersects={str(geojson.Feature(geometry=boundary))}"
-        if longitude_latitude:
-            url += f"&contains={longitude_latitude[0]},{longitude_latitude[1]}"
-        if path:
-            url += f"&path={path}"
-        if row:
-            url += f"&row={path}"
-
-        return url
-
-    def _calculate_area_coverage(self, search_boundary, scene_boundary):
-        """
-        :type search_boundary: shapely.geometry.Polygon
-        :type scene_boundary: shapely.geometry.Polygon
-        :rtype: float
-        """
+    @staticmethod
+    def _calculate_area_coverage(search_boundary: Polygon, scene_boundary: Polygon) -> float:
 
         intersection_area = scene_boundary.intersection(search_boundary).area
 

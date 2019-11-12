@@ -1,16 +1,16 @@
 from sklearn.decomposition import PCA
 import pandas as pd
+import numpy as np
+from typing import List, Tuple
+
+from remotesensing.image import Image
 
 
 class ImagePCA:
     """ Principal Components Analysis """
     @staticmethod
-    def calculate(image, band_names=None):
-        """ Calculate PCs for each image band
-        :type image: numpy.ndarray
-        :type band_names: list[str]
-        :return: tuple(numpy.ndarray, pandas.DataFrame)
-        """
+    def calculate(image: Image, band_names: List[str] = None) -> Tuple[np.ndarray, pd.DataFrame]:
+
         pca = PCA(n_components=image.shape[2])
 
         x = image.reshape(-1, image.shape[2])

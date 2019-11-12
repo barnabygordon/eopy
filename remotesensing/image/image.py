@@ -12,7 +12,7 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal """
-    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, band_labels: dict =None):
+    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, band_labels: dict = None):
 
         self.pixels = pixels
         self.data_type = self.pixels.dtype
