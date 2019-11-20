@@ -1,6 +1,6 @@
 from IPython.display import Image as IPythonImage
 from shapely.geometry import Polygon
-from typing import List
+from typing import List, Dict
 
 
 class Scene:
@@ -12,7 +12,7 @@ class Scene:
                  date: str,
                  thumbnail: str,
                  polygon: Polygon,
-                 links: List[str]):
+                 links: Dict[str, Dict]):
 
         self.identity = identity
         self.satellite_name = satellite_name
@@ -29,3 +29,8 @@ class Scene:
     @property
     def show(self):
         return IPythonImage(self._thumbnail)
+
+    @property
+    def bands(self) -> List[str]:
+
+        return list(self.links.keys())

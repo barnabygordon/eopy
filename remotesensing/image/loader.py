@@ -10,6 +10,8 @@ from osgeo import gdal, osr
 class Loader:
     def load(self, file_path: str, band_labels: Dict[str, int] = None, extent: Polygon = None) -> Image:
 
+        print(f'Loading: {file_path}')
+
         if extent:
             return self.load_from_dataset_and_clip(gdal.Open(file_path), band_labels, extent)
         else:

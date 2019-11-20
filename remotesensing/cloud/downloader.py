@@ -31,21 +31,14 @@ class Downloader:
     def download(self, scene: Scene, bands: List[str], extent: Polygon = None) -> Image:
 
         if len(bands) > 1:
-            return Image.stack([self._image_loader.load(self._get_url_for_band_name(scene, band), extent=extent) for band in bands])
-
+            return Image.stack([self._image_loader.load(self._get_url(scene, band), extent=extent) for band in bands])
         else:
-            return self._image_loader.load(self._get_url_for_band_name(scene, bands[0]), extent=extent)
+            return self._image_loader.load(self._get_url(scene, bands[0]), extent=extent)
 
-    def _get_url_for_band_name(self, scene: Scene, band_name: str) -> str:
+    @staticmethod
+    def _get_url(scene: Scene, band: str) -> str:
 
-        if scene.satellite_name == 'landsat-8':
-            band_url = scene.links[self._landsat_8.bands[band_name]]
-            return self._compute_gdal_virtual_url(band_url)
-
-        elif scene.satellite_name == 'Sentinel-2A':
-            band_url = scene.links[self._sentinel_2.bands[band_name]]
-            return self._compute_gdal_virtual_url(band_url)
-
-    def _compute_gdal_virtual_url(self, url: str) -> str:
-
-        return f"/vsicurl/{url.split('https://')[1]}"
+        try:
+            return scene.links[band]['href']
+        except KeyError:
+            raise UserWarning(f'Band {band} is invalid')

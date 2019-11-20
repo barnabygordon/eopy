@@ -45,7 +45,7 @@ class Searcher:
                     area_coverage=area_coverage,
                     date=result.get('datetime'),
                     thumbnail=result.get('assets', {}).get('thumbnail', {}).get('href'),
-                    links=result.get('download_links', {}).get('aws_s3'),
+                    links=result.get('assets', {}),
                     polygon=polygon)
             )
 

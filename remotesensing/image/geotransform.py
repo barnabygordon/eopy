@@ -15,6 +15,16 @@ class Geotransform:
     def __repr__(self) -> str:
         return f'(ulx, uly): ({self.upper_left_x}, {self.upper_left_y}) | xdist: {self.pixel_width}'
 
+    @property
+    def tuple(self):
+
+        return ((self.upper_left_x, self.pixel_width, self.rotation_x, self.upper_left_y, self.rotation_y, self.pixel_height))
+
     def translate(self, x: int, y: int) -> "Geotransform":
 
-        return Geotransform((x, self.rotation_x, self.pixel_height, y, self.rotation_y, self.pixel_height))
+        return Geotransform((x, self.pixel_width, self.rotation_x, y, self.rotation_y, self.pixel_height))
+
+    def scale(self, factor: int) -> "Geotransform":
+
+        return Geotransform((self.upper_left_x, self.pixel_width // factor, self.rotation_x,
+                             self.upper_left_y, self.rotation_y, self.pixel_height // factor))

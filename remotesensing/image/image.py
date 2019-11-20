@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import ndimage
 from typing import List, Tuple
 from osgeo import gdal, osr
 from tqdm import tqdm
@@ -89,6 +90,13 @@ class Image:
     def clip_with(self, polygon: Polygon, mask_value: float = np.nan) -> "Image":
 
         return gis.clip_image(self, polygon, mask_value=mask_value)
+
+    def upsample(self, factor: int) -> "Image":
+
+        resampled_pixels = ndimage.zoom(self.pixels, factor, order=0)
+        scaled_geotransform = self.geotransform.scale(factor)
+
+        return Image(resampled_pixels, scaled_geotransform, self.projection, band_labels=self.band_labels)
 
     @staticmethod
     def stack(images: List["Image"]) -> "Image":
