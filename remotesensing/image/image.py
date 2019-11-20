@@ -98,6 +98,11 @@ class Image:
 
         return Image(resampled_pixels, scaled_geotransform, self.projection, band_labels=self.band_labels)
 
+    def apply(self, function: callable) -> "Image":
+
+        modified_pixels = function(self.pixels)
+        return Image(modified_pixels, self.geotransform, self.projection, band_labels=self.band_labels)
+
     @staticmethod
     def stack(images: List["Image"]) -> "Image":
 

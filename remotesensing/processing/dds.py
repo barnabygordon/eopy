@@ -8,11 +8,11 @@ class DDS:
     @staticmethod
     def calculate(image: Image, k: float = 0.6) -> Image:
 
-        x = np.amin(image.pixels, axis=0)
+        x = np.amin(image.pixels, axis=2)
 
         dds_image = np.copy(image.pixels)
         for i in range(image.band_count):
             dds_image[:, :, i] -= (k * x)
 
         return Image(dds_image, image.geotransform, image.projection,
-                     band_labels=image.band_labels, metadata=image.metadata)
+                     band_labels=image.band_labels)

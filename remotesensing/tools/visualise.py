@@ -1,6 +1,9 @@
 import folium
 import geojson
 import matplotlib.pyplot as plt
+from typing import List
+from PIL import Image as PILImage
+from shapely.geometry import Polygon
 import numpy as np
 
 from remotesensing.tools import gis
@@ -98,3 +101,19 @@ class Visualise:
 
         plt.legend()
         plt.show()
+
+    @staticmethod
+    def show_image_and_polygon(image, polygon: Polygon):
+
+        x, y = polygon.exterior.xy
+
+        plt.figure(figsize=(15, 10))
+        plt.imshow(image.pixels)
+        plt.plot(x, y)
+        plt.show()
+
+    @staticmethod
+    def create_giphy(file_paths: List[str], save_path: str, duration: int = 200):
+
+        image, *images = [PILImage.open(file_path) for file_path in file_paths]
+        image.save(fp=save_path, format='GIF', append_images=images, save_all=True, duration=duration, loop=0)
