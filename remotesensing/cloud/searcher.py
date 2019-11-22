@@ -1,4 +1,6 @@
 import requests
+import json
+from enum import Enum
 from datetime import datetime
 from typing import List
 from shapely.geometry import shape, Polygon
@@ -6,34 +8,46 @@ from shapely.geometry import shape, Polygon
 from remotesensing.cloud.scene import Scene
 
 
+class Satellite(Enum):
+
+    Sentinel2 = 'sentinel-2-l1c'
+    Landsat8 = 'landsat-8-l1'
+
+
 class Searcher:
-    """ A class to search for satellite imagery """
+
     def __init__(self):
         self._api_url = 'https://sat-api.developmentseed.org/stac/search'
 
     def search(
             self,
             boundary: Polygon,
+            satellite: Satellite = None,
             start: datetime = None, end: datetime = None,
             cloud_min: float = 0, cloud_max: float = 100,
             limit: int = 1000) -> List[Scene]:
 
         params = {
             'bbox': list(boundary.exterior.bounds),
+            'limit': limit,
             'query': {
                 'eo:cloud_cover': {
-                    'lt': cloud_min,
-                    'gt': cloud_max
+                    'lt': cloud_max,
+                    'gt': cloud_min
                 }
             },
-            'limit': limit,
             'sort': [
                 {
-                    'field': 'time',
+                    'field': 'datetime',
                     'direction': 'desc'
                 }
             ]
         }
+
+        if satellite:
+            params['query']['collection'] = {
+                'eq': satellite.value
+            }
 
         if start:
             time_query = f"{start.strftime('%Y-%m-%dT%H:%M:%SZ')}"
@@ -41,7 +55,7 @@ class Searcher:
                 time_query += f"/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}"
             params['time'] = time_query
 
-        response = requests.post(self._api_url, params=params, headers={'Accept': 'application/geo+json'})
+        response = requests.post(self._api_url, data=json.dumps(params))
         response_json = response.json()
 
         if len(response_json['features']) == 0:
