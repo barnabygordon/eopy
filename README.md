@@ -73,11 +73,25 @@ from remotesensing.cloud import Downloader
 from remotesensing.image import Loader
 
 downloader = Downloader("data")
-downloader.download(scene=landsat_scenes[0], bands=['B8'])
+downloader.download(scene=scene, bands=['B8'])
 
 loader = Loader()
 image = loader.load('data/LC8202024019319.tif')
 
 print(image.shape)
 >>> (15801, 15601)
+```
+
+### Stream
+
+```python
+import maptlotlib.pyplot as plt
+from remotesensing.tools import gis
+
+projected_boundary = gis.transform_polygon(search_boundary, in_epsg=4326, out_epsg=32630)
+
+image = downloader.stream(scene, ['B8'], projected_boundary)
+
+plt.imshow(image.pixels, cmap='Greys')
+![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/stream.png)
 ```

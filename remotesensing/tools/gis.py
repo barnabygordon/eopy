@@ -69,11 +69,7 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tup
 def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
     """ Transform a polygon to a new coordinate system"""
 
-    projection = partial(
-        transform,
-        Proj(init='epsg:{}'.format(in_epsg)),
-        Proj(init='epsg:{}'.format(out_epsg)))
-
+    projection = partial(transform, Proj(init=f'epsg:{in_epsg}'), Proj(init=f'epsg:{out_epsg}'))
     return shapely_transform(projection, polygon)
 
 
