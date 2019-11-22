@@ -69,11 +69,15 @@ print(scenes[0])
 Currently we can download Landsat-8 scenes.
 
 ```python
-from image import Downloader
+from remotesensing.cloud import Downloader
+from remotesensing.image import Loader
 
-downloader = Downloader(filepath="path/to/image.tif")
-image = downloader.get_landsat8_bands(scene=landsat_scenes[0], band_list=['red', 'green', 'blue'])
+downloader = Downloader("data")
+downloader.download(scene=landsat_scenes[0], bands=['B8'])
 
-print(image.pixels.shape)
->>> (8171, 8091, 3)
+loader = Loader()
+image = loader.load('data/LC8202024019319.tif')
+
+print(image.shape)
+>>> (15801, 15601)
 ```

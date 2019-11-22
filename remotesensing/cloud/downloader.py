@@ -1,4 +1,5 @@
 import requests
+from urllib.request import urlretrieve
 from http import HTTPStatus
 from typing import List
 
@@ -25,7 +26,8 @@ class Downloader:
                 print(f'Unable to download {band}: {response.status_code} {response.reason}')
                 continue
 
-            self._download_from_url(url)
+            self._download_from_url(url, file_name=scene.identity)
 
-    def _download_from_url(self, url: str):
-        pass
+    def _download_from_url(self, url: str, file_name: str):
+
+        urlretrieve(url, f'{self._download_directory}/{file_name}.tif')
