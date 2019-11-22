@@ -46,23 +46,22 @@ BCET + DDS (k=0.6):
 Currently we can search for Sentinel-2 and Landsat-8 scenes.
 
 ```python
-from image import Searcher
-from shapely.geometry import Polygon
+from datetime import datetime, timedelta
+from shapely.geometry import Point
+from remotesensing.cloud import Searcher
 
-bounds = [
-    [-0.48, 51.30],
-    [0.31, 51.30],
-    [0.31, 51.66],
-    [-0.48, 51.66],
-    [-0.48, 51.30]]
+latitude, longitude = 51.507351, -0.127758
+search_boundary = Point((longitude, latitude)).buffer(0.1)
 
-polygon = Polygon(bounds)
+searcher = Searcher()
+scenes = searcher.search(
+    search_boundary, 
+    start=datetime.now() - timedelta(days=7),
+    end=datetime.now()
+)
 
-searcher = Searcher(cloud_min=0, cloud_max=100, search_limit=100)
-landsat_scenes = searcher.search_landsat8_scenes(aoi=polygon, start_date="2016-01-01")
-
-print(landsat_scenes[0])
->>> Landsat-8 Scene | Clouds: 90 | Date: 20170703
+print(scenes[0])
+>>> <Scene: S2A_39GWH_20191122_0 | Cloud: 15.57 | Date: 2019-11-22>
 ```
 
 ### Downloading

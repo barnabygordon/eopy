@@ -13,7 +13,7 @@ class ImagePCA:
 
         pca = PCA(n_components=image.shape[2])
 
-        x = image.reshape(-1, image.shape[2])
+        x = image.pixels.reshape(-1, image.shape[2])
         pca.fit(x)
 
         eigenvectors = pca.components_

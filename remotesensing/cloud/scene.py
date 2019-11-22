@@ -1,6 +1,7 @@
 from IPython.display import Image as IPythonImage
 from shapely.geometry import Polygon
 from typing import List, Dict
+from datetime import datetime
 
 
 class Scene:
@@ -9,7 +10,7 @@ class Scene:
                  satellite_name: str,
                  cloud_coverage: float,
                  area_coverage: float,
-                 date: str,
+                 date: datetime,
                  thumbnail: str,
                  polygon: Polygon,
                  links: Dict[str, Dict]):
@@ -24,7 +25,7 @@ class Scene:
         self.links = links
 
     def __repr__(self):
-        return f"<Scene: {self.identity}>"
+        return f"<Scene: {self.identity} | Cloud: {self.cloud_coverage} | Date: {self.date.strftime('%Y-%m-%d')}>"
 
     @property
     def show(self):

@@ -9,7 +9,7 @@ from remotesensing.cloud.scene import Scene
 class Searcher:
     """ A class to search for satellite imagery """
     def __init__(self):
-        self._api_url = 'https://sat-api.developmentseed.org/stac'
+        self._api_url = 'https://sat-api.developmentseed.org/stac/search'
 
     def search(
             self,
@@ -18,15 +18,30 @@ class Searcher:
             cloud_min: float = 0, cloud_max: float = 100,
             limit: int = 1000) -> List[Scene]:
 
-        url = f'{self._api_url}/search?bbox={list(boundary.bounds)}&limit={limit}'
+        params = {
+            'bbox': list(boundary.exterior.bounds),
+            'query': {
+                'eo:cloud_cover': {
+                    'lt': cloud_min,
+                    'gt': cloud_max
+                }
+            },
+            'limit': limit,
+            'sort': [
+                {
+                    'field': 'time',
+                    'direction': 'desc'
+                }
+            ]
+        }
 
         if start:
-            time = f'&time={start.strftime("%Y-%m-%dT%H:%M:%SZ")}'
+            time_query = f"{start.strftime('%Y-%m-%dT%H:%M:%SZ')}"
             if end:
-                time = time + f'/{end.strftime("%Y-%m-%dT%H:%M:%SZ")}'
-            url = url + time
+                time_query += f"/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+            params['time'] = time_query
 
-        response = requests.get(url)
+        response = requests.post(self._api_url, params=params, headers={'Accept': 'application/geo+json'})
         response_json = response.json()
 
         if len(response_json['features']) == 0:
@@ -43,7 +58,7 @@ class Searcher:
                     satellite_name=result.get('properties', {}).get('eo:platform'),
                     cloud_coverage=result.get('properties', {}).get('eo:cloud_cover'),
                     area_coverage=area_coverage,
-                    date=result.get('datetime'),
+                    date=datetime.strptime(result.get('properties', {}).get('datetime').split('.')[0], '%Y-%m-%dT%H:%M:%S'),
                     thumbnail=result.get('assets', {}).get('thumbnail', {}).get('href'),
                     links=result.get('assets', {}),
                     polygon=polygon)
