@@ -93,5 +93,5 @@ projected_boundary = gis.transform_polygon(search_boundary, in_epsg=4326, out_ep
 image = downloader.stream(scene, ['B8'], projected_boundary)
 
 plt.imshow(image.pixels, cmap='Greys')
-![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/stream.png)
 ```
+![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/stream.png)
