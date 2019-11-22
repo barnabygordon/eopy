@@ -43,8 +43,6 @@ BCET + DDS (k=0.6):
 
 ### Searching
 
-Currently we can search for Sentinel-2 and Landsat-8 scenes.
-
 ```python
 from datetime import datetime, timedelta
 from shapely.geometry import Point
@@ -65,8 +63,6 @@ print(scenes[0])
 ```
 
 ### Downloading
-
-Currently we can download Landsat-8 scenes.
 
 ```python
 from remotesensing.cloud import Downloader
