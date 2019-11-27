@@ -4,7 +4,7 @@ from remotesensing.tools import gis
 
 from typing import Dict
 from shapely.geometry import Polygon
-from osgeo import gdal, osr
+from osgeo import gdal
 
 
 class Loader:
@@ -27,6 +27,9 @@ class Loader:
         pixels = image_dataset.ReadAsArray(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1])
         subset_geo_transform = gis.subset_geotransform(geo_transform, bounds[0], bounds[1])
         pixel_polygon = gis.polygon_to_pixel(extent, subset_geo_transform)
+
+        if not pixels:
+            raise UserWarning('Extent does not overlap with image')
 
         if pixels.ndim > 2:
             pixels = pixels.transpose(1, 2, 0)
