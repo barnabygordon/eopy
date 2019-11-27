@@ -12,10 +12,6 @@ class GeoPolygon:
         self.polygon = polygon
         self.epsg = epsg
 
-    def __repr__(self) -> Polygon:
-
-        return self.polygon
-
     @classmethod
     def from_file(cls, filename: str, epsg: int) -> "GeoPolygon":
 
@@ -32,12 +28,12 @@ class GeoPolygon:
     @property
     def wgs84(self) -> "GeoPolygon":
 
-        if self.epsg == gis.WGS84_EPSG.value:
+        if self.epsg == gis.WGS84_EPSG:
             polygon = self.polygon
         else:
-            polygon = gis.transform_polygon(self.polygon, in_epsg=self.epsg, out_epsg=gis.WGS84_EPSG.value)
+            polygon = gis.transform_polygon(self.polygon, in_epsg=self.epsg, out_epsg=gis.WGS84_EPSG)
 
-        return GeoPolygon(polygon, epsg=gis.WGS84_EPSG.value)
+        return GeoPolygon(polygon, epsg=gis.WGS84_EPSG)
 
     @property
     def show(self):

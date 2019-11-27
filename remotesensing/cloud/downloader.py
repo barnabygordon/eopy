@@ -43,6 +43,8 @@ class Downloader:
                 print(e)
                 continue
 
+            print(url)
+
             image_dataset = gdal.Open('/vsicurl/' + url)
             if not image_dataset:
                 raise UserWarning(f'Unable to stream band: {band} {url}')

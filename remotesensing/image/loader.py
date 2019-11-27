@@ -28,9 +28,6 @@ class Loader:
         subset_geo_transform = gis.subset_geotransform(geo_transform, bounds[0], bounds[1])
         pixel_polygon = gis.polygon_to_pixel(extent, subset_geo_transform)
 
-        if not pixels:
-            raise UserWarning('Extent does not overlap with image')
-
         if pixels.ndim > 2:
             pixels = pixels.transpose(1, 2, 0)
 

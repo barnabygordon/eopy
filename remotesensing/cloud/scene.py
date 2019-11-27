@@ -1,7 +1,8 @@
 from IPython.display import Image as IPythonImage
-from shapely.geometry import Polygon
 from typing import List, Dict
 from datetime import datetime
+
+from remotesensing.geometry import GeoPolygon
 
 
 class Scene:
@@ -12,8 +13,9 @@ class Scene:
                  area_coverage: float,
                  date: datetime,
                  thumbnail: str,
-                 polygon: Polygon,
-                 links: Dict[str, Dict]):
+                 polygon: GeoPolygon,
+                 links: Dict[str, Dict],
+                 epsg: int):
 
         self.identity = identity
         self.satellite_name = satellite_name
@@ -23,6 +25,7 @@ class Scene:
         self._thumbnail = thumbnail
         self.polygon = polygon
         self.links = links
+        self.epsg = epsg
 
     def __repr__(self):
         return f"<Scene: {self.identity} | Cloud: {self.cloud_coverage} | Date: {self.date.strftime('%Y-%m-%d')}>"
