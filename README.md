@@ -84,7 +84,7 @@ print(image.shape)
 ```python
 import maptlotlib.pyplot as plt
 
-image = downloader.stream(scene, ['B8'], search_boundary.transform(scene.epsg))
+image = downloader.stream(scene, bands=['B8'], boundary=search_boundary.transform(scene.epsg))
 
 plt.imshow(image.pixels, cmap='Greys')
 ```
