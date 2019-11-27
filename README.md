@@ -47,9 +47,10 @@ BCET + DDS (k=0.6):
 from datetime import datetime, timedelta
 from shapely.geometry import Point
 from remotesensing.cloud import Searcher
+from remotesensing.geometry import GeoPolygon
 
 latitude, longitude = 51.507351, -0.127758
-search_boundary = Point((longitude, latitude)).buffer(0.1)
+search_boundary = GeoPolygon(Point((longitude, latitude)).buffer(0.1), epsg=4326)
 
 searcher = Searcher()
 scenes = searcher.search(
@@ -82,11 +83,8 @@ print(image.shape)
 
 ```python
 import maptlotlib.pyplot as plt
-from remotesensing.tools import gis
 
-projected_boundary = gis.transform_polygon(search_boundary, in_epsg=4326, out_epsg=32630)
-
-image = downloader.stream(scene, ['B8'], projected_boundary)
+image = downloader.stream(scene, ['B8'], search_boundary.transform(scene.epsg))
 
 plt.imshow(image.pixels, cmap='Greys')
 ```

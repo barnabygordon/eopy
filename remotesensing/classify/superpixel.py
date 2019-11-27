@@ -4,34 +4,28 @@ from skimage.segmentation import slic
 from sklearn.cluster import KMeans
 
 from remotesensing.tools import gis
+from remotesensing.image import Geotransform, Image
 
 
 class Superpixels:
     """ A class to segment an image into superpixels for classification """
-    def __init__(self, gdf, geotransform, epsg, number_of_features):
-        """
-        :type gdf: geopandas.GeoDataFrame
-        :type geotransform: geotransform.Geotransform
-        :type epsg: int
-        :type number_of_features: int
-        """
+    def __init__(self, gdf: gpd.GeoDataFrame, geo_transform: Geotransform, epsg: int, number_of_features: int):
+
         self.gdf = gdf
-        self.geotransform = geotransform
+        self.geo_transform = geo_transform
         self.epsg = epsg
         self.number_of_features = number_of_features
 
     @classmethod
-    def segment_image(cls, image, extract_values=True, n_segments=100, compactness=10.,
-                      sigma=0, enforce_connectivity=True):
-        """ Extract superpixels from an image
-        :type image: image.Image
-        :type extract_values: Bool
-        :type n_segments: int
-        :type compactness: float
-        :type sigma: int
-        :type enforce_connectivity: Bool
-        :rtype: classify.superpixel.Superpixels
-        """
+    def segment_image(
+            cls,
+            image: Image,
+            extract_values: bool = True,
+            n_segments: int = 100,
+            compactness: float = 10.,
+            sigma: int = 0,
+            enforce_connectivity: bool = True) -> "Superpixels":
+
         pixels = image.pixels
         pixels[np.isnan(pixels)] = 0.
 
@@ -57,25 +51,19 @@ class Superpixels:
 
         return Superpixels(gdf, image.geotransform, image.epsg, number_of_features=image.band_count)
 
-    def cluster(self, n_clusters=2):
-        """
-        :type n_clusters: int
-        """
+    def cluster(self, n_clusters: int = 2):
+
         if self.number_of_features == 1:
             features = [[feature] for feature in self.gdf.features.tolist()]
         else:
             features = self.gdf.features.tolist()
         self.gdf['cluster'] = KMeans(n_clusters=n_clusters).fit_predict(features)
 
-    def save(self, filename, driver='GeoJSON'):
-        """
-        :type filename: str
-        :type driver: str
-        """
+    def save(self, filename: str, driver: str = 'GeoJSON'):
+
         gdf = self.gdf.drop('geometry', axis=1)
         gdf.to_file(filename, driver=driver)
 
     def project_to_geographic(self):
-        self.gdf['geographic'] = self.gdf.geometry.apply(
-            lambda x: gis.polygon_to_world(x, self.geotransform))
+        self.gdf['geographic'] = self.gdf.geometry.apply(lambda x: x.to_world(self.geo_transform))
         self.gdf = self.gdf.set_geometry('geographic')

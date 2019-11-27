@@ -1,8 +1,12 @@
 import folium
+from pyproj import Proj, transform
+from shapely.ops import transform as shapely_transform
 import geopandas as gpd
-from shapely.geometry import Polygon
+from functools import partial
+from shapely.geometry import Polygon, MultiPolygon
 
 from remotesensing.tools import gis
+from remotesensing.image import Geotransform
 
 
 class GeoPolygon:
@@ -31,7 +35,7 @@ class GeoPolygon:
         if self.epsg == gis.WGS84_EPSG:
             polygon = self.polygon
         else:
-            polygon = gis.transform_polygon(self.polygon, in_epsg=self.epsg, out_epsg=gis.WGS84_EPSG)
+            polygon = self.transform(gis.WGS84_EPSG)
 
         return GeoPolygon(polygon, epsg=gis.WGS84_EPSG)
 
@@ -49,6 +53,32 @@ class GeoPolygon:
         if self.epsg == epsg:
             raise UserWarning(f'Polygon already in {epsg} EPSG')
 
-        polygon = gis.transform_polygon(self.polygon, in_epsg=self.epsg, out_epsg=epsg)
+        projection = partial(transform, Proj(init=f'epsg:{self.epsg}'), Proj(init=f'epsg:{epsg}'))
 
-        return GeoPolygon(polygon, epsg)
+        return GeoPolygon(shapely_transform(projection, self.polygon), epsg)
+
+    def to_pixel(self, geo_transform: "Geotransform") -> "GeoPolygon":
+        """ Reproject polygon coordinates to image indices"""
+
+        if self.polygon.geom_type == 'Polygon':
+            exterior = [gis.world_to_pixel(x, y, geo_transform) for x, y, in self.polygon.exterior.coords]
+            if len(self.polygon.interiors) > 0:
+                interior = [[gis.world_to_pixel(x, y, geo_transform) for x, y, in interior.coords]
+                            for interior in self.polygon.interiors]
+
+                return GeoPolygon(Polygon(exterior, interior), self.epsg)
+            else:
+                return GeoPolygon(Polygon(exterior), self.epsg)
+        elif self.polygon.geom_type == 'MultiPolygon':
+
+            multi_polygon = MultiPolygon([GeoPolygon(sub_polygon, self.epsg).to_pixel(geo_transform).polygon for sub_polygon in self.polygon])
+            return GeoPolygon(multi_polygon, self.epsg)
+        else:
+            raise UserWarning("polygon has an unexpected type.")
+
+    def to_world(self, geo_transform: "Geotransform") -> "GeoPolygon":
+
+        x, y = self.polygon.exterior.xy
+        points = [gis.pixel_to_world(x, y, geo_transform) for x, y in zip(x, y)]
+
+        return GeoPolygon(Polygon(points), self.epsg)

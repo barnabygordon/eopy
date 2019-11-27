@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import List
 from shapely.geometry import shape, Polygon
 
-from remotesensing.tools import gis
 from remotesensing.cloud.scene import Scene
 from remotesensing.geometry import GeoPolygon
+from remotesensing.tools import gis
 
 
 class Satellite(Enum):
@@ -23,14 +23,14 @@ class Searcher:
 
     def search(
             self,
-            boundary: Polygon,
+            boundary: GeoPolygon,
             satellite: Satellite = None,
             start: datetime = None, end: datetime = None,
             cloud_min: float = 0, cloud_max: float = 100,
             limit: int = 1000) -> List[Scene]:
 
         params = {
-            'bbox': list(boundary.exterior.bounds),
+            'bbox': list(boundary.polygon.exterior.bounds),
             'limit': limit,
             'query': {
                 'eo:cloud_cover': {
@@ -66,7 +66,7 @@ class Searcher:
         scene_list = []
         for result in response_json['features']:
             polygon = shape(result.get('geometry'))
-            area_coverage = self._calculate_area_coverage(boundary, polygon)
+            area_coverage = self._calculate_area_coverage(boundary.polygon, polygon)
             properties = result.get('properties', {})
 
             scene_list.append(

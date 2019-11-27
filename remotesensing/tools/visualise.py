@@ -6,27 +6,9 @@ from PIL import Image as PILImage
 from shapely.geometry import Polygon
 import numpy as np
 
-from remotesensing.tools import gis
-
 
 class Visualise:
     """ Class for visualising geospatial data"""
-    @staticmethod
-    def image_bounds(image_list):
-        """ Display image boundary on a slippy Leaflet map
-        :type image_list: list[image.Image]
-        :rtype: folium.Map
-        """
-        unprojected_bounds = [gis.transform_polygon(image.bounds,
-                                                    in_epsg=image.epsg,
-                                                    out_epsg=gis.WGS84_EPSG) for image in image_list]
-        geojson_bounds = [geojson.Feature(geometry=bounds) for bounds in unprojected_bounds]
-        center = unprojected_bounds[0].centroid.xy
-        map_window = folium.Map(location=[center[1][0], center[0][0]])
-        for boundary in geojson_bounds:
-            folium.GeoJson(boundary).add_to(map_window)
-
-        return map_window
 
     @staticmethod
     def search_results(scene_list):

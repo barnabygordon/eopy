@@ -3,10 +3,10 @@ from scipy import ndimage
 from typing import List, Tuple
 from osgeo import gdal, osr
 from tqdm import tqdm
-from shapely.geometry import Polygon
 
 from remotesensing.tools import gis
 from remotesensing.image import Geotransform
+from remotesensing.geometry import GeoPolygon
 
 GTIFF_DRIVER = 'GTiff'
 
@@ -87,9 +87,9 @@ class Image:
         geotransform = gis.subset_geotransform(self.geotransform, x, y)
         return Image(pixels, geotransform, self.projection, band_labels=self.band_labels)
 
-    def clip_with(self, polygon: Polygon, mask_value: float = np.nan) -> "Image":
+    def clip_with(self, polygon: GeoPolygon, mask_value: float = np.nan) -> "Image":
 
-        return gis.clip_image(self, polygon, mask_value=mask_value)
+        return gis.clip_image(self, polygon.polygon, mask_value=mask_value)
 
     def upsample(self, factor: int) -> "Image":
 
@@ -118,7 +118,7 @@ class Image:
                            if image.band_labels is not None}
             return Image(stack, images[0].geotransform, images[0].projection, band_labels=band_labels)
 
-    def save(self, filepath: str, data_type: str='uint16'):
+    def save(self, filepath: str, data_type: str = 'uint16'):
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\

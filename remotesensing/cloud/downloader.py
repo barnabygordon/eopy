@@ -2,16 +2,16 @@ import gdal
 import requests
 from urllib.request import urlretrieve
 from http import HTTPStatus
-from shapely.geometry import Polygon
 from typing import List
 
+from remotesensing.geometry import GeoPolygon
 from remotesensing.cloud.scene import Scene
 from remotesensing.image import Image, Loader
 
 
 class Downloader:
 
-    def __init__(self, download_directory: str):
+    def __init__(self, download_directory: str = ''):
 
         self._image_loader = Loader()
         self._download_directory = download_directory
@@ -33,7 +33,7 @@ class Downloader:
 
             self._download_from_url(url, file_name=scene.identity)
 
-    def stream(self, scene: Scene, bands: List[str], boundary: Polygon = None) -> Image:
+    def stream(self, scene: Scene, bands: List[str], boundary: GeoPolygon = None) -> Image:
 
         band_stack = []
         for band in bands:
@@ -42,8 +42,6 @@ class Downloader:
             except UserWarning as e:
                 print(e)
                 continue
-
-            print(url)
 
             image_dataset = gdal.Open('/vsicurl/' + url)
             if not image_dataset:

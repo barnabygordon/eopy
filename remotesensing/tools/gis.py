@@ -1,9 +1,7 @@
 from pyproj import Proj, transform
 from shapely.geometry import Polygon, MultiPolygon
-from shapely.ops import transform as shapely_transform
 from geojson import Feature
 import mgrs
-from functools import partial
 from typing import Tuple, Dict, List
 import numpy as np
 import geopandas as gpd
@@ -31,30 +29,6 @@ def pixel_to_world(x: int, y: int, geotransform: "Geotransform") -> Tuple[float,
     return x2, y2
 
 
-def polygon_to_pixel(polygon: Polygon, geotransform: "Geotransform") -> Polygon:
-    """ Reproject polygon coordinates to image indices"""
-    if polygon.geom_type == 'Polygon':
-        exterior = [world_to_pixel(x, y, geotransform) for x, y, in polygon.exterior.coords]
-        if len(polygon.interiors) > 0:
-            interior = [[world_to_pixel(x, y, geotransform) for x, y, in interior.coords]
-                        for interior in polygon.interiors]
-
-            return Polygon(exterior, interior)
-        else:
-            return Polygon(exterior)
-    elif polygon.geom_type == 'MultiPolygon':
-        return MultiPolygon([polygon_to_pixel(sub_polygon, geotransform) for sub_polygon in polygon])
-    else:
-        raise UserWarning("polygon has an unexpected type.")
-
-
-def polygon_to_world(polygon: Polygon, geotransform: "Geotransform") -> Polygon:
-
-    x, y = polygon.exterior.xy
-    points = [pixel_to_world(x, y, geotransform) for x, y in zip(x, y)]
-    return Polygon(points)
-
-
 def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tuple[float, float]:
     """ Tranform a coordinate to a new coordinate system"""
 
@@ -64,13 +38,6 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tup
     x2, y2 = transform(in_proj, out_proj, x, y)
 
     return x2, y2
-
-
-def transform_polygon(polygon: Polygon, in_epsg: int, out_epsg: int) -> Polygon:
-    """ Transform a polygon to a new coordinate system"""
-
-    projection = partial(transform, Proj(init=f'epsg:{in_epsg}'), Proj(init=f'epsg:{out_epsg}'))
-    return shapely_transform(projection, polygon)
 
 
 def wkt_to_geojson(polygon: Polygon, properties: Dict = dict) -> Feature:
