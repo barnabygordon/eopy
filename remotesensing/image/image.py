@@ -84,8 +84,8 @@ class Image:
         if height is None:
             height = width
         pixels = self.pixels[y:y+height, x:x+width]
-        geotransform = gis.subset_geotransform(self.geotransform, x, y)
-        return Image(pixels, geotransform, self.projection, band_labels=self.band_labels)
+        geo_transform = gis.subset_geotransform(self.geotransform, x, y)
+        return Image(pixels, geo_transform, self.projection, band_labels=self.band_labels)
 
     def clip_with(self, polygon: GeoPolygon, mask_value: float = np.nan) -> "Image":
 
@@ -94,9 +94,9 @@ class Image:
     def upsample(self, factor: int) -> "Image":
 
         resampled_pixels = ndimage.zoom(self.pixels, factor, order=0)
-        scaled_geotransform = self.geotransform.scale(factor)
+        scaled_geo_transform = self.geotransform.scale(factor)
 
-        return Image(resampled_pixels, scaled_geotransform, self.projection, band_labels=self.band_labels)
+        return Image(resampled_pixels, scaled_geo_transform, self.projection, band_labels=self.band_labels)
 
     def apply(self, function: callable) -> "Image":
 
@@ -114,15 +114,22 @@ class Image:
             for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
                 stack[:, :, i] = image.pixels
 
-            band_labels = {list(image.band_labels)[0]: i+1 for i, image in enumerate(images)
-                           if image.band_labels is not None}
+            band_labels = {}
+            for i, image in enumerate(images):
+                if image.band_labels is not None:
+                    band_name = list(image.band_labels)[0]
+                    if band_name not in band_labels:
+                        band_labels[band_name] = i+1
+                    else:
+                        band_labels[f'{band_name}_2'] = i+1
+
             return Image(stack, images[0].geotransform, images[0].projection, band_labels=band_labels)
 
-    def save(self, filepath: str, data_type: str = 'uint16'):
+    def save(self, file_path: str, data_type: str = 'uint16'):
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(filepath, self.height, self.width, self.band_count, gdal_data_type)
+            .Create(file_path, self.height, self.width, self.band_count, gdal_data_type)
         out_image.SetGeoTransform(self.geotransform.tuple)
         out_image.SetProjection(self.projection)
 
@@ -140,6 +147,22 @@ class Image:
 
         image_min, image_max = np.nanmin(self.pixels), np.nanmax(self.pixels)
         return self.apply(lambda x: (x - image_min) / (image_max - image_min))
+
+    def add_index(self, band_1: int, band_2: int) -> "Image":
+
+        if self.band_count == 1:
+            raise UserWarning(f'Image only has one band')
+
+        for band in [band_1, band_2]:
+            if self.band_count < band:
+                raise UserWarning(f'Band number: {band} greater than image bands: {self.band_count}')
+
+        band_1_pixels = self.pixels[:, :, band_1]
+        band_2_pixels = self.pixels[:, :, band_2]
+
+        index = (band_1_pixels - band_2_pixels) / (band_1_pixels + band_2_pixels)
+
+        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection, self.band_labels)
 
     @staticmethod
     def _get_gdal_data_type(name: str):
