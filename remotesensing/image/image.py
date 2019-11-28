@@ -134,6 +134,13 @@ class Image:
 
         out_image.FlushCache()
 
+    @property
+    def normalise(self) -> "Image":
+        """ normalise image to 0-1 """
+
+        image_min, image_max = np.nanmin(self.pixels), np.nanmax(self.pixels)
+        return self.apply(lambda x: (x - image_min) / (image_max - image_min))
+
     @staticmethod
     def _get_gdal_data_type(name: str):
         if name == 'uint8':
