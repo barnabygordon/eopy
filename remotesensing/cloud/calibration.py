@@ -4,30 +4,27 @@ from urllib.request import urlopen
 
 import numpy as np
 from remotesensing.image import Image
-from remotesensing.image.sensor import Landsat8
 
 
 class Calibration:
 
     def __init__(self, metadata_url: str):
 
-        self.landsat8 = Landsat8()
         self.metadata_url = metadata_url
 
     def calibrate_landsat(self, image: Image, band_list: List[str]) -> Image:
 
         if image.band_count == 1:
-            calibrated_image = self.calibrate_landsat_band(image.pixels, self.landsat8.band_number(band_list[0]))
+            calibrated_image = self.calibrate_landsat_band(image.pixels, 0)
 
         else:
             calibrated_image = np.zeros(image.shape)
             for i, band_name in enumerate(band_list):
                 band_array = image.pixels[:, :, i]
-                band_number = self.landsat8.band_number(band_name)
 
-                calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, band_number)
+                calibrated_image[:, :, i] = self.calibrate_landsat_band(band_array, i)
 
-        return Image(calibrated_image, image.geotransform, image.projection, image.metadata, band_labels={i+1: band for i, band in enumerate(band_list)})
+        return Image(calibrated_image, image.geotransform, image.projection, band_labels={i+1: band for i, band in enumerate(band_list)})
 
     def calibrate_landsat_band(self, band_array: np.ndarray, band_number: int) -> np.ndarray:
 
@@ -38,7 +35,7 @@ class Calibration:
 
         return self.calculate_landsat_toa_reflectance(band_array, gain, bias, sun_elevation_radians)
 
-    def get_landsat_metadata_value(self, parameter: float) -> float:
+    def get_landsat_metadata_value(self, parameter: str) -> float:
         """ Extract value from metadata txt file"""
 
         metadata_file = urlopen(self.metadata_url)

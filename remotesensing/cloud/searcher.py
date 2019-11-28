@@ -57,7 +57,7 @@ class Searcher:
                 time_query += f"/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}"
             params['time'] = time_query
 
-        response = requests.post(self._api_url, data=json.dumps(params))
+        response = requests.post(self._api_url, data=json.dumps(params), headers={'Content-Type': 'application/json'})
         response_json = response.json()
 
         if len(response_json['features']) == 0:
