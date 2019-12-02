@@ -46,11 +46,10 @@ class Downloader:
             image_dataset = gdal.Open('/vsicurl/' + url)
             if not image_dataset:
                 raise UserWarning(f'Unable to stream band: {band} {url}')
-            band_labels = {band: 0}
             if boundary:
-                band = self._image_loader.load_from_dataset_and_clip(image_dataset, band_labels, boundary)
+                band = self._image_loader.load_from_dataset_and_clip(image_dataset, boundary)
             else:
-                band = self._image_loader.load_from_dataset(image_dataset, band_labels)
+                band = self._image_loader.load_from_dataset(image_dataset)
             band_stack.append(band)
 
         if len(band_stack) > 1:

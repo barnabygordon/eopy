@@ -1,5 +1,5 @@
-import geopandas as gpd
 import numpy as np
+from geopandas import GeoDataFrame
 from skimage.segmentation import slic
 from sklearn.cluster import KMeans
 
@@ -9,7 +9,7 @@ from remotesensing.image import Geotransform, Image
 
 class Superpixels:
     """ A class to segment an image into superpixels for classification """
-    def __init__(self, gdf: gpd.GeoDataFrame, geo_transform: Geotransform, epsg: int, number_of_features: int):
+    def __init__(self, gdf: GeoDataFrame, geo_transform: Geotransform, epsg: int, number_of_features: int):
 
         self.gdf = gdf
         self.geo_transform = geo_transform
@@ -40,7 +40,7 @@ class Superpixels:
             segment = segments == i
             superpixel_list.append(gis.vectorise_image(segment, levels=[0.9, 1.1]).iloc[0].geom)
 
-        gdf = gpd.GeoDataFrame(geometry=superpixel_list)
+        gdf = GeoDataFrame(geometry=superpixel_list)
 
         image.pixels = np.copy(image.pixels).astype(float)
         if extract_values:
