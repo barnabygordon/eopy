@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image as PILImage
 from PIL import ImageDraw
 from sklearn import metrics
+from typing import List
+from shapely.geometry import Polygon
 from sklearn.ensemble import RandomForestClassifier
 
 from remotesensing.image import Image
@@ -11,25 +13,16 @@ from remotesensing.tools import gis
 
 
 class Supervised:
-    """
-    :type image: image.Image
-    :type vector_filepath: str
-    :type label_name: str
-    :type model: sklearn.ensemble.RandomForestClassifier
-    :type estimators: int
-    """
-    def __init__(self, image, vector_filepath, label_name='class', model=RandomForestClassifier, estimators=100):
+
+    def __init__(self, image: Image, vector_filepath: str, label_name: str = 'class', model=RandomForestClassifier, estimators: int = 100):
         self.image = image
         self.vectors = self._gather_data(vector_filepath)
         self.label_name = label_name
         self.model = model(estimators)
         self.trained = False
 
-    def _gather_data(self, vector_filepath):
-        """ Extract all features for class vectors
-        :type vector_filepath: str
-        :rtype: geopandas.GeoDataFrame
-        """
+    def _gather_data(self, vector_filepath: str) -> gpd.GeoDataFrame:
+
         gdf = gpd.read_file(vector_filepath)
         gdf['pixel_polygon'] = gdf.geometry.apply(lambda x: gis.polygon_to_pixel(x, self.image.geotransform))
         gdf['features'] = gdf.pixel_polygon.apply(lambda x: self._extract_features(x))
@@ -37,18 +30,15 @@ class Supervised:
 
         return gdf
 
-    def _extract_features(self, polygon):
-        """ Extract all features and remove nan values
-        :type polygon: shapely.geometry.Polygon
-        :rtype: numpy.ndarray
-        """
+    def _extract_features(self, polygon: Polygon) -> np.ndarray:
+
         clipped_image = self.image.clip_with(polygon)
         features = clipped_image.pixels.reshape((clipped_image.width * clipped_image.height, clipped_image.band_count))
         clean_features = np.array([feature for feature in features if not np.isnan(feature.min())])
 
         return clean_features
 
-    def train_model(self) -> None:
+    def train_model(self):
         """ Train the model """
         labels, features = [], []
 
@@ -62,12 +52,8 @@ class Supervised:
         self.model.fit(features, labels)
         self.trained = True
 
-    def apply_model(self, image):
-        """
-        :type image: image.Image
-        :rtype: image.Image
-        """
-        """ Run the trained model on an image """
+    def apply_model(self, image: Image) -> Image:
+
         if not self.trained:
             raise UserWarning("Model needs to be trained before it can be tested.")
         features = image.pixels.reshape(image.width * image.height, image.band_count)
@@ -79,11 +65,8 @@ class Supervised:
 
         return Image(results_image, self.image.geotransform, self.image.projection)
 
-    def test_model(self, output_image, truth_vectors):
-        """
-        :type output_image: image.Image
-        :type truth_vectors: geopandas.GeoDataFrame
-        """
+    def test_model(self, output_image: Image, truth_vectors: gpd.GeoDataFrame):
+
         truth_image = PILImage.new("L", (output_image.height, output_image.width), 200)
         for i, row in truth_vectors.iterrows():
             class_value = truth_vectors[self.label_name].unique().tolist().index(row[self.label_name])
@@ -98,11 +81,8 @@ class Supervised:
 
         self._plot_confusion_matrix(confusion_matrix)
 
-    def plot_features(self, ylabel=None, xticks=None):
-        """ Plot the averages of all class features and their variance
-        :type ylabel: str
-        :type xticks: list[str]
-        """
+    def plot_features(self, ylabel: str = None, xticks: List[str] = None):
+        """ Plot the averages of all class features and their variance """
         plt.figure(figsize=(15, 10))
 
         for c in self.vectors[self.label_name].unique():
@@ -122,15 +102,13 @@ class Supervised:
         plt.show()
 
     def plot_vectors(self, image: np.ndarray):
-        """ Plot vectors over an image
-        :type image: numpy.ndarray
-        """
+
         f, ax = plt.subplots(figsize=(15, 10))
         ax.imshow(image)
         self.vectors.plot(column=self.label_name, ax=ax, legend=True, linewidth=0.1)
         plt.show()
 
-    def _plot_confusion_matrix(self, confusion_matrix, cmap='OrRd'):
+    def _plot_confusion_matrix(self, confusion_matrix: np.ndarray, cmap: str = 'OrRd'):
         plt.figure(figsize=(15, 10))
         plt.imshow(confusion_matrix, cmap=cmap)
 
