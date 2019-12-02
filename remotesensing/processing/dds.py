@@ -10,8 +10,4 @@ class DDS:
 
         x = np.amin(image.pixels, axis=2)
 
-        bands = []
-        for band_number in range(image.band_count):
-            bands.append(image[:, :, band_number].apply(lambda i: i - (k * x)))
-
-        return image.stack(bands)
+        return image.stack([band.apply(lambda i: i - (k * x)) for band in image])

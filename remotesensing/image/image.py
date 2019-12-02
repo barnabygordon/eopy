@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import ndimage
 from typing import List, Tuple
+from scipy.ndimage.filters import gaussian_filter
 from osgeo import gdal, osr
 from tqdm import tqdm
 
@@ -101,6 +102,10 @@ class Image:
         scaled_geo_transform = self.geotransform.scale(factor)
 
         return Image(resampled_pixels, scaled_geo_transform, self.projection)
+
+    def smooth(self, sigma: int = 5) -> "Image":
+
+        return self.apply(lambda x: gaussian_filter(x, sigma=sigma))
 
     def apply(self, function: callable) -> "Image":
 

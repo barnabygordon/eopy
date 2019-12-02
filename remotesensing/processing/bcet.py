@@ -10,9 +10,7 @@ class BCET:
     def calculate(image: Image, L: float = 0., H: float = 1., E: float = 0.5, clip: float = 0.) -> Image:
 
         bands = []
-        for i in tqdm(range(image.band_count), total=image.band_count, desc='Calculating bands'):
-
-            band = image[:, :, i]
+        for band in tqdm(image, total=image.band_count, desc='Calculating bands'):
 
             l0 = np.ma.min(band.pixels)
             h0 = np.ma.max(band.pixels)

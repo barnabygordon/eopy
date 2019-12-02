@@ -1,6 +1,5 @@
 import numpy as np
 from cv2 import resize
-from scipy.ndimage.filters import gaussian_filter
 from tqdm import tqdm
 
 from remotesensing.image import Image
@@ -11,37 +10,26 @@ class SFIM:
     A class for fusing together images for pansharpening
     """
     @classmethod
-    def calculate(cls, low_resolution_image: Image, pan_image: Image) -> Image:
+    def calculate(cls, coarse_image: Image, fine_image: Image) -> Image:
 
-        pan_smooth = cls._smooth_image(pan_image.pixels)
+        pan_smooth = fine_image.smooth()
 
-        if low_resolution_image.band_count > 2:
-            pansharpened = np.zeros((
-                pan_image.shape[0],
-                pan_image.shape[1],
-                low_resolution_image.shape[2]))
+        if coarse_image.band_count > 2:
 
-            for b in tqdm(range(pansharpened.shape[2]), total=pansharpened.shape[2], desc="Fusing images"):
-                pansharpened[:, :, b] = cls._fuse_images(
-                    low_resolution_image=low_resolution_image[b].pixels,
-                    pan_image=pan_image.pixels,
-                    smoothed_pan_image=pan_smooth)
+            fused_pixels = np.zeros((fine_image.height, fine_image.width, coarse_image.band_count))
+            fused = Image(fused_pixels, fine_image.geotransform, fine_image.projection)
+
+            bands = []
+            for pan_band, band in tqdm(zip(fused, coarse_image), total=fused.band_count, desc='Fusing images'):
+                bands.append(pan_band.apply(lambda x: cls._fuse_images(band.pixels, fine_image.pixels, pan_smooth)))
+
+            return fused.stack(bands)
 
         else:
-            pansharpened = cls._fuse_images(
-                low_resolution_image=low_resolution_image.pixels,
-                pan_image=pan_image.pixels,
-                smoothed_pan_image=pan_smooth)
-
-        return Image(pansharpened, pan_image.geotransform, pan_image.projection)
+            return fine_image.apply(lambda x: cls._fuse_images(coarse_image.pixels, x, pan_smooth))
 
     @staticmethod
-    def _fuse_images(low_resolution_image: np.ndarray, pan_image: np.ndarray, smoothed_pan_image: np.ndarray) -> np.ndarray:
+    def _fuse_images(coarse_pixels: np.ndarray, fine_pixels: np.ndarray, smoothed_pan_image: np.ndarray) -> np.ndarray:
 
-        resized_image = resize(low_resolution_image, pan_image.shape[::-1])
-        return (resized_image * pan_image) / smoothed_pan_image
-
-    @staticmethod
-    def _smooth_image(image: Image, sigma: int = 5) -> np.ndarray:
-
-        return gaussian_filter(image.pixels, sigma=sigma)
+        resized_image = resize(coarse_pixels, fine_pixels.shape[::-1])
+        return (resized_image * fine_pixels) / smoothed_pan_image
