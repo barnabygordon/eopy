@@ -12,17 +12,19 @@ class Calibrator:
 
         metadata = self._get_metadata(metadata_url)
 
+        if len(band_list) != image.band_count:
+            raise UserWarning(f'{len(band_list)} bands provided but image has {image.band_count} bands')
+
         if image.band_count == 1:
-            calibrated_pixels = self._calibrate_landsat_band(image.pixels, metadata, band_list[0])
+            return self._calibrate_landsat_band(image, metadata, band_list[0])
         else:
-            calibrated_pixels = np.zeros(image.shape)
-            for i, band in enumerate(band_list):
-                band_pixels = image.pixels[:, :, i]
-                calibrated_pixels[:, :, i] = self._calibrate_landsat_band(band_pixels, metadata, band)
+            calibrated_bands = []
+            for i, band_number in enumerate(band_list):
+                calibrated_bands.append(self._calibrate_landsat_band(image[:, :, i], metadata, band_number))
 
-        return Image(calibrated_pixels, image.geotransform, image.projection)
+            return image.stack(calibrated_bands)
 
-    def _calibrate_landsat_band(self, band: np.ndarray, metadata: Dict[str, str], band_number: int) -> np.ndarray:
+    def _calibrate_landsat_band(self, band: Image, metadata: Dict[str, str], band_number: int) -> Image:
 
         gain = float(metadata[f'REFLECTANCE_MULT_BAND_{band_number}'])
         bias = float(metadata[f'REFLECTANCE_ADD_BAND_{band_number}'])
@@ -30,7 +32,7 @@ class Calibrator:
 
         sun_elevation_radians = math.radians(sun_elevation_degrees)
 
-        return self._calculate_landsat_toa_reflectance(band, gain, bias, sun_elevation_radians)
+        return band.apply(lambda x: self._calculate_landsat_toa_reflectance(x, gain, bias, sun_elevation_radians))
 
     @staticmethod
     def _get_metadata(url: str) -> Dict[str, str]:
