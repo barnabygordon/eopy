@@ -19,6 +19,7 @@ class Image:
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         self.projection = projection
+        self._index = 0
 
     def __repr__(self) -> str:
 
@@ -41,9 +42,20 @@ class Image:
 
             return Image(pixels, geo_transform, self.projection)
 
-    def _get_band_by_number(self, band_number: int) -> np.ndarray:
+    def __next__(self):
 
-        return self.pixels[:, :, band_number-1]
+        if self._index < self.band_count:
+            if self.band_count == 1:
+                band = self
+            else:
+                band = self[:, :, self._index]
+            self._index += 1
+            return band
+        self._index = 0
+        raise StopIteration
+
+    def __iter__(self):
+        return self
 
     @property
     def width(self) -> int:
