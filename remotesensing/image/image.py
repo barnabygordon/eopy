@@ -12,7 +12,7 @@ GTIFF_DRIVER = 'GTiff'
 
 
 class Image:
-    """ A generic image object using gdal """
+    """ A generic image object using gdal with shape (y, x, band) """
     def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, band_labels: dict = None):
 
         self.pixels = pixels
@@ -25,21 +25,25 @@ class Image:
 
         return f'Image - Shape: {self.width}x{self.height}x{self.band_count} | EPSG: {self.epsg}'
 
-    def __getitem__(self, band) -> "Image":
+    def __getitem__(self, band_slice) -> "Image":
 
-        if type(band) == int:
-            image = self.pixels[:, :, band]
-            if bool(self.band_labels):
-                band_labels = {list(self.band_labels)[band]: 1}
-            else:
-                band_labels = None
-        elif type(band) == str:
-            image = self._get_band_by_number(self.band_labels[band])
-            band_labels = {band: 1}
+        geo_transform = self.geotransform
+
+        if type(band_slice) is tuple:
+            pixels = self.pixels[band_slice]
+            band_labels = None
+
+            if len(band_slice) > 1:
+                x, y = band_slice[1].start, band_slice[0].start
+                geo_transform = gis.subset_geotransform(self.geotransform, x, y)
+
+        elif type(band_slice) == str:
+            pixels = self._get_band_by_number(self.band_labels[band_slice])
+            band_labels = {band_slice: 1}
         else:
             raise UserWarning("Requires a integer or a string")
 
-        return Image(image, self.geotransform, self.projection, band_labels=band_labels)
+        return Image(pixels, geo_transform, self.projection, band_labels=band_labels)
 
     def _get_band_by_number(self, band_number: int) -> np.ndarray:
 
@@ -78,14 +82,6 @@ class Image:
 
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
-
-    def subset(self, x: int, y: int, width: int, height: int = None) -> "Image":
-
-        if height is None:
-            height = width
-        pixels = self.pixels[y:y+height, x:x+width]
-        geo_transform = gis.subset_geotransform(self.geotransform, x, y)
-        return Image(pixels, geo_transform, self.projection, band_labels=self.band_labels)
 
     def clip_with(self, polygon: GeoPolygon, mask_value: float = np.nan) -> "Image":
 

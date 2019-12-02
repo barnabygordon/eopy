@@ -55,7 +55,11 @@ def clip_image(image: "Image", polygon: Polygon, mask_value: float = np.nan) -> 
     mask = np.array(mask_image)
     mask = mask[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
-    subset = image.subset(bounds[0], bounds[1], bounds[2] - bounds[0], bounds[3] - bounds[1])
+    y, x = bounds[0], bounds[1]
+    width, height = bounds[2] - bounds[0], bounds[3] - bounds[1]
+
+    subset = image[y:y + height, x:x + width]
+
     subset.pixels = np.copy(subset.pixels)
     subset.pixels[mask != 0] = mask_value
 
