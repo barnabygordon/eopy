@@ -20,8 +20,10 @@ class Geotransform:
     @classmethod
     def from_tuple(cls, geo_transform: Tuple) -> "Geotransform":
 
-        return cls(geo_transform[0], geo_transform[3], geo_transform[1],
-                   geo_transform[5], geo_transform[2], geo_transform[4])
+        return cls(
+            upper_left_x=geo_transform[0], upper_left_y=geo_transform[3],
+            pixel_width=geo_transform[1], pixel_height=geo_transform[5],
+            rotation_x=geo_transform[2], rotation_y=geo_transform[4])
 
     @property
     def tuple(self):
@@ -29,10 +31,6 @@ class Geotransform:
         return self.upper_left_x, self.pixel_width, \
                self.rotation_x, self.upper_left_y, \
                self.rotation_y, self.pixel_height
-
-    def translate(self, x: int, y: int) -> "Geotransform":
-
-        return Geotransform((x, self.pixel_width, self.rotation_x, y, self.rotation_y, self.pixel_height))
 
     def scale(self, factor: int) -> "Geotransform":
 
