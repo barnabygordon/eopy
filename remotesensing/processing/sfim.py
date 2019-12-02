@@ -29,7 +29,7 @@ class SFIM:
             return fine_image.apply(lambda x: cls._fuse_images(coarse_image.pixels, x, pan_smooth))
 
     @staticmethod
-    def _fuse_images(coarse_pixels: np.ndarray, fine_pixels: np.ndarray, smoothed_pan_image: np.ndarray) -> np.ndarray:
+    def _fuse_images(coarse_pixels: np.ndarray, fine_pixels: np.ndarray, smoothed_pan_image: Image) -> np.ndarray:
 
         resized_image = resize(coarse_pixels, fine_pixels.shape[::-1])
-        return (resized_image * fine_pixels) / smoothed_pan_image
+        return (resized_image * fine_pixels) / smoothed_pan_image.pixels

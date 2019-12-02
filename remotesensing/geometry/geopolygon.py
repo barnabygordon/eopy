@@ -3,6 +3,7 @@ from pyproj import Proj, transform
 from shapely.ops import transform as shapely_transform
 import geopandas as gpd
 from functools import partial
+from typing import List
 from shapely.geometry import Polygon, MultiPolygon
 
 from remotesensing.tools import gis
@@ -82,3 +83,11 @@ class GeoPolygon:
         points = [gis.pixel_to_world(x, y, geo_transform) for x, y in zip(x, y)]
 
         return GeoPolygon(Polygon(points), self.epsg)
+
+    @property
+    def coordinates(self) -> List[List[float]]:
+
+        if self.polygon.geom_type == 'MultiPolygon':
+            return [list(sub_polygon.exterior.coords) for sub_polygon in self.polygon]
+        else:
+            return list(self.polygon.exterior.coords)

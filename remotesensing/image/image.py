@@ -4,8 +4,9 @@ from typing import List, Tuple
 from scipy.ndimage.filters import gaussian_filter
 from osgeo import gdal, osr
 from tqdm import tqdm
+from PIL import Image as PILImage
+from PIL import ImageDraw
 
-from remotesensing.tools import gis
 from remotesensing.image import Geotransform
 from remotesensing.geometry import GeoPolygon
 
@@ -94,7 +95,25 @@ class Image:
 
     def clip_with(self, polygon: GeoPolygon, mask_value: float = np.nan) -> "Image":
 
-        return gis.clip_image(self, polygon.polygon, mask_value=mask_value)
+        if polygon.epsg != self.epsg:
+            raise UserWarning(f'Image and polygon do not have the same EPSG: {self.epsg}, {polygon.epsg}')
+
+        bounds = [int(value) for value in polygon.polygon.bounds]
+        mask = PILImage.new("L", (self.height, self.width), 1)
+
+        [ImageDraw.Draw(mask).polygon(coordinates, 0) for coordinates in polygon.coordinates]
+        mask_pixels = np.array(mask)
+        mask_pixels = mask_pixels[bounds[1]:bounds[3], bounds[0]:bounds[2]]
+
+        y, x = bounds[0], bounds[1]
+        width, height = bounds[2] - bounds[0], bounds[3] - bounds[1]
+
+        subset = self[y:y + height, x:x + width]
+
+        subset.pixels = np.copy(subset.pixels)
+        subset.pixels[mask_pixels != 0] = mask_value
+
+        return subset
 
     def upsample(self, factor: int) -> "Image":
 
