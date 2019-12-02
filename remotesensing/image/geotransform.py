@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from remotesensing.tools import gis
+
 
 class Geotransform:
 
@@ -18,7 +20,7 @@ class Geotransform:
     @property
     def tuple(self):
 
-        return ((self.upper_left_x, self.pixel_width, self.rotation_x, self.upper_left_y, self.rotation_y, self.pixel_height))
+        return self.upper_left_x, self.pixel_width, self.rotation_x, self.upper_left_y, self.rotation_y, self.pixel_height
 
     def translate(self, x: int, y: int) -> "Geotransform":
 
@@ -28,3 +30,9 @@ class Geotransform:
 
         return Geotransform((self.upper_left_x, self.pixel_width // factor, self.rotation_x,
                              self.upper_left_y, self.rotation_y, self.pixel_height // factor))
+
+    def subset(self, x: int, y: int) -> "Geotransform":
+        """ Slice geotransform to new position """
+
+        upper_left_x, upper_left_y = gis.pixel_to_world(x, y, self)
+        return Geotransform((upper_left_y, self.pixel_width, self.rotation_x, upper_left_x, self.rotation_y, self.pixel_height))

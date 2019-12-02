@@ -1,8 +1,7 @@
 from pyproj import Proj, transform
 from shapely.geometry import Polygon, MultiPolygon
-from geojson import Feature
 import mgrs
-from typing import Tuple, Dict, List
+from typing import Tuple, List
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -40,11 +39,6 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tup
     return x2, y2
 
 
-def wkt_to_geojson(polygon: Polygon, properties: Dict = dict) -> Feature:
-
-    return Feature(geometry=polygon, properties=properties)
-
-
 def clip_image(image: "Image", polygon: Polygon, mask_value: float = np.nan) -> "Image":
 
     bounds = [int(value) for value in polygon.bounds]
@@ -64,13 +58,6 @@ def clip_image(image: "Image", polygon: Polygon, mask_value: float = np.nan) -> 
     subset.pixels[mask != 0] = mask_value
 
     return subset
-
-
-def subset_geotransform(geotransform: "Geotransform", x: int, y: int) -> "Geotransform":
-    """ Update the image geotransform based on the new subset coordinates"""
-    upper_left_x, upper_left_y = pixel_to_world(x, y, geotransform)
-
-    return geotransform.translate(upper_left_x, upper_left_y)
 
 
 def _get_polygon_coords(polygon: Polygon) -> List[List[float]]:

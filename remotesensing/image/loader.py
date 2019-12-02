@@ -25,7 +25,7 @@ class Loader:
         bounds = [int(bound) for bound in pixel_polygon.polygon.bounds]
 
         pixels = image_dataset.ReadAsArray(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1])
-        subset_geo_transform = gis.subset_geotransform(geo_transform, bounds[0], bounds[1])
+        subset_geo_transform = geo_transform.subset(x=bounds[0], y=bounds[1])
         pixel_polygon = extent.to_pixel(subset_geo_transform)
 
         if pixels.ndim > 2:

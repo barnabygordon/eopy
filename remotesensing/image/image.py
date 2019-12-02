@@ -35,7 +35,7 @@ class Image:
 
             if len(band_slice) > 1:
                 x, y = band_slice[1].start, band_slice[0].start
-                geo_transform = gis.subset_geotransform(self.geotransform, x, y)
+                geo_transform = self.geotransform.subset(x, y)
 
         elif type(band_slice) == str:
             pixels = self._get_band_by_number(self.band_labels[band_slice])
