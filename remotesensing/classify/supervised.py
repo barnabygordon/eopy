@@ -5,32 +5,39 @@ from PIL import Image as PILImage
 from PIL import ImageDraw
 from sklearn import metrics
 from typing import List
-from shapely.geometry import Polygon
 from sklearn.ensemble import RandomForestClassifier
 
 from remotesensing.image import Image
-from remotesensing.tools import gis
+from remotesensing.geometry import GeoPolygon
 
 
 class Supervised:
 
-    def __init__(self, image: Image, vector_filepath: str, label_name: str = 'class', model=RandomForestClassifier, estimators: int = 100):
+    def __init__(
+            self,
+            image: Image,
+            epsg: int,
+            vector_filepath: str,
+            label_name: str = 'class',
+            model=RandomForestClassifier,
+            estimators: int = 100):
+
         self.image = image
-        self.vectors = self._gather_data(vector_filepath)
+        self.vectors = self._gather_data(vector_filepath, epsg)
         self.label_name = label_name
         self.model = model(estimators)
         self.trained = False
 
-    def _gather_data(self, vector_filepath: str) -> gpd.GeoDataFrame:
+    def _gather_data(self, vector_filepath: str, epsg: int) -> gpd.GeoDataFrame:
 
         gdf = gpd.read_file(vector_filepath)
-        gdf['pixel_polygon'] = gdf.geometry.apply(lambda x: gis.polygon_to_pixel(x, self.image.geotransform))
+        gdf['pixel_polygon'] = gdf.geometry.apply(lambda x: GeoPolygon(x, epsg).to_pixel(self.image.geotransform))
         gdf['features'] = gdf.pixel_polygon.apply(lambda x: self._extract_features(x))
         gdf = gdf.set_geometry('pixel_polygon')
 
         return gdf
 
-    def _extract_features(self, polygon: Polygon) -> np.ndarray:
+    def _extract_features(self, polygon: GeoPolygon) -> np.ndarray:
 
         clipped_image = self.image.clip_with(polygon)
         features = clipped_image.pixels.reshape((clipped_image.width * clipped_image.height, clipped_image.band_count))
