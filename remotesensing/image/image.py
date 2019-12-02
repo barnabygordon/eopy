@@ -13,37 +13,33 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal with shape (y, x, band) """
-    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, band_labels: dict = None):
+    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str):
 
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         self.projection = projection
-        self.band_labels = band_labels
 
     def __repr__(self) -> str:
 
         return f'Image - Shape: {self.width}x{self.height}x{self.band_count} | EPSG: {self.epsg}'
 
-    def __getitem__(self, band_slice) -> "Image":
+    def __getitem__(self, image_slice) -> "Image":
 
         geo_transform = self.geotransform
 
-        if type(band_slice) is tuple:
-            pixels = self.pixels[band_slice]
-            band_labels = None
+        if type(image_slice) is tuple:
+            pixels = self.pixels[image_slice]
 
-            if len(band_slice) > 1:
-                x, y = band_slice[1].start, band_slice[0].start
+            if len(image_slice) > 1:
+                x, y = image_slice[1].start, image_slice[0].start
+                if x is None:
+                    x = 0
+                if y is None:
+                    y = 0
                 geo_transform = self.geotransform.subset(x, y)
 
-        elif type(band_slice) == str:
-            pixels = self._get_band_by_number(self.band_labels[band_slice])
-            band_labels = {band_slice: 1}
-        else:
-            raise UserWarning("Requires a integer or a string")
-
-        return Image(pixels, geo_transform, self.projection, band_labels=band_labels)
+            return Image(pixels, geo_transform, self.projection)
 
     def _get_band_by_number(self, band_number: int) -> np.ndarray:
 
@@ -92,12 +88,12 @@ class Image:
         resampled_pixels = ndimage.zoom(self.pixels, factor, order=0)
         scaled_geo_transform = self.geotransform.scale(factor)
 
-        return Image(resampled_pixels, scaled_geo_transform, self.projection, band_labels=self.band_labels)
+        return Image(resampled_pixels, scaled_geo_transform, self.projection)
 
     def apply(self, function: callable) -> "Image":
 
         modified_pixels = function(self.pixels)
-        return Image(modified_pixels, self.geotransform, self.projection, band_labels=self.band_labels)
+        return Image(modified_pixels, self.geotransform, self.projection)
 
     @staticmethod
     def stack(images: List["Image"]) -> "Image":
@@ -105,21 +101,18 @@ class Image:
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
         else:
-            stack = np.zeros((images[0].width, images[0].height, len(images)))
+            stack = np.zeros((images[0].width, images[0].height, sum([image.band_count for image in images])))
 
-            for i, image in tqdm(enumerate(images), total=len(images), desc='Stacking bands'):
-                stack[:, :, i] = image.pixels
+            band_count = 0
+            for image in tqdm(images, total=len(images), desc='Stacking bands'):
+                if image.band_count > 1:
+                    for i in range(image.band_count):
+                        stack[:, :, band_count] = image[:, :, i].pixels
+                else:
+                    stack[:, :, band_count] = image.pixels
+                band_count += 1
 
-            band_labels = {}
-            for i, image in enumerate(images):
-                if image.band_labels is not None:
-                    band_name = list(image.band_labels)[0]
-                    if band_name not in band_labels:
-                        band_labels[band_name] = i+1
-                    else:
-                        band_labels[f'{band_name}_2'] = i+1
-
-            return Image(stack, images[0].geotransform, images[0].projection, band_labels=band_labels)
+            return Image(stack, images[0].geotransform, images[0].projection)
 
     def save(self, file_path: str, data_type: str = 'uint16'):
 
@@ -158,7 +151,7 @@ class Image:
 
         index = (band_1_pixels - band_2_pixels) / (band_1_pixels + band_2_pixels)
 
-        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection, self.band_labels)
+        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection)
 
     @staticmethod
     def _get_gdal_data_type(name: str):

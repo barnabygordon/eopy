@@ -1,23 +1,21 @@
 from remotesensing.image import Image
 from remotesensing.image import Geotransform
 from remotesensing.geometry import GeoPolygon
-from remotesensing.tools import gis
 
-from typing import Dict
 from osgeo import gdal
 
 
 class Loader:
-    def load(self, file_path: str, band_labels: Dict[str, int] = None, extent: GeoPolygon = None) -> Image:
+    def load(self, file_path: str, extent: GeoPolygon = None) -> Image:
 
         print(f'Loading: {file_path}')
 
         if extent:
-            return self.load_from_dataset_and_clip(gdal.Open(file_path), band_labels, extent)
+            return self.load_from_dataset_and_clip(gdal.Open(file_path), extent)
         else:
-            return self.load_from_dataset(gdal.Open(file_path), band_labels)
+            return self.load_from_dataset(gdal.Open(file_path))
 
-    def load_from_dataset_and_clip(self, image_dataset: gdal.Dataset, band_labels: Dict, extent: GeoPolygon) -> Image:
+    def load_from_dataset_and_clip(self, image_dataset: gdal.Dataset, extent: GeoPolygon) -> Image:
 
         geo_transform = self._load_geotransform(image_dataset)
         pixel_polygon = extent.to_pixel(geo_transform)
@@ -31,10 +29,10 @@ class Loader:
         if pixels.ndim > 2:
             pixels = pixels.transpose(1, 2, 0)
 
-        return Image(pixels, subset_geo_transform, image_dataset.GetProjection(), band_labels=band_labels)\
+        return Image(pixels, subset_geo_transform, image_dataset.GetProjection())\
             .clip_with(pixel_polygon, mask_value=0)
 
-    def load_from_dataset(self, image_dataset: gdal.Dataset, band_labels: Dict = None) -> Image:
+    def load_from_dataset(self, image_dataset: gdal.Dataset) -> Image:
 
         geo_transform = self._load_geotransform(image_dataset)
         projection = image_dataset.GetProjection()
@@ -43,8 +41,8 @@ class Loader:
         if pixels.ndim > 2:
             pixels = pixels.transpose(1, 2, 0)
 
-        return Image(pixels, geo_transform, projection, band_labels=band_labels)
+        return Image(pixels, geo_transform, projection)
 
     def _load_geotransform(self, image_dataset: gdal.Dataset) -> Geotransform:
 
-        return Geotransform(image_dataset.GetGeoTransform())
+        return Geotransform.from_tuple(image_dataset.GetGeoTransform())

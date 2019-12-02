@@ -33,8 +33,7 @@ class SFIM:
                 pan_image=pan_image.pixels,
                 smoothed_pan_image=pan_smooth)
 
-        return Image(pansharpened, pan_image.geotransform, pan_image.projection,
-                     band_labels=low_resolution_image.band_labels, metadata=low_resolution_image.metadata)
+        return Image(pansharpened, pan_image.geotransform, pan_image.projection)
 
     @staticmethod
     def _fuse_images(low_resolution_image: np.ndarray, pan_image: np.ndarray, smoothed_pan_image: np.ndarray) -> np.ndarray:
