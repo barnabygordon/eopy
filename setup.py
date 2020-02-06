@@ -27,6 +27,7 @@ setup(
         'gdal',
         'geopandas',
         'matplotlib',
+        'mgrs',
         'numpy',
         'pandas',
         'pillow',
