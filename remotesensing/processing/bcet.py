@@ -11,7 +11,7 @@ class BCET:
 
         bcet_image = np.zeros(image.shape)
         for i in tqdm(range(image.band_count), total=image.band_count, desc='Calculating bands'):
-            x = image[i].pixels
+            x = image.pixels[:, :, i]
 
             l0 = np.ma.min(x)
             h0 = np.ma.max(x)
