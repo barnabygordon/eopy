@@ -102,6 +102,7 @@ def test_stack_single_bands(image):
 
 def test_add_index(image):
 
+    image.pixels[image.pixels == 0] = 1
     image_with_index = image.add_index(band_1=0, band_2=1)
 
     assert image_with_index.band_count == image.band_count + 1
