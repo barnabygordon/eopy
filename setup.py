@@ -1,7 +1,3 @@
-"""
-Remote Sensing!.
-"""
-
 from codecs import open
 from os.path import abspath, dirname, join
 from setuptools import find_packages, setup
