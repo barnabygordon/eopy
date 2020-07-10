@@ -13,7 +13,7 @@ def world_to_pixel(x: float, y: float, geotransform: "Geotransform") -> Tuple[in
     """ Transform a projected coordinates to image pixel indices"""
 
     x = np.round((x - geotransform.upper_left_x) / geotransform.pixel_width).astype(np.int)
-    y = np.round((geotransform.upper_left_y - y) / geotransform.pixel_width).astype(np.int)
+    y = np.round((geotransform.upper_left_y - y) / geotransform.pixel_height).astype(np.int)
 
     return x, y
 
@@ -21,7 +21,7 @@ def world_to_pixel(x: float, y: float, geotransform: "Geotransform") -> Tuple[in
 def pixel_to_world(x: int, y: int, geotransform: "Geotransform") -> Tuple[float, float]:
     """ Transform a pixel indices into projected coordinates"""
     x2 = (x * geotransform.pixel_width) + geotransform.upper_left_x
-    y2 = (y * geotransform.pixel_height) + geotransform.upper_left_y
+    y2 = geotransform.upper_left_y - (y * geotransform.pixel_height)
 
     return x2, y2
 
@@ -29,8 +29,8 @@ def pixel_to_world(x: int, y: int, geotransform: "Geotransform") -> Tuple[float,
 def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tuple[float, float]:
     """ Tranform a coordinate to a new coordinate system"""
 
-    in_proj = Proj(init=f'epsg:{in_epsg}')
-    out_proj = Proj(init=f'epsg:{out_epsg}')
+    in_proj = Proj(f'epsg:{in_epsg}')
+    out_proj = Proj(f'epsg:{out_epsg}')
 
     x2, y2 = transform(in_proj, out_proj, x, y)
 
