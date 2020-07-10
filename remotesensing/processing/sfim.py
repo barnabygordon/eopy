@@ -1,6 +1,8 @@
 import numpy as np
-from cv2 import resize
 from tqdm import tqdm
+from skimage.morphology import disk
+from skimage.filters import rank
+from skimage.transform import resize
 
 from remotesensing.image import Image
 
@@ -9,27 +11,22 @@ class SFIM:
     """ (Smoothing Filter-Based Intensity Modulation)
     A class for fusing together images for pansharpening
     """
+
     @classmethod
-    def calculate(cls, coarse_image: Image, fine_image: Image) -> Image:
+    def calculate(cls, coarse: Image, fine: Image, filter_size: int = None) -> Image:
 
-        pan_smooth = fine_image.smooth()
+        if not filter_size:
+            filter_size = fine.geotransform.pixel_width // coarse.geotransform.pixel_width
 
-        if coarse_image.band_count > 2:
+        smooth_pan = rank.mean(fine.pixels, disk(filter_size))
 
-            fused_pixels = np.zeros((fine_image.height, fine_image.width, coarse_image.band_count))
-            fused = Image(fused_pixels, fine_image.geotransform, fine_image.projection)
+        output_shape = (fine.height, fine.width, coarse.band_count)
+        msi_upsampled = fine.apply(lambda x: resize(coarse.pixels, output_shape, preserve_range=True))
 
-            bands = []
-            for pan_band, band in tqdm(zip(fused, coarse_image), total=fused.band_count, desc='Fusing images'):
-                bands.append(pan_band.apply(lambda x: cls._fuse_images(band.pixels, fine_image.pixels, pan_smooth)))
+        bands = []
+        for band in msi_upsampled:
 
-            return fused.stack(bands)
+            numerator = band.pixels * fine.pixels
+            bands.append(band.apply(lambda x: np.divide(numerator, smooth_pan, out=np.zeros_like(numerator), where=smooth_pan != 0)))
 
-        else:
-            return fine_image.apply(lambda x: cls._fuse_images(coarse_image.pixels, x, pan_smooth))
-
-    @staticmethod
-    def _fuse_images(coarse_pixels: np.ndarray, fine_pixels: np.ndarray, smoothed_pan_image: Image) -> np.ndarray:
-
-        resized_image = resize(coarse_pixels, fine_pixels.shape[::-1])
-        return (resized_image * fine_pixels) / smoothed_pan_image.pixels
+        return Image.stack(bands)
