@@ -6,9 +6,8 @@ from osgeo import gdal
 
 
 class Loader:
-    def load(self, file_path: str, extent: GeoPolygon = None) -> Image:
 
-        print(f'Loading: {file_path}')
+    def load(self, file_path: str, extent: GeoPolygon = None) -> Image:
 
         if extent:
             return self.load_from_dataset_and_clip(gdal.Open(file_path), extent)
@@ -23,6 +22,10 @@ class Loader:
         bounds = [int(bound) for bound in pixel_polygon.polygon.bounds]
 
         pixels = image_dataset.ReadAsArray(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1])
+
+        if pixels is None:
+            raise UserWarning(f'Unable to open image with extent: {bounds}')
+
         subset_geo_transform = geo_transform.subset(x=bounds[0], y=bounds[1])
         pixel_polygon = extent.to_pixel(subset_geo_transform)
 
