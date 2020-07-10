@@ -44,7 +44,7 @@ class Visualise:
         if image.band_count > 1:
             raise UserWarning("Image must be 2D")
 
-        xx, yy = np.mgrid[0:image.width, 0:image.height]
+        yy, xx = np.mgrid[0:image.height, 0:image.width]
 
         f = plt.figure(figsize=figsize)
         ax = f.gca(projection='3d')
@@ -83,3 +83,12 @@ class Visualise:
 
         image, *images = [PILImage.open(file_path) for file_path in file_paths]
         image.save(fp=save_path, format='GIF', append_images=images, save_all=True, duration=duration, loop=0)
+
+    @staticmethod
+    def show_histogram(image: "Image"):
+
+        plt.figure(figsize=(10, 5))
+        for i, band in enumerate(image):
+            plt.hist(band.pixels.ravel(), bins=100, alpha=0.5, label=f'Band {i}')
+        plt.legend()
+        plt.show()
