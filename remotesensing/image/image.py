@@ -3,9 +3,9 @@ from scipy import ndimage
 from typing import List, Tuple
 from scipy.ndimage.filters import gaussian_filter
 from osgeo import gdal, osr
-from tqdm import tqdm
 from PIL import Image as PILImage
 from PIL import ImageDraw
+from shapely.geometry import Polygon
 
 from remotesensing.image import Geotransform
 from remotesensing.geometry import GeoPolygon
@@ -25,7 +25,7 @@ class Image:
 
     def __repr__(self) -> str:
 
-        return f'Image - Shape: {self.width}x{self.height}x{self.band_count} | EPSG: {self.epsg}'
+        return f'Image - Shape: {self.height}x{self.width}x{self.band_count} | EPSG: {self.epsg}'
 
     def __getitem__(self, image_slice) -> "Image":
 
@@ -62,12 +62,12 @@ class Image:
     @property
     def width(self) -> int:
 
-        return self.pixels.shape[0]
+        return self.pixels.shape[1]
 
     @property
     def height(self) -> int:
 
-        return self.pixels.shape[1]
+        return self.pixels.shape[0]
 
     @property
     def band_count(self) -> int:
@@ -93,19 +93,33 @@ class Image:
         spatial_reference = osr.SpatialReference(wkt=self.projection)
         return spatial_reference.GetAttrValue("AUTHORITY", 1)
 
+    @property
+    def footprint(self) -> GeoPolygon:
+
+        return GeoPolygon(Polygon([
+            (self.geotransform.upper_left_x, self.geotransform.upper_left_y),
+            (self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width),
+             self.geotransform.upper_left_y),
+            (self.geotransform.upper_left_x + (self.width * self.geotransform.pixel_width),
+             self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_height)),
+            (self.geotransform.upper_left_x,
+             self.geotransform.upper_left_y - (self.height * self.geotransform.pixel_height)),
+            (self.geotransform.upper_left_x, self.geotransform.upper_left_y)
+        ]), epsg=self.epsg)
+
     def clip_with(self, polygon: GeoPolygon, mask_value: float = np.nan) -> "Image":
 
-        if polygon.epsg != self.epsg:
-            raise UserWarning(f'Image and polygon do not have the same EPSG: {self.epsg}, {polygon.epsg}')
+        if str(polygon.epsg) != str(self.epsg):
+            print(f'Image and polygon do not have the same EPSG: {self.epsg}, {polygon.epsg}')  # Todo: turn into log message
 
         bounds = [int(value) for value in polygon.polygon.bounds]
-        mask = PILImage.new("L", (self.height, self.width), 1)
+        mask = PILImage.new("L", (self.width, self.height), 1)
 
         [ImageDraw.Draw(mask).polygon(coordinates, 0) for coordinates in polygon.coordinates]
         mask_pixels = np.array(mask)
         mask_pixels = mask_pixels[bounds[1]:bounds[3], bounds[0]:bounds[2]]
 
-        y, x = bounds[0], bounds[1]
+        x, y = bounds[0], bounds[1]
         width, height = bounds[2] - bounds[0], bounds[3] - bounds[1]
 
         subset = self[y:y + height, x:x + width]
@@ -137,10 +151,10 @@ class Image:
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
         else:
-            stack = np.zeros((images[0].width, images[0].height, sum([image.band_count for image in images])))
+            stack = np.zeros((images[0].height, images[0].width, sum([image.band_count for image in images])))
 
             band_count = 0
-            for image in tqdm(images, total=len(images), desc='Stacking bands'):
+            for image in images:
                 if image.band_count > 1:
                     for i in range(image.band_count):
                         stack[:, :, band_count] = image[:, :, i].pixels
@@ -154,7 +168,7 @@ class Image:
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
-            .Create(file_path, self.height, self.width, self.band_count, gdal_data_type)
+            .Create(file_path, self.width, self.height, self.band_count, gdal_data_type)
         out_image.SetGeoTransform(self.geotransform.tuple)
         out_image.SetProjection(self.projection)
 
