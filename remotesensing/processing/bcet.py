@@ -7,14 +7,19 @@ from remotesensing.image import Image
 class BCET:
     """ Balanced Contrast Enhancement Technique """
     @staticmethod
-    def calculate(image: Image, L: float = 0., H: float = 1., E: float = 0.5, clip: float = 0.) -> Image:
+    def calculate(image: Image, L: float = 0., H: float = 1., E: float = 0.5, clip: float = 0., window: slice = None) -> Image:
 
         bands = []
         for band in tqdm(image, total=image.band_count, desc='Calculating bands'):
 
-            l0 = np.ma.min(band.pixels)
-            h0 = np.ma.max(band.pixels)
-            e = np.ma.mean(band.pixels)
+            if window:
+                pixels = band.pixels[window]
+            else:
+                pixels = band.pixels
+
+            l0 = np.ma.min(pixels)
+            h0 = np.ma.max(pixels)
+            e = np.ma.mean(pixels)
 
             l = l0 + (clip * (h0-l0))
             h = h0 - (clip * (h0-l0))
@@ -23,7 +28,7 @@ class BCET:
             H = H
             E = E
 
-            s = np.ma.mean(band.pixels**2)
+            s = np.ma.mean(pixels**2)
 
             b = (h**2 * (E - L) - s * (H - L) + l**2 * (H - E)) / (2 * (h * (E - L) - e * (H - L) + l * (H - E)))
             a = (H - L) / ((h - l) * (h + l - 2 * b))
