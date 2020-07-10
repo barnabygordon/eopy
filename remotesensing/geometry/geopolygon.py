@@ -1,8 +1,7 @@
 import folium
-from pyproj import Proj, transform
+from pyproj import Transformer
 from shapely.ops import transform as shapely_transform
 import geopandas as gpd
-from functools import partial
 from typing import List
 from shapely.geometry import Polygon, MultiPolygon
 
@@ -54,9 +53,9 @@ class GeoPolygon:
         if self.epsg == epsg:
             raise UserWarning(f'Polygon already in {epsg} EPSG')
 
-        projection = partial(transform, Proj(init=f'epsg:{self.epsg}'), Proj(init=f'epsg:{epsg}'))
+        project = Transformer.from_crs(self.epsg, epsg, always_xy=True).transform
 
-        return GeoPolygon(shapely_transform(projection, self.polygon), epsg)
+        return GeoPolygon(shapely_transform(project, self.polygon), epsg)
 
     def to_pixel(self, geo_transform: "Geotransform") -> "GeoPolygon":
         """ Reproject polygon coordinates to image indices"""
@@ -90,4 +89,4 @@ class GeoPolygon:
         if self.polygon.geom_type == 'MultiPolygon':
             return [list(sub_polygon.exterior.coords) for sub_polygon in self.polygon]
         else:
-            return list(self.polygon.exterior.coords)
+            return [list(self.polygon.exterior.coords)]
