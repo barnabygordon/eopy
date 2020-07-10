@@ -1,4 +1,3 @@
-import math
 from typing import List, Dict
 from urllib.request import urlopen
 
@@ -30,7 +29,7 @@ class Calibrator:
         bias = float(metadata[f'REFLECTANCE_ADD_BAND_{band_number}'])
         sun_elevation_degrees = float(metadata['SUN_ELEVATION'])
 
-        sun_elevation_radians = math.radians(sun_elevation_degrees)
+        sun_elevation_radians = np.deg2rad(sun_elevation_degrees)
 
         return band.apply(lambda x: self._calculate_landsat_toa_reflectance(x, gain, bias, sun_elevation_radians))
 
@@ -52,6 +51,6 @@ class Calibrator:
     def _calculate_landsat_toa_reflectance(dn: np.ndarray, gain: float, bias: float, sun_elevation: float) -> np.ndarray:
         """ Calculate Top of Atmosphere reflectance taking into account solar geometry"""
 
-        rho = np.where(dn > 0, (gain*dn + bias) / math.sin(sun_elevation), 0)
+        rho = np.where(dn > 0, (gain*dn + bias) / np.sin(sun_elevation), 0)
 
         return rho
