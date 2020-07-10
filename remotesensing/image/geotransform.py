@@ -5,7 +5,7 @@ from remotesensing.tools import gis
 
 class Geotransform:
 
-    def __init__(self, upper_left_x: float, upper_left_y: float, pixel_width: int, pixel_height: int, rotation_x: float, rotation_y: float):
+    def __init__(self, upper_left_x: float, upper_left_y: float, pixel_width: float, pixel_height: float, rotation_x: float, rotation_y: float):
 
         self.upper_left_x = upper_left_x
         self.upper_left_y = upper_left_y
@@ -22,7 +22,7 @@ class Geotransform:
 
         return cls(
             upper_left_x=geo_transform[0], upper_left_y=geo_transform[3],
-            pixel_width=geo_transform[1], pixel_height=geo_transform[5],
+            pixel_width=geo_transform[1], pixel_height=abs(geo_transform[5]),
             rotation_x=geo_transform[2], rotation_y=geo_transform[4])
 
     @property
@@ -30,13 +30,13 @@ class Geotransform:
 
         return self.upper_left_x, self.pixel_width, \
                self.rotation_x, self.upper_left_y, \
-               self.rotation_y, self.pixel_height
+               self.rotation_y, -self.pixel_height
 
     def scale(self, factor: int) -> "Geotransform":
 
         return Geotransform(
             self.upper_left_x, self.upper_left_y,
-            self.pixel_width // factor, self.pixel_height // factor,
+            self.pixel_width / factor, self.pixel_height / factor,
             self.rotation_x, self.rotation_y)
 
     def subset(self, x: int, y: int) -> "Geotransform":

@@ -1,15 +1,16 @@
-import geopandas as gpd
 import numpy as np
+from geopandas import GeoDataFrame
 from skimage.segmentation import slic
 from sklearn.cluster import KMeans
 
 from remotesensing.tools import gis
+from remotesensing.geometry import GeoPolygon
 from remotesensing.image import Geotransform, Image
 
 
 class Superpixels:
     """ A class to segment an image into superpixels for classification """
-    def __init__(self, gdf: gpd.GeoDataFrame, geo_transform: Geotransform, epsg: int, number_of_features: int):
+    def __init__(self, gdf: GeoDataFrame, geo_transform: Geotransform, epsg: int, number_of_features: int):
 
         self.gdf = gdf
         self.geo_transform = geo_transform
@@ -33,21 +34,21 @@ class Superpixels:
             pixels = np.dstack((pixels, pixels, pixels))
 
         segments = slic(pixels, n_segments=n_segments, compactness=compactness, sigma=sigma,
-                        enforce_connectivity=enforce_connectivity)
+                        enforce_connectivity=enforce_connectivity, start_label=1)
 
         superpixel_list = []
-        for i in range(segments.max()):
+        for i in range(1, segments.max() + 1):
             segment = segments == i
             superpixel_list.append(gis.vectorise_image(segment, levels=[0.9, 1.1]).iloc[0].geom)
 
-        gdf = gpd.GeoDataFrame(geometry=superpixel_list)
+        gdf = GeoDataFrame(geometry=superpixel_list)
 
         image.pixels = np.copy(image.pixels).astype(float)
         if extract_values:
             if image.band_count == 1:
-                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels))
+                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(GeoPolygon(x, epsg=image.epsg)).pixels))
             else:
-                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(x).pixels, axis=(0, 1)))
+                gdf['features'] = gdf.geometry.apply(lambda x: np.nanmean(image.clip_with(GeoPolygon(x, epsg=image.epsg)).pixels, axis=(0, 1)))
 
         return Superpixels(gdf, image.geotransform, image.epsg, number_of_features=image.band_count)
 

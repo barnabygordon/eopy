@@ -1,26 +1,24 @@
 import folium
-import geojson
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Tuple
 from PIL import Image as PILImage
 from shapely.geometry import Polygon
 import numpy as np
+
+from remotesensing.cloud.scene import Scene
+from remotesensing.classify.superpixel import Superpixels
 
 
 class Visualise:
     """ Class for visualising geospatial data"""
 
     @staticmethod
-    def search_results(scene_list):
-        """ Display a list of satellite scenes on a slippy Leaflet map
-        :type scene_list: list[cloud.scene.SatelliteScene]
-        :rtype: folium.Map
-        """
+    def search_results(scene_list: List[Scene]) -> folium.Map:
+
         map_window = folium.Map()
         for scene in scene_list:
-            scene_geojson = geojson.Feature(geometry=scene.bounds)
             folium.GeoJson(
-                scene_geojson,
+                scene.polygon.geojson,
                 style_function=lambda feature: {
                     'fillOpacity': 0,
                 }).add_to(map_window)
@@ -28,14 +26,8 @@ class Visualise:
         return map_window
 
     @staticmethod
-    def save_pyplot(image: np.ndarray, filepath, width_in_pixels, height_in_pixels, dpi=72):
-        """ Plot an image and save it without whitespace
-        :type image: numpy.ndarray
-        :type filepath: str
-        :type width_in_pixels: int
-        :type height_in_pixels: int
-        :type dpi: int
-        """
+    def save_pyplot(image: np.ndarray, filepath: str, width_in_pixels: int, height_in_pixels: int, dpi: int = 72):
+
         f = plt.figure(frameon=False, dpi=dpi)
         f.set_size_inches(width_in_pixels/dpi, height_in_pixels/dpi)
 
@@ -47,18 +39,12 @@ class Visualise:
         f.savefig(filepath, dpi=dpi)
 
     @staticmethod
-    def show_3d_surface(image, figsize=(15, 10), rstride=100, cstride=100, cmap='jet'):
-        """ Plots a 2D image as a surface model
-        :type image: image.Image
-        :type figsize: tuple(int, int)
-        :type rstride: int
-        :type cstride: int
-        :type cmap: str
-        """
+    def show_3d_surface(image: "Image", figsize: Tuple[int, int] = (15, 10), rstride: int = 100, cstride: int = 100, cmap: str = 'jet'):
+
         if image.band_count > 1:
             raise UserWarning("Image must be 2D")
 
-        xx, yy = np.mgrid[0:image.width, 0:image.height]
+        yy, xx = np.mgrid[0:image.height, 0:image.width]
 
         f = plt.figure(figsize=figsize)
         ax = f.gca(projection='3d')
@@ -67,10 +53,8 @@ class Visualise:
         plt.show()
 
     @staticmethod
-    def show_superpixel_spectra(superpixels):
-        """ Plot the average spectra for each superpixel cluster
-        :type superpixels: classify.superpixel.Superpixels
-        """
+    def show_superpixel_spectra(superpixels: Superpixels):
+        """ Plot the average spectra for each superpixel cluster """
         plt.figure(figsize=(15, 10))
 
         for cluster in superpixels.gdf.cluster.unique():
@@ -85,7 +69,7 @@ class Visualise:
         plt.show()
 
     @staticmethod
-    def show_image_and_polygon(image, polygon: Polygon):
+    def show_image_and_polygon(image: "Image", polygon: Polygon):
 
         x, y = polygon.exterior.xy
 
@@ -99,3 +83,12 @@ class Visualise:
 
         image, *images = [PILImage.open(file_path) for file_path in file_paths]
         image.save(fp=save_path, format='GIF', append_images=images, save_all=True, duration=duration, loop=0)
+
+    @staticmethod
+    def show_histogram(image: "Image"):
+
+        plt.figure(figsize=(10, 5))
+        for i, band in enumerate(image):
+            plt.hist(band.pixels.ravel(), bins=100, alpha=0.5, label=f'Band {i}')
+        plt.legend()
+        plt.show()

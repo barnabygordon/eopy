@@ -1,4 +1,4 @@
-import gdal
+import gdal, osr
 import requests
 from urllib.request import urlretrieve
 from http import HTTPStatus
@@ -46,11 +46,12 @@ class Downloader:
             image_dataset = gdal.Open('/vsicurl/' + url)
             if not image_dataset:
                 raise UserWarning(f'Unable to stream band: {band} {url}')
-            band_labels = {band: 0}
             if boundary:
-                band = self._image_loader.load_from_dataset_and_clip(image_dataset, band_labels, boundary)
+                spatial_reference = osr.SpatialReference(wkt=image_dataset.GetProjection())
+                epsg = spatial_reference.GetAttrValue("AUTHORITY", 1)
+                band = self._image_loader.load_from_dataset_and_clip(image_dataset, boundary.transform(int(epsg)))
             else:
-                band = self._image_loader.load_from_dataset(image_dataset, band_labels)
+                band = self._image_loader.load_from_dataset(image_dataset)
             band_stack.append(band)
 
         if len(band_stack) > 1:
@@ -64,7 +65,7 @@ class Downloader:
         try:
             return scene.links[band]['href']
         except KeyError:
-            raise UserWarning(f'Band {band} does not exist')
+            raise UserWarning(f'Band {band} does not exist {scene.links}')
 
     def _download_from_url(self, url: str, file_name: str):
 

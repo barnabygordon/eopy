@@ -10,8 +10,4 @@ class DDS:
 
         x = np.amin(image.pixels, axis=2)
 
-        dds_image = np.copy(image.pixels)
-        for i in range(image.band_count):
-            dds_image[:, :, i] -= (k * x)
-
-        return Image(dds_image, image.geotransform, image.projection)
+        return image.stack([band.apply(lambda i: i - (k * x)) for band in image])

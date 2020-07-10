@@ -3,9 +3,7 @@ import math
 
 
 class Focus:
-    def __init__(self,
-                 multilook: bool=True,
-                 multilook_factor: int=5):
+    def __init__(self, multilook: bool = True, multilook_factor: int = 5):
 
         self.multilook = multilook
         self.multilook_factor = multilook_factor
