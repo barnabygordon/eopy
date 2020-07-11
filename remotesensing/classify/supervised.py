@@ -70,7 +70,7 @@ class Supervised:
         results_image = results_list.reshape(image.width, image.height)
         results_image[np.isnan(image[0].pixels)] = 0.
 
-        return Image(results_image, self.image.geotransform, self.image.projection)
+        return Image(results_image, self.image.geotransform, self.image.projection, self.image.no_data_value)
 
     def test_model(self, output_image: Image, truth_vectors: gpd.GeoDataFrame):
 

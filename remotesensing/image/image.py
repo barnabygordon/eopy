@@ -15,12 +15,13 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal with shape (y, x, band) """
-    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str):
+    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, no_data_value: float = None):
 
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         self.projection = projection
+        self.no_data_value = no_data_value
         self._index = 0
 
     def __repr__(self) -> str:
@@ -42,7 +43,7 @@ class Image:
                     y = 0
                 geo_transform = self.geotransform.subset(x, y)
 
-            return Image(pixels, geo_transform, self.projection)
+            return Image(pixels, geo_transform, self.projection, self.no_data_value)
 
     def __next__(self):
 
@@ -134,7 +135,7 @@ class Image:
         resampled_pixels = ndimage.zoom(self.pixels, factor, order=0)
         scaled_geo_transform = self.geotransform.scale(factor)
 
-        return Image(resampled_pixels, scaled_geo_transform, self.projection)
+        return Image(resampled_pixels, scaled_geo_transform, self.projection, self.no_data_value)
 
     def smooth(self, sigma: int = 5) -> "Image":
 
@@ -142,8 +143,8 @@ class Image:
 
     def apply(self, function: callable) -> "Image":
 
-        modified_pixels = function(self.pixels)
-        return Image(modified_pixels, self.geotransform, self.projection)
+        modified_pixels = function(np.copy(self.pixels))
+        return Image(modified_pixels, self.geotransform, self.projection, self.no_data_value)
 
     @staticmethod
     def stack(images: List["Image"]) -> "Image":
@@ -162,7 +163,7 @@ class Image:
                     stack[:, :, band_count] = image.pixels
                 band_count += 1
 
-            return Image(stack, images[0].geotransform, images[0].projection)
+            return Image(stack, images[0].geotransform, images[0].projection, images[0].no_data_value)
 
     def save(self, file_path: str, data_type: str = 'uint16'):
 
@@ -174,9 +175,9 @@ class Image:
 
         if self.band_count > 1:
             for band in range(self.band_count):
-                out_image.GetRasterBand(band+1).WriteArray(self.pixels[:, :, band])
+                out_image.GetRasterBand(band+1).WriteArray(self.pixels[:, :, band]).SetNoDataValue(self.no_data_value)
         else:
-            out_image.GetRasterBand(1).WriteArray(self.pixels)
+            out_image.GetRasterBand(1).WriteArray(self.pixels).SetNoDataValue(self.no_data_value)
 
         out_image.FlushCache()
 
@@ -201,7 +202,27 @@ class Image:
 
         index = (band_1_pixels - band_2_pixels) / (band_1_pixels + band_2_pixels)
 
-        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection)
+        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection, self.no_data_value)
+
+    def mask(self, value: float = None) -> "Image":
+
+        if not value:
+            value = self.no_data_value
+
+        image = self.apply(lambda x: x)
+        image.pixels[image.pixels == value] = np.nan
+
+        return image
+
+    def unmask(self, value: float = None) -> "Image":
+
+        if not value:
+            value = self.no_data_value
+
+        image = self.apply(lambda x: x)
+        image.pixels[np.isnan(image.pixels)] = value
+
+        return image
 
     @staticmethod
     def _get_gdal_data_type(name: str):
