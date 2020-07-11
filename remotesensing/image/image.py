@@ -204,15 +204,25 @@ class Image:
 
         return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection, self.no_data_value)
 
-    def mask(self, mask_value: float = None):
+    def mask(self, value: float = None) -> "Image":
 
-        if not mask_value:
-            mask_value = self.no_data_value
+        if not value:
+            value = self.no_data_value
 
-        masked_image = self.apply(lambda x: x)
-        masked_image.pixels[masked_image.pixels == mask_value] = np.nan
+        image = self.apply(lambda x: x)
+        image.pixels[image.pixels == value] = np.nan
 
-        return masked_image
+        return image
+
+    def unmask(self, value: float = None) -> "Image":
+
+        if not value:
+            value = self.no_data_value
+
+        image = self.apply(lambda x: x)
+        image.pixels[np.isnan(image.pixels)] = value
+
+        return image
 
     @staticmethod
     def _get_gdal_data_type(name: str):
