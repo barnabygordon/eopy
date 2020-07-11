@@ -3,6 +3,8 @@ from remotesensing.image import Geotransform
 from remotesensing.geometry import GeoPolygon
 
 from typing import Optional
+from pyproj import CRS
+from pyproj.exceptions import CRSError
 from osgeo import gdal
 
 
@@ -34,14 +36,20 @@ class Loader:
             pixels = pixels.transpose(1, 2, 0)
 
         no_data_value = self._get_no_data_value(image_dataset)
+        try:
+            epsg = CRS.from_wkt(image_dataset.GetProjection()).to_epsg()
+        except CRSError:
+            epsg = None
 
-        return Image(pixels, subset_geo_transform, image_dataset.GetProjection(), no_data_value)\
-            .clip_with(pixel_polygon, mask_value=0)
+        return Image(pixels, subset_geo_transform, epsg, no_data_value).clip_with(pixel_polygon, mask_value=0)
 
     def load_from_dataset(self, image_dataset: gdal.Dataset) -> Image:
 
         geo_transform = self._load_geotransform(image_dataset)
-        projection = image_dataset.GetProjection()
+        try:
+            epsg = CRS.from_wkt(image_dataset.GetProjection()).to_epsg()
+        except CRSError:
+            epsg = None
         pixels = image_dataset.ReadAsArray()
 
         if pixels.ndim > 2:
@@ -49,7 +57,7 @@ class Loader:
 
         no_data_value = self._get_no_data_value(image_dataset)
 
-        return Image(pixels, geo_transform, projection, no_data_value)
+        return Image(pixels, geo_transform, epsg, no_data_value)
 
     def _load_geotransform(self, image_dataset: gdal.Dataset) -> Geotransform:
 
