@@ -25,6 +25,11 @@ class Geotransform:
             pixel_width=geo_transform[1], pixel_height=abs(geo_transform[5]),
             rotation_x=geo_transform[2], rotation_y=geo_transform[4])
 
+    @classmethod
+    def empty(cls) -> "Geotransform":
+
+        return cls(upper_left_x=0, upper_left_y=0, pixel_width=1, pixel_height=1, rotation_x=0, rotation_y=0)
+
     @property
     def tuple(self):
 

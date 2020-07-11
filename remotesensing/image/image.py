@@ -17,10 +17,9 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal with shape (y, x, band) """
-    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, epsg: Optional[int] = None, no_data_value: float = None):
+    def __init__(self, pixels: np.ndarray, geotransform: Optional[Geotransform] = Geotransform.empty(), epsg: Optional[int] = None, no_data_value: Optional[float] = None):
 
         self.pixels = pixels
-        self.data_type = self.pixels.dtype
         self.geotransform = geotransform
         try:
             self.crs = CRS.from_epsg(epsg)
@@ -173,7 +172,7 @@ class Image:
     def save(self, file_path: str, data_type: Optional[str] = None):
 
         if not data_type:
-            data_type = str(self.data_type)
+            data_type = str(self.dtype)
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
