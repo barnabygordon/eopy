@@ -1,5 +1,7 @@
-import gdal, osr
+import gdal
 import requests
+from pyproj import CRS
+from pyproj.exceptions import CRSError
 from urllib.request import urlretrieve
 from http import HTTPStatus
 from typing import List
@@ -47,9 +49,12 @@ class Downloader:
             if not image_dataset:
                 raise UserWarning(f'Unable to stream band: {band} {url}')
             if boundary:
-                spatial_reference = osr.SpatialReference(wkt=image_dataset.GetProjection())
-                epsg = spatial_reference.GetAttrValue("AUTHORITY", 1)
-                band = self._image_loader.load_from_dataset_and_clip(image_dataset, boundary.transform(int(epsg)))
+                try:
+                    crs = CRS(image_dataset.GetProjection())
+                    boundary = boundary.transform(crs.to_epsg())
+                except CRSError:
+                    continue
+                band = self._image_loader.load_from_dataset_and_clip(image_dataset, boundary)
             else:
                 band = self._image_loader.load_from_dataset(image_dataset)
             band_stack.append(band)

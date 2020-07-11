@@ -1,8 +1,10 @@
 import numpy as np
 from scipy import ndimage
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from scipy.ndimage.filters import gaussian_filter
-from osgeo import gdal, osr
+from osgeo import gdal
+from pyproj import CRS
+from pyproj.exceptions import ProjError
 from PIL import Image as PILImage
 from PIL import ImageDraw
 from shapely.geometry import Polygon
@@ -15,12 +17,15 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal with shape (y, x, band) """
-    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, projection: str, no_data_value: float = None):
+    def __init__(self, pixels: np.ndarray, geotransform: Geotransform, epsg: Optional[int] = None, no_data_value: float = None):
 
         self.pixels = pixels
         self.data_type = self.pixels.dtype
         self.geotransform = geotransform
-        self.projection = projection
+        try:
+            self.crs = CRS.from_epsg(epsg)
+        except ProjError:
+            self.crs = None
         self.no_data_value = no_data_value
         self._index = 0
 
@@ -43,7 +48,7 @@ class Image:
                     y = 0
                 geo_transform = self.geotransform.subset(x, y)
 
-            return Image(pixels, geo_transform, self.projection, self.no_data_value)
+            return Image(pixels, geo_transform, self.epsg, self.no_data_value)
 
     def __next__(self):
 
@@ -89,10 +94,10 @@ class Image:
         return self.pixels.dtype
 
     @property
-    def epsg(self) -> int:
+    def epsg(self) -> Optional[int]:
 
-        spatial_reference = osr.SpatialReference(wkt=self.projection)
-        return spatial_reference.GetAttrValue("AUTHORITY", 1)
+        if self.crs:
+            return self.crs.to_epsg()
 
     @property
     def footprint(self) -> GeoPolygon:
@@ -135,7 +140,7 @@ class Image:
         resampled_pixels = ndimage.zoom(self.pixels, factor, order=0)
         scaled_geo_transform = self.geotransform.scale(factor)
 
-        return Image(resampled_pixels, scaled_geo_transform, self.projection, self.no_data_value)
+        return Image(resampled_pixels, scaled_geo_transform, self.epsg, self.no_data_value)
 
     def smooth(self, sigma: int = 5) -> "Image":
 
@@ -144,7 +149,7 @@ class Image:
     def apply(self, function: callable) -> "Image":
 
         modified_pixels = function(np.copy(self.pixels))
-        return Image(modified_pixels, self.geotransform, self.projection, self.no_data_value)
+        return Image(modified_pixels, self.geotransform, self.epsg, self.no_data_value)
 
     @staticmethod
     def stack(images: List["Image"]) -> "Image":
@@ -163,15 +168,19 @@ class Image:
                     stack[:, :, band_count] = image.pixels
                 band_count += 1
 
-            return Image(stack, images[0].geotransform, images[0].projection, images[0].no_data_value)
+            return Image(stack, images[0].geotransform, images[0].epsg, images[0].no_data_value)
 
-    def save(self, file_path: str, data_type: str = 'uint16'):
+    def save(self, file_path: str, data_type: Optional[str] = None):
+
+        if not data_type:
+            data_type = str(self.data_type)
 
         gdal_data_type = self._get_gdal_data_type(data_type)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
             .Create(file_path, self.width, self.height, self.band_count, gdal_data_type)
         out_image.SetGeoTransform(self.geotransform.tuple)
-        out_image.SetProjection(self.projection)
+        if self.crs:
+            out_image.SetProjection(self.crs.to_wkt())
 
         if self.band_count > 1:
             for band in range(self.band_count):
@@ -202,7 +211,7 @@ class Image:
 
         index = (band_1_pixels - band_2_pixels) / (band_1_pixels + band_2_pixels)
 
-        return Image(np.dstack([self.pixels, index]), self.geotransform, self.projection, self.no_data_value)
+        return Image(np.dstack([self.pixels, index]), self.geotransform, self.epsg, self.no_data_value)
 
     def mask(self, value: float = None) -> "Image":
 
