@@ -20,7 +20,9 @@ class Mosaic:
         return Image(
             pixels=mosaic,
             geotransform=geotransform,
-            projection=images[0].projection)
+            projection=images[0].projection,
+            no_data_value=images[0].no_data_value
+        )
 
     def _paint_images_onto_base(self, base: np.ndarray, images: List[Image], geotransform: Geotransform) -> np.ndarray:
 
