@@ -21,9 +21,12 @@ bands are pansharpened using the 15 m panchromatic band.
 ![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/pansharpening.gif)
 
 
-## Image Handling
+## Access to cloud data
 
 ### Searching
+
+Here's an example of searching for imagery in the cloud, Landsat-8 and 
+Sentinel-2 are currently supported.
 
 ```python
 from datetime import datetime, timedelta
@@ -62,6 +65,11 @@ print(image.shape)
 ```
 
 ### Stream
+
+It's not always convenient to have to download a whole image if we
+are only interested in a specific section. Streaming a scene at a
+particular boundary is much faster than downloading the whole image
+and allows us to read it directly into memory.
 
 ```python
 import maptlotlib.pyplot as plt
