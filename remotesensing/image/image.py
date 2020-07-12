@@ -17,7 +17,7 @@ GTIFF_DRIVER = 'GTiff'
 
 class Image:
     """ A generic image object using gdal with shape (y, x, band) """
-    def __init__(self, pixels: np.ndarray, geotransform: Optional[Geotransform] = Geotransform.empty(), epsg: Optional[int] = None, no_data_value: Optional[float] = None):
+    def __init__(self, pixels: np.ndarray, geotransform: Optional[Geotransform] = Geotransform.empty(), epsg: Optional[int] = None, no_data_value: float = 0.):
 
         self.pixels = pixels
         self.geotransform = geotransform
@@ -156,7 +156,7 @@ class Image:
         if len(images) == 1:
             raise UserWarning("Only one image has been provided")
         else:
-            stack = np.zeros((images[0].height, images[0].width, sum([image.band_count for image in images])))
+            stack = np.zeros((images[0].height, images[0].width, sum([image.band_count for image in images])), dtype=images[0].dtype)
 
             band_count = 0
             for image in images:
@@ -183,18 +183,26 @@ class Image:
 
         if self.band_count > 1:
             for band in range(self.band_count):
-                out_image.GetRasterBand(band+1).WriteArray(self.pixels[:, :, band]).SetNoDataValue(self.no_data_value)
+                out_image.GetRasterBand(band+1).WriteArray(self.pixels[:, :, band])
+                if self.no_data_value is not None:
+                    out_image.GetRasterBand(band+1).SetNoDataValue(float(self.no_data_value))
+
         else:
-            out_image.GetRasterBand(1).WriteArray(self.pixels).SetNoDataValue(self.no_data_value)
+            out_image.GetRasterBand(1).WriteArray(self.pixels)
+            if self.no_data_value is not None:
+                out_image.GetRasterBand(1).SetNoDataValue(self.no_data_value)
 
         out_image.FlushCache()
 
-    @property
-    def normalise(self) -> "Image":
-        """ normalise image to 0-1 """
+    def normalise(self, output_range: Tuple[float, float] = (0, 1), current_range: Tuple[float, float] = None) -> "Image":
 
-        image_min, image_max = np.nanmin(self.pixels), np.nanmax(self.pixels)
-        return self.apply(lambda x: (x - image_min) / (image_max - image_min))
+        if not current_range:
+            current_range = (np.nanmin(self.pixels), np.nanmax(self.pixels))
+
+        delta1 = current_range[1] - current_range[0]
+        delta2 = output_range[1] - output_range[0]
+
+        return self.apply(lambda x: (delta2 * (x - current_range[0]) / delta1) + output_range[0])
 
     def add_index(self, band_1: int, band_2: int) -> "Image":
 
