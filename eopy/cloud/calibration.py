@@ -2,7 +2,7 @@ from typing import List, Dict
 from urllib.request import urlopen
 
 import numpy as np
-from remotesensing.image import Image
+from eopy.image import Image
 
 
 class Calibrator:

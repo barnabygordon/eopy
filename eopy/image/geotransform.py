@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from remotesensing.tools import gis
+from eopy.tools import gis
 
 
 class Geotransform:

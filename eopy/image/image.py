@@ -9,8 +9,8 @@ from PIL import Image as PILImage
 from PIL import ImageDraw
 from shapely.geometry import Polygon
 
-from remotesensing.image import Geotransform
-from remotesensing.geometry import GeoPolygon
+from eopy.image import Geotransform
+from eopy.geometry import GeoPolygon
 
 GTIFF_DRIVER = 'GTiff'
 

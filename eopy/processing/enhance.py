@@ -1,6 +1,6 @@
 import numpy as np
 
-from remotesensing.image import Image
+from eopy.image import Image
 
 
 def linear_stretch(image: Image, limit: float = 1, percentile: int = None, std: int = None) -> Image:

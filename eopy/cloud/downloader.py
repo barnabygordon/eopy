@@ -6,9 +6,9 @@ from urllib.request import urlretrieve
 from http import HTTPStatus
 from typing import List
 
-from remotesensing.geometry import GeoPolygon
-from remotesensing.cloud.scene import Scene
-from remotesensing.image import Image, Loader
+from eopy.geometry import GeoPolygon
+from eopy.cloud.scene import Scene
+from eopy.image import Image, Loader
 
 
 class Downloader:

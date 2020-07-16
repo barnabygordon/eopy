@@ -5,8 +5,8 @@ import geopandas as gpd
 from typing import List
 from shapely.geometry import Polygon, MultiPolygon
 
-from remotesensing.tools import gis
-from remotesensing.image import Geotransform
+from eopy.tools import gis
+from eopy.image import Geotransform
 
 
 class GeoPolygon:

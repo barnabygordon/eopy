@@ -1,8 +1,8 @@
 from typing import List
 import numpy as np
 
-from remotesensing.image import Image, Geotransform
-from remotesensing.tools import gis
+from eopy.image import Image, Geotransform
+from eopy.tools import gis
 
 
 class Mosaic:

@@ -1,6 +1,7 @@
-# Remote Sensing
+# eopy
 
-A collection of helper functions and classes to search, download and process earth observation data.
+Earth Observation for Python. A collection of helper functions and classes to search, 
+download and process earth observation data.
 
 ## Examples
 
@@ -9,7 +10,7 @@ A collection of helper functions and classes to search, download and process ear
 Here's an example of some basic contrast enhancement (BCET) and decorrelation
 stretching (DDS) techniques applied to a Landsat-8 false colour composite. 
 
-![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/enhance.png)
+![alt text](https://github.com/barnabygordon/eopy/blob/master/assets/enhance.png)
 
 
 ### Pansharpening
@@ -18,7 +19,7 @@ This library also includes the SFIM pansharpenning method,
 here's an example using a Landsat-8 RGB image where the 30 m multispectral
 bands are pansharpened using the 15 m panchromatic band.
 
-![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/pansharpening.gif)
+![alt text](https://github.com/barnabygordon/eopy/blob/master/assets/pansharpening.gif)
 
 
 ## Access to cloud data
@@ -31,8 +32,8 @@ Sentinel-2 are currently supported.
 ```python
 from datetime import datetime, timedelta
 from shapely.geometry import Point
-from remotesensing.cloud import Searcher
-from remotesensing.geometry import GeoPolygon
+from eopy.cloud import Searcher
+from eopy.geometry import GeoPolygon
 
 latitude, longitude = 51.507351, -0.127758
 search_boundary = GeoPolygon(Point((longitude, latitude)).buffer(0.1), epsg=4326)
@@ -51,8 +52,8 @@ print(scenes[0])
 ### Downloading
 
 ```python
-from remotesensing.cloud import Downloader
-from remotesensing.image import Loader
+from eopy.cloud import Downloader
+from eopy.image import Loader
 
 downloader = Downloader("data")
 downloader.download(scene=scene, bands=['B8'])
@@ -78,4 +79,4 @@ image = downloader.stream(scene, bands=['B8'], boundary=search_boundary.transfor
 
 plt.imshow(image.pixels, cmap='Greys')
 ```
-![alt text](https://github.com/barnabygordon/remote-sensing/blob/master/assets/stream.png)
+![alt text](https://github.com/barnabygordon/eopy/blob/master/assets/stream.png)

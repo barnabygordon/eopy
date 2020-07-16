@@ -5,8 +5,8 @@ from PIL import Image as PILImage
 from shapely.geometry import Polygon
 import numpy as np
 
-from remotesensing.cloud.scene import Scene
-from remotesensing.classify.superpixel import Superpixels
+from eopy.cloud.scene import Scene
+from eopy.classify.superpixel import Superpixels
 
 
 def search_results(scene_list: List[Scene]) -> folium.Map:

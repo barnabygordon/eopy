@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from typing import List, Tuple
 
-from remotesensing.image import Image
+from eopy.image import Image
 
 
 class ImagePCA:
