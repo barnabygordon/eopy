@@ -3,7 +3,7 @@ from skimage.morphology import disk
 from skimage.filters import rank
 from skimage.transform import resize
 
-from remotesensing.image import Image
+from eopy.image import Image
 
 
 def sfim(msi: Image, pan: Image, filter_size: int = None) -> Image:

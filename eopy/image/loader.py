@@ -1,6 +1,6 @@
-from remotesensing.image import Image
-from remotesensing.image import Geotransform
-from remotesensing.geometry import GeoPolygon
+from eopy.image import Image
+from eopy.image import Geotransform
+from eopy.geometry import GeoPolygon
 
 from typing import Optional
 from pyproj import CRS

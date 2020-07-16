@@ -2,7 +2,7 @@ from IPython.display import Image as IPythonImage
 from typing import List, Dict
 from datetime import datetime
 
-from remotesensing.geometry import GeoPolygon
+from eopy.geometry import GeoPolygon
 
 
 class Scene:

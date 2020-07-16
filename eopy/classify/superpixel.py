@@ -3,9 +3,9 @@ from geopandas import GeoDataFrame
 from skimage.segmentation import slic
 from sklearn.cluster import KMeans
 
-from remotesensing.tools import gis
-from remotesensing.geometry import GeoPolygon
-from remotesensing.image import Geotransform, Image
+from eopy.tools import gis
+from eopy.geometry import GeoPolygon
+from eopy.image import Geotransform, Image
 
 
 class Superpixels:

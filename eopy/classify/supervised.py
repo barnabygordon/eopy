@@ -7,8 +7,8 @@ from sklearn import metrics
 from typing import List
 from sklearn.ensemble import RandomForestClassifier
 
-from remotesensing.image import Image
-from remotesensing.geometry import GeoPolygon
+from eopy.image import Image
+from eopy.geometry import GeoPolygon
 
 
 class Supervised:

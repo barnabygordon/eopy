@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import List
 from shapely.geometry import shape, Polygon
 
-from remotesensing.cloud.scene import Scene
-from remotesensing.geometry import GeoPolygon
-from remotesensing.tools import gis
+from eopy.cloud.scene import Scene
+from eopy.geometry import GeoPolygon
+from eopy.tools import gis
 
 
 class Satellite(Enum):
