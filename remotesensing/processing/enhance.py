@@ -1,20 +1,40 @@
 import numpy as np
-from typing import Tuple
 
 from remotesensing.image import Image
 
 
-def linear(image: Image, contrast: float, brightness: float) -> Image:
+def linear_stretch(image: Image, limit: float = 1, percentile: int = None, std: int = None) -> Image:
 
-    return image.apply(lambda x: contrast * x + brightness)
+    bands = []
+    for band in image:
+
+        min_value, max_value = np.nanmin(band.pixels), np.nanmax(band.pixels)
+
+        if percentile:
+            min_value, max_value = np.nanpercentile(band.pixels, (percentile, 100 - percentile))
+
+        elif std:
+            mean, band_std = np.nanmean(band.pixels), np.nanstd(band.pixels)
+            min_value, max_value = mean - std * band_std, mean + std * band_std
+
+        if percentile or std:
+            band = band.apply(lambda x: np.where(x > max_value, max_value, x))
+            band = band.apply(lambda x: np.where(x < min_value, min_value, x))
+
+        bands.append(band.normalise(output_range=(0, limit), current_range=(min_value, max_value)))
+
+    if len(bands) == 1:
+        return bands[0]
+
+    return Image.stack(bands)
 
 
-def bcet(image: Image, value_range: Tuple[int, int] = (0, 1), clip: float = 0., window: slice = None) -> Image:
+def bcet(image: Image, limit: float = 1, percentile: int = None, clip: float = 0., window: slice = None) -> Image:
     ''' BCET (Balanced Contrast Enhancement Technique)
     G.J. Liu (1990) Balance contrast enhancement technique and its application in image colour composition
     '''
 
-    L, H = value_range
+    L, H = 0, limit
     E = H / 2
 
     bands = []
@@ -22,14 +42,19 @@ def bcet(image: Image, value_range: Tuple[int, int] = (0, 1), clip: float = 0., 
 
         pixels = band.pixels[window] if window else band.pixels
 
-        l0 = np.nanmin(pixels)
-        h0 = np.nanmax(pixels)
-        e = np.nanmean(pixels)
+        if percentile is not None:
+            min_offset, max_offset = np.nanpercentile(pixels, (clip, 100 - clip))
 
-        l = l0 + (clip * (h0-l0))
-        h = h0 - (clip * (h0-l0))
+        else:
+            min_value, max_value = np.nanmin(pixels), np.nanmax(pixels)
+            min_offset = clip * (max_value - min_value)
+            max_offset = min_offset
+
+        l = np.nanmin(pixels) + min_offset
+        h = np.nanmax(pixels) - max_offset
 
         s = np.nanmean(pixels**2)
+        e = np.nanmean(pixels)
 
         b = (h**2 * (E - L) - s * (H - L) + l**2 * (H - E)) / (2 * (h * (E - L) - e * (H - L) + l * (H - E)))
         a = (H - L) / ((h - l) * (h + l - 2 * b))
