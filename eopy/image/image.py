@@ -248,5 +248,7 @@ class Image:
             return gdal.GDT_UInt16
         elif name == 'float32':
             return gdal.GDT_Float32
+        elif name == 'float64':
+            return gdal.GDT_Float64
         else:
             raise UserWarning("Unrecognised data type.")
