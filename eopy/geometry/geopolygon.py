@@ -90,3 +90,7 @@ class GeoPolygon:
             return [list(sub_polygon.exterior.coords) for sub_polygon in self.polygon]
         else:
             return [list(self.polygon.exterior.coords)]
+
+    def buffer(self, distance: int) -> "GeoPolygon":
+
+        return GeoPolygon(self.polygon.buffer(distance), self.epsg)
