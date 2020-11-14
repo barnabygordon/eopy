@@ -44,6 +44,14 @@ class Geotransform:
             self.pixel_width / factor, self.pixel_height / factor,
             self.rotation_x, self.rotation_y)
 
+    def translate(self, x: int, y: int) -> "Geotransform":
+
+        return Geotransform(
+            self.upper_left_x + x, self.upper_left_y + y,
+            self.pixel_width, self.pixel_height,
+            self.rotation_x, self.rotation_y
+        )
+
     def subset(self, x: int, y: int) -> "Geotransform":
         """ Slice geo_transform to new position """
 
