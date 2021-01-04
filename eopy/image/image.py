@@ -169,15 +169,17 @@ class Image:
 
             return Image(stack, images[0].geotransform, images[0].epsg, images[0].no_data_value)
 
-    def save(self, file_path: str, data_type: Optional[str] = None):
+    def save(self, file_path: str, dtype: Optional[str] = None, metadata: dict = None, metadata_name: str = None):
 
-        if not data_type:
-            data_type = str(self.dtype)
+        if not dtype:
+            dtype = str(self.dtype)
 
-        gdal_data_type = self._get_gdal_data_type(data_type)
+        gdal_data_type = self._get_gdal_data_type(dtype)
         out_image = gdal.GetDriverByName(GTIFF_DRIVER)\
             .Create(file_path, self.width, self.height, self.band_count, gdal_data_type)
         out_image.SetGeoTransform(self.geotransform.tuple)
+        if metadata:
+            out_image.SetMetadata(metadata, metadata_name)
         if self.crs:
             out_image.SetProjection(self.crs.to_wkt())
 
