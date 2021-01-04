@@ -32,7 +32,7 @@ def transform_coordinate(x: float, y: float, in_epsg: int, out_epsg: int) -> Tup
     in_proj = Proj(f'epsg:{in_epsg}')
     out_proj = Proj(f'epsg:{out_epsg}')
 
-    x2, y2 = transform(in_proj, out_proj, x, y)
+    x2, y2 = transform(in_proj, out_proj, x, y, always_xy=True)
 
     return x2, y2
 
