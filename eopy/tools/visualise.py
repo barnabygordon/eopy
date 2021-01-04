@@ -1,7 +1,7 @@
 import folium
+import imageio
 import matplotlib.pyplot as plt
 from typing import List, Tuple
-from PIL import Image as PILImage
 from shapely.geometry import Polygon
 import numpy as np
 
@@ -75,10 +75,10 @@ def show_image_and_polygon(image: "Image", polygon: Polygon):
     plt.show()
 
 
-def create_giphy(file_paths: List[str], save_path: str, duration: int = 200):
+def create_giphy(file_paths: List[str], save_path: str, duration: int = 0.5):
 
-    image, *images = [PILImage.open(file_path) for file_path in file_paths]
-    image.save(fp=save_path, format='GIF', append_images=images, save_all=True, duration=duration, loop=0)
+    images = [imageio.imread(path) for path in file_paths]
+    imageio.mimsave(save_path, images, duration=duration)
 
 
 def show_histogram(image: "Image", range: Tuple[float, float] = None):
