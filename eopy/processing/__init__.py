@@ -1,3 +1,3 @@
 from .pca import ImagePCA
-from .coregistration import Coregistration
+from.registration import PCRegistrator, FeatureRegistrator
 from .mosaic import Mosaic
