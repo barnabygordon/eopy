@@ -17,12 +17,12 @@ class GeoPolygon:
         self.epsg = epsg
 
     @classmethod
-    def from_file(cls, filename: str, epsg: int) -> "GeoPolygon":
+    def from_file(cls, filename: str) -> "GeoPolygon":
 
         df = gpd.read_file(filename)
         geometry = df.iloc[0].geometry
 
-        return cls(geometry, epsg)
+        return cls(geometry, df.crs.to_epsg())
 
     @property
     def geojson(self) -> dict:
